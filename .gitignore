@@ -1,0 +1,14 @@
+.dub
+docs.json
+__dummy.html
+docs/
+jarena.so
+jarena.dylib
+jarena.dll
+jarena.a
+jarena.lib
+jarena-test-*
+*.exe
+*.o
+*.obj
+*.lst
