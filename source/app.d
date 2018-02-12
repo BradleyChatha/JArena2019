@@ -37,9 +37,9 @@ void main()
         if(input.isKeyDown(sfKeyEscape))
             window.close();
         
-        window.clear();
+        window.renderer.clear();
         window.renderer.drawRect(vec2(100, 50), vec2(200, 150));
         window.renderer.drawSprite(sprite);
-        window.displayChanges();
+        window.renderer.displayChanges();
     }
 }

@@ -156,18 +156,6 @@ class Window
         {
             sfRenderWindow_close(this.handle);
         }
-
-        /// Clears the screen
-        void clear(uvec4b clearColour = colour(255, 255, 255, 255))
-        {
-            sfRenderWindow_clear(this.handle, clearColour.toSF!sfColor);
-        }
-
-        /// Displays all rendered changes to the screen.
-        void displayChanges()
-        {
-            sfRenderWindow_display(this.handle);
-        }
     }
 
     // Properties
@@ -217,6 +205,18 @@ class Renderer
         {
             if(this._rect !is null)
                 sfRectangleShape_destroy(this._rect);
+        }
+
+        /// Clears the screen
+        void clear(uvec4b clearColour = colour(255, 255, 255, 255))
+        {
+            sfRenderWindow_clear(this._window.handle, clearColour.toSF!sfColor);
+        }
+
+        /// Displays all rendered changes to the screen.
+        void displayChanges()
+        {
+            sfRenderWindow_display(this._window.handle);
         }
 
         /++
