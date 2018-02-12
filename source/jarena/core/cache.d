@@ -4,6 +4,11 @@ module jarena.core.cache;
 class Cache(T)
 {
     import std.experimental.logger, std.traits : fullyQualifiedName;
+
+    static if(is(T == class))
+        enum defaultValue = null;
+    else
+        enum defaultValue = T.init;
     
     private
     {
@@ -29,7 +34,7 @@ class Cache(T)
         }
 
         ///
-        T get(string key, T default_ = null)
+        T get(string key, T default_ = defaultValue)
         {
             tracef("Fetching the %s with the key of '%s' from the cache", TName, key);
             
@@ -37,7 +42,7 @@ class Cache(T)
             if(ptr is null)
             {
                 tracef("Unable to find the %s, returning default value", TName);
-                return null;
+                return default_;
             }
             else
             {
