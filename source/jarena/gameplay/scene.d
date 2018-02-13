@@ -8,7 +8,7 @@ private
     import jarena.graphics.sprite, jarena.graphics.window;
 }
 
-///
+/// Defines a scene, which can be thought of as a gamestate.
 abstract class Scene
 {
     private
@@ -21,17 +21,39 @@ abstract class Scene
     {
         // Protected, so inheriting classes can call SceneManager.registerSprite, but because *that's* private, no other class can
         // outside of this function.
-        ///
+        
+        /++
+         + Registers a `Sprite` to be drawn (handled by the `SceneManager`)
+         +
+         + Notes:
+         +  The y-level defines the order in which the sprites get drawn.
+         +  Lower y-levels get drawn first, higher y-levels get drawn last.
+         +  This allows greater control over which sprites are rendered over eachother.
+         +
+         + Params:
+         +  sprite = The sprite to register.
+         +  yLevel = The y-level to give the sprite.
+         + ++/
         void registerSprite(Sprite sprite, int yLevel)
         {
             this._manager.registerSprite(this, sprite, yLevel);
         }
 
+        /++
+         + Unregisters a sprite previously registered using `registerSprite`.
+         +
+         + Params:
+         +  sprite = The sprite to unregister.
+         + ++/
         void unregisterSprite(Sprite sprite)
         {
             this._manager.unregisterSprite(this, sprite);
         }
 
+        /++
+         + Returns:
+         +  Whether the given `sprite` has been registered.
+         + ++/
         bool isRegistered(Sprite sprite)
         {
             import std.algorithm : canFind;
@@ -44,21 +66,24 @@ abstract class Scene
 
     public
     {
-        ///
+        /++
+         + Params:
+         +  name = The name to give the scene.
+         + ++/
         @safe @nogc
         this(string name) nothrow
         {
             this._name = name;
         }
 
-        ///
+        /// The `SceneManager` this scene has been registered with.
         @property @safe @nogc
         inout(SceneManager) manager() nothrow inout
         {
             return this._manager;
         }
 
-        ///
+        /// The name of this Scene.
         @property @safe @nogc
         string name() nothrow const
         {
@@ -68,14 +93,43 @@ abstract class Scene
 
     public abstract
     {
+        /++
+         + Called when the scene is first registered with a `SceneManager`.
+         +
+         + Use this function to load in any initial assests
+         + ++/
         void onInit();
+
+        /++
+         + Called when this scene is swapped in.
+         +
+         + For now, this function and `onUnswap` are used to subscribe/unsubscribe to the `office`.
+         +
+         + Params:
+         +  office = The main event `PostOffice`.
+         + ++/
         void onSwap(PostOffice office);
+
+        /++
+         + Called when this scene is swapped out.
+         +
+         + Params:
+         +  office = The main event `PostOffice`.
+         + ++/
         void onUnswap(PostOffice office);
+
+        /++
+         + Called everytime the scene should process a frame.
+         +
+         + Params:
+         +  window = The game's window.
+         +  deltaTime = The amount of time the last frame took to process (used for making speed frame-independent).
+         + ++/
         void onUpdate(Window window, GameTime deltaTime);
     }
 }
 
-///
+/// Manages multiple `Scene`s and is required for certain utility functions that a `Scene` provides.
 class SceneManager
 {
     private class SceneInfo
@@ -106,11 +160,11 @@ class SceneManager
 
     private
     {
-        Cache!SceneInfo _scenes;
-        SceneInfo       _currentScene;
-        PostOffice      _eventOffice; // Main event office.
-        Cache!Texture   _commonTextureCache;
-        InputManager    _input;
+        Cache!SceneInfo _scenes;                // Cache of all scenes.
+        SceneInfo       _currentScene;          // Current scene to update
+        PostOffice      _eventOffice;           // Main event office.
+        Cache!Texture   _commonTextureCache;    // Shared texture cache.
+        InputManager    _input;                 // 
 
         // Private, so only the Scene class can access it (don't want some random function randomly adding sprites in.)
         void registerSprite(Scene scene, Sprite sprite, int yLevel)
@@ -162,7 +216,17 @@ class SceneManager
 
     public
     {
-        ///
+        /++
+         + Notes:
+         +  If `input` is `null`, then one is created, and paired with the `eventOffice`.
+         +
+         +  If `commonTextures` is `null`, then one is created.
+         +
+         + Params:
+         +  eventOffice = A `PostOffice` that is recieving events from core game features, such as the `Window`.
+         +  input = An `InputManager` that should be paried with the `eventOffice`.
+         +  commonTextures = A texture cache to contain common textures shared between all scenes.
+         + ++/
         this(PostOffice eventOffice, InputManager input = null, Cache!Texture commonTextures = null)
         {
             assert(eventOffice !is null);
@@ -173,7 +237,15 @@ class SceneManager
             this._input = (input is null) ? new InputManager(eventOffice) : input;
         }
 
-        ///
+        /++
+         + Registers a `Scene`.
+         +
+         + Notes:
+         +  If the scene inheirts `IPostBox` then the `SceneManager` will automatically handle subscribing and unsubscribing it's onMail function.
+         +
+         + Params:
+         +  scene = The scene to register. 
+         + ++/
         void register(S : Scene)(S scene)
         {
             assert(scene !is null);
@@ -193,7 +265,16 @@ class SceneManager
             scene.onInit();
         }
 
-        ///
+        /++
+         + Updates the current `Scene` (if there is one.
+         +
+         + Notes:
+         +  This function will also draw any sprites registered with `Scene.registerSprite` *after* updating the `Scene`.
+         +
+         + Params:
+         +  window = The game's `Window`.
+         +  deltaTime = The time the last frame of the game took.
+         + ++/
         void onUpdate(Window window, GameTime deltaTime)
         {
             assert(window !is null);
@@ -207,7 +288,17 @@ class SceneManager
             }
         }
 
-        ///
+        /++
+         + Swaps the current scene.
+         +
+         + Notes:
+         +  If the `Scene` that is getting swapped $(B out) inherits from `IPostBox`, it will be unsubscribed from the `PostOffice`.
+         +
+         +  If the `Scene` that is getting swapped $(B in) inherits from `IPostBox`, it will be subscribed to the `PostOffice`.
+         +
+         + Params:
+         +  sceneName = The name of the `Scene` to swap to.
+         + ++/
         void swap(string sceneName)
         {
             tracef("Swapping to scene called '%s'", sceneName);
