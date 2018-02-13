@@ -62,11 +62,11 @@ class Test : Scene, IPostBox
     {
         void onInit()
         {
-            this.tahn = new Sprite(super.manager.commonTextures.add("Tahn", new Texture("Tahn.png")));
+            this.tahn = new Sprite(super.manager.commonTextures.loadOrGet("Tahn.png"));
             super.registerSprite(this.tahn, 1);
 
             // meh, testing code, can't be botehred ot make a variable for it
-            super.registerSprite(new Sprite(super.manager.commonTextures.add("TahnBig", new Texture("TahnBig.png"))), 0);
+            super.registerSprite(new Sprite(super.manager.commonTextures.loadOrGet("TahnBig.png")), 0);
         }
 
         void onSwap(PostOffice office)

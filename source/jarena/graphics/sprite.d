@@ -103,3 +103,27 @@ class Sprite
         }
     }
 }
+
+/++
+ + Will either return a cached texture, or load in, cache, then return a texture.
+ +
+ + Params:
+ +  cache = The texture cache to use.
+ +  path = The path to the texture.
+ +
+ + Returns:
+ +  If `cache` contains a texture called `path`, then the cached texture is returned.
+ +
+ +  Otherwise, a new texture is loaded in from the `path`, cached into the `cache`, and then returned.
+ + ++/
+Texture loadOrGet(Cache!Texture cache, string path)
+{
+    auto cached = cache.get(path);
+    if(cached is null)
+    {
+        cached = new Texture(path);
+        cache.add(path, cached);
+    }
+
+    return cached;
+}
