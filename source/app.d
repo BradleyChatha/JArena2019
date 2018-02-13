@@ -85,6 +85,11 @@ class Test : Scene, IPostBox
                 this.tahn.move(speed);
             if(super.manager.input.isKeyDown(sfKeyA))
                 this.tahn.move(-speed);
+
+            if(super.manager.input.isKeyDown(sfKeyE) && !super.isRegistered(this.tahn))
+                super.registerSprite(this.tahn, 1);
+            if(super.manager.input.isKeyDown(sfKeyF) && super.isRegistered(this.tahn))
+                super.unregisterSprite(this.tahn);
         }
     }
 }

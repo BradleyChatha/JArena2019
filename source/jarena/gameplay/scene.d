@@ -26,6 +26,20 @@ abstract class Scene
         {
             this._manager.registerSprite(this, sprite, yLevel);
         }
+
+        void unregisterSprite(Sprite sprite)
+        {
+            this._manager.unregisterSprite(this, sprite);
+        }
+
+        bool isRegistered(Sprite sprite)
+        {
+            import std.algorithm : canFind;
+
+            if(sprite is null) return false;
+
+            return this._manager._scenes.get(this.name).sprites.canFind!"a.sprite == b"(sprite);
+        }
     }
 
     public
@@ -106,7 +120,7 @@ class SceneManager
             auto spriteInfo = SpriteInfo(sprite, yLevel);
             auto sceneInfo = this._scenes.get(scene.name);
 
-            infof("Registering sprite with Y-Level of %s", yLevel);
+            infof("Scene '%s' is registering a sprite with Y-Level of %s", scene.name, yLevel);
 
             bool wasInsertion = false;
             for(size_t i = 0; i < sceneInfo.sprites.length; i++)
@@ -127,6 +141,22 @@ class SceneManager
 
             if(!wasInsertion)
                 sceneInfo.sprites ~= spriteInfo;
+        }
+
+        void unregisterSprite(Scene scene, Sprite sprite)
+        {
+            import std.algorithm : countUntil;
+
+            assert(scene !is null);
+            assert(sprite !is null);
+
+            infof("Scene '%s' is unregistering a sprite.", scene.name);
+
+            auto sceneInfo = this._scenes.get(scene.name);
+            auto index = sceneInfo.sprites.countUntil!"a.sprite == b"(sprite);
+            assert(index != -1, "Tried to unregister an unregistered sprite.");
+
+            sceneInfo.sprites.removeAt(index);
         }
     }
 

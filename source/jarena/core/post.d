@@ -837,7 +837,6 @@ unittest
 }
 
 // Some strange code I made for whatever reason (original: jaster.algorithm)
-private:
 
 import std.range : isRandomAccessRange, ElementType;
 

@@ -50,5 +50,12 @@ class Cache(T)
                 return *ptr;
             }
         }
+
+        ///
+        @safe @nogc
+        bool hasKey(string key) nothrow const
+        {
+            return (key in this._cache) !is null;
+        }
     }
 }
