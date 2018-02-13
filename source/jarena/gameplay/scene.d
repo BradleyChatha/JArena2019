@@ -32,11 +32,9 @@ abstract class Scene
     {
         ///
         @safe @nogc
-        this(SceneManager manager, string name) nothrow
+        this(string name) nothrow
         {
-            assert(manager !is null);
-            this._manager = manager;
-            this._name    = name;
+            this._name = name;
         }
 
         ///
@@ -97,6 +95,7 @@ class SceneManager
         Cache!SceneInfo _scenes;
         SceneInfo       _currentScene;
         PostOffice      _eventOffice; // Main event office.
+        Cache!Texture   _commonTextureCache;
 
         // Private, so only the Scene class can access it (don't want some random function randomly adding sprites in.)
         void registerSprite(Scene scene, Sprite sprite, int yLevel)
@@ -133,18 +132,20 @@ class SceneManager
     public
     {
         ///
-        this(PostOffice eventOffice)
+        this(PostOffice eventOffice, Cache!Texture commonTextures = null)
         {
             assert(eventOffice !is null);
 
             this._eventOffice = eventOffice;
             this._scenes = new Cache!SceneInfo;
+            this._commonTextureCache = (commonTextures is null) ? new Cache!Texture() : commonTextures;
         }
 
         ///
         void register(S : Scene)(S scene)
         {
             assert(scene !is null);
+            scene._manager = this;
 
             auto info = new SceneInfo(scene);
             static if(is(S : IPostBox))

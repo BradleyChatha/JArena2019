@@ -21,7 +21,7 @@ void main()
         window.close();
     });
 
-    scenes.register(new Test(scenes));
+    scenes.register(new Test());
     scenes.swap("Test");
     while(window.isOpen)
     {
@@ -52,9 +52,9 @@ class Test : Scene, IPostBox
 
     public
     {
-        this(SceneManager manager)
+        this()
         {
-            super(manager, "Test");
+            super("Test");
         }
 
         // temp, InputManager currently doesn't get passed to a Scene
