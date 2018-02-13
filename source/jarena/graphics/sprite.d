@@ -4,7 +4,7 @@ private
 {
     import std.experimental.logger;
     import derelict.sfml2.system, derelict.sfml2.graphics;
-    import jarena.core.util, jarena.core.maths;
+    import jarena.core.util, jarena.core.maths, jarena.core.cache;
 }
 
 ///

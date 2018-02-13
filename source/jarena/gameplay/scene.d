@@ -96,6 +96,7 @@ class SceneManager
         SceneInfo       _currentScene;
         PostOffice      _eventOffice; // Main event office.
         Cache!Texture   _commonTextureCache;
+        InputManager    _input;
 
         // Private, so only the Scene class can access it (don't want some random function randomly adding sprites in.)
         void registerSprite(Scene scene, Sprite sprite, int yLevel)
@@ -132,13 +133,14 @@ class SceneManager
     public
     {
         ///
-        this(PostOffice eventOffice, Cache!Texture commonTextures = null)
+        this(PostOffice eventOffice, InputManager input = null, Cache!Texture commonTextures = null)
         {
             assert(eventOffice !is null);
 
             this._eventOffice = eventOffice;
             this._scenes = new Cache!SceneInfo;
             this._commonTextureCache = (commonTextures is null) ? new Cache!Texture() : commonTextures;
+            this._input = (input is null) ? new InputManager(eventOffice) : input;
         }
 
         ///
@@ -203,6 +205,20 @@ class SceneManager
                 trace("New Scene inherits from IPostBox, subscribing it to the post office.");
                 this._eventOffice.subscribe(cast(IPostBox)this._currentScene.scene);
             }
+        }
+
+        /// A texture cache shared between all `Scene`s
+        @property @safe @nogc
+        Cache!Texture commonTextures() nothrow
+        {
+            return this._commonTextureCache;
+        }
+
+        /// An `InputManager` provided for easy access for `Scene`s to get user input.
+        @property @safe @nogc
+        InputManager input() nothrow
+        {
+            return this._input;
         }
     }
 }

@@ -12,7 +12,7 @@ void main()
     auto office = new PostOffice();
     auto input = new InputManager(office);
     auto fps = new FPS();
-    auto scenes = new SceneManager(office);
+    auto scenes = new SceneManager(office, input);
 
     office.reserveTypes!(Window.Event);
     office.subscribe(Window.Event.Close,
@@ -56,36 +56,17 @@ class Test : Scene, IPostBox
         {
             super("Test");
         }
-
-        // temp, InputManager currently doesn't get passed to a Scene
-        @MailBox(Window.Event.KeyDown)
-        void onKeyDown(PostOffice o, ValueMail!sfKeyEvent m)
-        {
-            if(m.value.code == sfKeyD)
-                this.moveRight = true;
-            if(m.value.code == sfKeyA)
-                this.moveLeft = true;
-        }
-
-        @MailBox(Window.Event.KeyUp)
-        void onKeyUp(PostOffice o, ValueMail!sfKeyEvent m)
-        {
-            if(m.value.code == sfKeyD)
-                this.moveRight = false;
-            if(m.value.code == sfKeyA)
-                this.moveLeft = false;
-        }
     }
 
     public override
     {
         void onInit()
         {
-            this.tahn = new Sprite(new Texture("Tahn.png"));
+            this.tahn = new Sprite(super.manager.commonTextures.add("Tahn", new Texture("Tahn.png")));
             super.registerSprite(this.tahn, 1);
 
             // meh, testing code, can't be botehred ot make a variable for it
-            super.registerSprite(new Sprite(new Texture("TahnBig.png")), 0);
+            super.registerSprite(new Sprite(super.manager.commonTextures.add("TahnBig", new Texture("TahnBig.png"))), 0);
         }
 
         void onSwap(PostOffice office)
@@ -100,9 +81,9 @@ class Test : Scene, IPostBox
         {
             auto speed = vec2(160 * deltaTime.asSeconds, 0);
 
-            if(moveRight)
+            if(super.manager.input.isKeyDown(sfKeyD))
                 this.tahn.move(speed);
-            if(moveLeft)
+            if(super.manager.input.isKeyDown(sfKeyA))
                 this.tahn.move(-speed);
         }
     }
