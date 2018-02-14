@@ -210,14 +210,6 @@ struct MailBox
  + mail to the office, alerting any subscribers of the mail.
  + 
  + It is essentially an event dispatcher, just with a fancy (stupid) name.
- + 
- + Memory_And_GC:
- +  `Mallocator` is used internally by the class, and most of the functions do not require the GC (by themselves, since
- +  functions such as `PostOffice.mail` will call user-passed functions, so @nogc cannot be used. Lambdas may also be
- +  GC-allocated when given to the PostOffice.).
- + 
- +  So overall, this class is suitable to be used with or without the GC. (I cannot confirm, but some of std.algorithm's
- +  functions seem to prevent @nogc in some cases, which should be noted).
  + ++/
 final class PostOffice
 {
@@ -248,12 +240,87 @@ final class PostOffice
         Subscriber[] _subscribers;
         IPostBox[]   _postboxes;
         EnumRange[]  _reserved;
+        PostOffice[] _proxies;
     }
 
     public
     {
         /++
+         + Sometimes it's neccessary to keep certain PostOffices seperate, while still sharing mail
+         + between the two. In cases like this, a proxy is useful.
+         +
+         + Anytime mail is sent through a parent PostOffice, it will forward it to all proxy offices.
+         +
+         + Assertions:
+         +  `proxy` must not be null.
+         +
+         +  `proxy` must not be the same instance as this PostOffice.
+         + 
+         + Params:
+         +  proxy = The proxy to use.
+         + ++/
+        void addProxy(PostOffice proxy)
+        {
+            assert(proxy !is null, "The Proxy Post Office is null.");
+            assert(proxy != this, "");
+
+            this._proxies ~= proxy;
+        }
+        ///
+        unittest
+        {
+            enum Command : Mail.MailTypeT
+            {
+                IncrementI
+            }
+
+            int  i;
+            auto office     = new PostOffice();
+            auto proxy      = new PostOffice();
+            auto subscriber = proxy.subscribe(Command.IncrementI, (office, mail) {i += 1;});
+            office.reserveTypes!Command; // Not needed in this example, but I consider it good practice when using PostOffice to always do this.
+
+            office.addProxy(proxy);
+            office.mailCommand(Command.IncrementI); // Same as: office.mail(new CommandMail(Command.IncrementI));
+            assert(i == 1);
+            office.mailCommand(Command.IncrementI);
+            assert(i == 2);
+
+            office.unsubscribe(subscriber);
+            office.mailCommand(Command.IncrementI);
+            assert(i == 2);
+        }
+
+        /++
+         + Removes a proxy
+         +
+         + Assertions:
+         +  `proxy` must not be null.
+         +
+         +  `proxy` must not be the same instance as this PostOffice.
+         +
+         +  `proxy` must have been registered previously.
+         +
+         + Params:
+         +  proxy = The proxy to remove.
+         + ++/
+        void removeProxy(PostOffice proxy)
+        {
+            assert(proxy !is null, "The Proxy Post Office is null.");
+            assert(proxy != this, "");
+
+            import std.algorithm : countUntil;
+            auto index = this._proxies.countUntil(proxy);
+            assert(index != -1);
+
+            this._proxies.removeAt(index);
+        }
+
+        /++
          + Mails a message to any subscriber of the mail's `Mail.type`
+         +
+         + Notes:
+         +  The `mail` will be forwaded to all proxies.
          + 
          + Assertions:
          +  `mail` must not be `null`.
@@ -270,6 +337,7 @@ final class PostOffice
                              .each  !(s => s.func(this, mail));
 
             this._postboxes.each!(p => p.onMail(this, mail));
+            this._proxies.each!(p => p.mail(mail));
         }
         ///
         unittest

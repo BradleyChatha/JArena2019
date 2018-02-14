@@ -46,7 +46,7 @@ class Test : Scene, IPostBox
 {
     mixin(IPostBox.generateOnMail!Test);
 
-    Sprite tahn;
+    StaticObject tahn;
 
     public
     {
@@ -60,11 +60,11 @@ class Test : Scene, IPostBox
     {
         void onInit()
         {
-            this.tahn = new Sprite(super.manager.commonTextures.loadOrGet("Tahn.png"));
-            super.registerSprite(this.tahn, 1);
+            this.tahn = new StaticObject("Tahn.png");
+            super.register("Tahn", this.tahn);
 
             // meh, testing code, can't be botehred ot make a variable for it
-            super.registerSprite(new Sprite(super.manager.commonTextures.loadOrGet("TahnBig.png")), 0);
+            super.register("TahnBig", new StaticObject("TahnBig.png"));
         }
 
         void onSwap(PostOffice office)
@@ -85,9 +85,11 @@ class Test : Scene, IPostBox
                 this.tahn.move(-speed);
 
             if(super.manager.input.isKeyDown(sfKeyE) && !super.isRegistered(this.tahn))
-                super.registerSprite(this.tahn, 1);
+                super.register(this.tahn.name, this.tahn);
             if(super.manager.input.isKeyDown(sfKeyF) && super.isRegistered(this.tahn))
-                super.unregisterSprite(this.tahn);
+                super.unregister(this.tahn);
+
+            super.renderScene(window);
         }
     }
 }
