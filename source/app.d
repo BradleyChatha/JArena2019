@@ -89,6 +89,7 @@ class Test : Scene, IPostBox
             if(super.manager.input.isKeyDown(sfKeyF) && super.isRegistered(this.tahn))
                 super.unregister(this.tahn);
 
+            super.updateScene(window, deltaTime);
             super.renderScene(window);
         }
     }

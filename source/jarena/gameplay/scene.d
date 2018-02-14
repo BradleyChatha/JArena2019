@@ -84,7 +84,30 @@ abstract class Scene
 
     protected
     {
-        ///
+        /++
+         + Registers a `GameObject` to this scene.
+         +
+         + Notes:
+         +  This is required for any `GameObject` that calls `GameObject.scene`, or relies on any of the `onXXX` functions.
+         +
+         +  Any `GameObject` that is registered will have it's `onUpdate` function called when `Scene.updateScene` is called.
+         +
+         +  Any `GameObject` that is $(B not) registered will have to have their `onUpdate` function called manually.
+         +
+         +  If `autoRender` is `AutoRender.yes`, and if `object` inherits from `DrawableObject`, then `object` will be flagged for AutoRendering.
+         +
+         +  An auto rendered object is drawn to the screen whenever the `Scene.renderScene` function is called (usually by inheriting classes in their onUpdate function).
+         +
+         +  DrawableObjects contain a field called `yLevel`, which determines the order of which the objects are drawn.
+         +  The lower the y-level, the sooner the object is drawn. The higher the y-level, the later it is drawn.
+         +
+         +  Using the y-level is neccessary for making sure certain sprites will always be drawn on top of others (e.g. a player is always drawn on top of the background).
+         +
+         + Params:
+         +  name = The name to give the game object. (This can then be gotten with `GameObject.name`)
+         +  object = The game object to register.
+         +  autoRender = Whether the object should be automatically rendered or not. (See Notes)
+         + ++/
         void register(string name, GameObject object, AutoRender autoRender = AutoRender.yes)
         {
             infof("Scene '%s' is registering a game object named '%s'", this.name, name);
@@ -108,7 +131,15 @@ abstract class Scene
             object.onRegister(this._proxyEventOffice);
         }
 
-        ///
+        /++
+         + Unregisters a previously-registered GameObject.
+         +
+         + Notes:
+         +  Any calls to `GameObject.scene` after using this function will result in an assertion failure, as it gets reset to null.
+         +
+         + Params:
+         +  object = The game object to unregister.
+         + ++/
         void unregister(GameObject object)
         {
             import std.algorithm : countUntil;
@@ -130,28 +161,67 @@ abstract class Scene
             object._scene = null;
         }
 
+        /++
+         + Unregisters a previously-registered `GameObject`.
+         +
+         + Params:
+         +  objectName = The name of the game object to unregister.
+         + ++/
         void unregister(string objectName)
         {
             assert(this.isRegistered(objectName), "Attempted to unregister an object with non-existant name: " ~ objectName);
             this.unregister(*(objectName in this._objects));
         }
 
+        /++
+         + Returns:
+         +  `true` if a `GameObject` with the name of `objectName` is registered.
+         + ++/
         bool isRegistered(string objectName)
         {
             return (objectName in this._objects) !is null;
         }
 
+        /++
+         + Returns:
+         +  `true` if `object` is registered with this scene.
+         + ++/
         bool isRegistered(GameObject object)
         {
             return this.isRegistered(object.name);
         }
 
+        /++
+         + Renders all `DrawableObjects` that have been flagged as `AutoRender`able.
+         +
+         + Params:
+         +  window = The game's window.
+         + ++/
         void renderScene(Window window)
         {
             foreach(object; this._drawOrder)
                 object.onRender(window);
         }
 
+        /++
+         + Updates all `GameObjects` that have been registered.
+         +
+         + Params:
+         +  window = The game's window.
+         +  deltaTime = The amount of time the last frame took to process.
+         + ++/
+        void updateScene(Window window, GameTime deltaTime)
+        {
+            foreach(object; this._objects.byValue)
+                object.onUpdate(window, deltaTime);
+        }
+
+        /++
+         + The main event office.
+         +
+         + Notes:
+         +  This is actually a proxy of the main event office, so `GameObjects` don't need to worry about subscribing and unsubscribing during scene swaps.
+         + ++/
         @property
         PostOffice eventOffice()
         {
@@ -407,8 +477,36 @@ abstract class GameObject
 
     public abstract
     {
+        /++
+         + Called whenever the game object is registered with a `Scene`.
+         +
+         + Notes:
+         +  Unlike a `Scene`, game objects that inherit from `IPostBox` aren't automatically subscribed/unsubscribed
+         +  to the main event `PostOffice`, so this must be done manually during onRegister and onUnregister.
+         +
+         +  This is because, a `Scene` may provide it's own/differente `PostOffices`, so having GameObjects auto subscribe to the
+         +  main event office might be undesirable.
+         +
+         + Params:
+         +  office = The main event office. (see `Scene.eventOffice`)
+         + ++/
         void onRegister(PostOffice office);
+
+        /++
+         + Called whenever the game object is unregistered with a `Scene`.
+         +
+         + Params:
+         +  office = The main event office.
+         + ++/
         void onUnregister(PostOffice office);
+        
+        /++
+         + Called whenever the game object should update (usually every frame).
+         +
+         + Params:
+         +  window = The game's window.
+         +  deltaTime = The amount of time the last frame took to process.
+         + ++/
         void onUpdate(Window window, GameTime deltaTime);
     }
 }
@@ -428,6 +526,7 @@ abstract class DrawableObject : GameObject
 
     public
     {
+        /// The object's y-level (See `Scene.register`)
         @property @safe @nogc
         int yLevel() nothrow const
         {
@@ -437,6 +536,12 @@ abstract class DrawableObject : GameObject
 
     public abstract
     {
+        /++
+         + Called when the object should draw itself.
+         +
+         + Params:
+         +  window = The game's window.
+         + ++/
         void onRender(Window window);
     }
 }
