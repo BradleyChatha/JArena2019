@@ -12,3 +12,5 @@ jarena-test-*
 *.o
 *.obj
 *.lst
+trace.log
+trace.def

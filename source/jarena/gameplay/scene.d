@@ -30,9 +30,9 @@ abstract class Scene
         DrawableObject[]    _drawOrder;
         PostOffice          _proxyEventOffice; // GameObjects will subscribe to this proxy, so GameObjects don't need any knowledge of when a scene is swapped in and out.
 
+        @safe
         void registerDrawable(DrawableObject object)
         {
-            infof("The game object is being flagged to be auto rendered, it has a Y-level of %s", object.yLevel);
             object._flags |= GameObject.Flags.IS_AUTO_RENDERED;
 
             bool wasInsertion = false;
@@ -57,6 +57,7 @@ abstract class Scene
                 this._drawOrder ~= object;
         }
 
+        @trusted
         void unregisterDrawable(DrawableObject object)
         {
             if(object._flags & GameObject.Flags.IS_AUTO_RENDERED)
@@ -125,6 +126,7 @@ abstract class Scene
                 auto drawable = cast(DrawableObject)object;
                 assert(drawable !is null, "Attempted to assign a GameObject that does *not* inherit from DrawableObject as an AutoRender object.");
 
+                infof("The game object is being flagged to be auto rendered, it has a Y-level of %s", drawable.yLevel);
                 this.registerDrawable(drawable);
             }
 
@@ -530,6 +532,19 @@ abstract class DrawableObject : GameObject
         int yLevel() nothrow const
         {
             return this._yLevel;
+        }
+
+        /// The object's y-level
+        @property @safe
+        void yLevel(int level)
+        {
+            this._yLevel = level;
+
+            if(this._flags & Flags.IS_AUTO_RENDERED)
+            {
+                super.scene.unregisterDrawable(this);
+                super.scene.registerDrawable(this);
+            }
         }
     }
 

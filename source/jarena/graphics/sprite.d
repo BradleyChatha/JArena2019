@@ -130,12 +130,14 @@ class StaticObject : DrawableObject
          + Params:
          +  sprite = The Sprite to use.
          +  position = The position to set the sprite at.
+         +  yLevel = The yLevel to use
          + ++/
-        @safe @nogc
-        this(Sprite sprite, vec2 position = vec2(0)) nothrow
+        @safe
+        this(Sprite sprite, vec2 position = vec2(0), int yLevel = 0)
         {
             assert(sprite !is null);
             this._sprite = sprite;
+            this.yLevel = yLevel;
         }
 
         /++
@@ -144,11 +146,12 @@ class StaticObject : DrawableObject
          + Params:
          +  texture = The texture to use.
          +  position = The position to set the sprite at.
+         +  yLevel = The yLevel to use
          + ++/
         @safe
-        this(Texture texture, vec2 position = vec2(0))
+        this(Texture texture, vec2 position = vec2(0), int yLevel = 0)
         {
-            this(new Sprite(texture), position);
+            this(new Sprite(texture), position, yLevel);
         }
 
         /++
@@ -161,12 +164,14 @@ class StaticObject : DrawableObject
          + Params:
          +  texturePath = The path to the texture to use.
          +  position = The position to set the sprite at.
+         +  yLevel = The yLevel to use
          + ++/
-        @safe @nogc
-        this(string texturePath, vec2 position = vec2(0)) nothrow
+        @safe
+        this(string texturePath, vec2 position = vec2(0), int yLevel = 0)
         {
             this._texturePath = texturePath;
             this._initialPosition = position;
+            this.yLevel = yLevel;
         }
 
         /// The sprite for this StaticObject.
