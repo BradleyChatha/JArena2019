@@ -47,8 +47,6 @@ class Test : Scene, IPostBox
     mixin(IPostBox.generateOnMail!Test);
 
     Sprite tahn;
-    bool moveLeft = false;
-    bool moveRight = false;
 
     public
     {
