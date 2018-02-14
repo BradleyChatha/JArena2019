@@ -448,8 +448,7 @@ abstract class GameObject
         {
             None = 0,
 
-            IS_POSTBOX = 1 << 0,
-            IS_AUTO_RENDERED = 1 << 1
+            IS_AUTO_RENDERED = 1 << 0
         }
 
         string _name;
