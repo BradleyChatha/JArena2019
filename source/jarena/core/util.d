@@ -35,9 +35,16 @@ unittest
     assert(sfVector2i(20, 40).to!ivec2 == ivec2(20, 40));
 }
 
+/// Implementation of the `to` function for - uvec4b -> sfColor
 sfColor toSF(T : sfColor)(uvec4b vect)
 {
     return sfColor(vect.r, vect.g, vect.b, vect.a);
+}
+
+/// Implementation of the `to` function for - RectangleI -> sfIntRect
+sfIntRect toSF(T : sfIntRect)(RectangleI intRect)
+{
+    return sfIntRect(intRect.position.x, intRect.position.y, intRect.size.x, intRect.size.y);
 }
 
 /++
