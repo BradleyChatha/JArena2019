@@ -308,7 +308,7 @@ class SceneManager
         Scene           _currentScene;          // Current scene to update
         PostOffice      _eventOffice;           // Main event office.
         Cache!Texture   _commonTextureCache;    // Shared texture cache.
-        InputManager    _input;                 // 
+        InputManager    _input;                 // Input Manager for the game's window.
     }
 
     public
@@ -420,7 +420,7 @@ class SceneManager
             }
 
             import core.memory : GC;
-            GC.collect(); // Forcing a collection here should hopefully make the GC feel less inclined to collect during a Scene's update.
+            GC.collect(); // Forcing a collection here should hopefully make the GC feel less inclined to collect during a Scene's update function.
         }
 
         /// A texture cache shared between all `Scene`s
