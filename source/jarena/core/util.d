@@ -22,6 +22,24 @@ unittest
     assert(ivec2(20, 40).toSF!sfVector2i == sfVector2i(20, 40));
 }
 
+/// Implementation of the `to` function for - uvec4b -> sfColor
+sfColor toSF(T : sfColor)(uvec4b vect)
+{
+    return sfColor(vect.r, vect.g, vect.b, vect.a);
+}
+
+/// Implementation of the `to` function for - RectangleI -> sfIntRect
+sfIntRect toSF(T : sfIntRect)(RectangleI intRect)
+{
+    return sfIntRect(intRect.position.x, intRect.position.y, intRect.size.x, intRect.size.y);
+}
+
+/// Implemntation of the `to` function for - RectangleF -> sfFloatRect
+sfFloatRect toSF(T : sfFloatRect)(RectangleF floatRect)
+{
+    return sfFloatRect(floatRect.position.x, floatRect.position.y, floatRect.size.x, floatRect.size.y);
+}
+
 /// Implementation of the `to` function for - SFML Vector -> DLSL Vector
 dlslVect to(dlslVect, sfVect)(sfVect vect)
 if(isSFMLVector!sfVect && isDLSLVector!dlslVect)
@@ -33,18 +51,6 @@ if(isSFMLVector!sfVect && isDLSLVector!dlslVect)
 unittest
 {
     assert(sfVector2i(20, 40).to!ivec2 == ivec2(20, 40));
-}
-
-/// Implementation of the `to` function for - uvec4b -> sfColor
-sfColor toSF(T : sfColor)(uvec4b vect)
-{
-    return sfColor(vect.r, vect.g, vect.b, vect.a);
-}
-
-/// Implementation of the `to` function for - RectangleI -> sfIntRect
-sfIntRect toSF(T : sfIntRect)(RectangleI intRect)
-{
-    return sfIntRect(intRect.position.x, intRect.position.y, intRect.size.x, intRect.size.y);
 }
 
 /++
