@@ -196,6 +196,8 @@ abstract class Scene
         /++
          + Renders all `DrawableObjects` that have been flagged as `AutoRender`able.
          +
+         + Any drawable object that is hidden won't be rendered to the screen.
+         +
          + Params:
          +  window = The game's window.
          + ++/
