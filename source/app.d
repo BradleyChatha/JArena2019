@@ -79,17 +79,27 @@ class Test : Scene, IPostBox
 
         void onUpdate(Window window, GameTime deltaTime)
         {
-            auto speed = vec2(160 * deltaTime.asSeconds, 0);
+            auto speedHorizontal = vec2(160 * deltaTime.asSeconds, 0);
+            auto speedVertical   = vec2(0, 160 * deltaTime.asSeconds);
 
             if(super.manager.input.isKeyDown(sfKeyD))
-                this.tahn.move(speed);
+                this.tahn.move(speedHorizontal);
             if(super.manager.input.isKeyDown(sfKeyA))
-                this.tahn.move(-speed);
+                this.tahn.move(-speedHorizontal);
+            if(super.manager.input.isKeyDown(sfKeyW))
+                this.tahn.move(-speedVertical);
+            if(super.manager.input.isKeyDown(sfKeyS))
+                this.tahn.move(speedVertical);
 
             if(super.manager.input.isKeyDown(sfKeyE) && !super.isRegistered(this.tahn))
                 super.register(this.tahn.name, this.tahn);
             if(super.manager.input.isKeyDown(sfKeyF) && super.isRegistered(this.tahn))
                 super.unregister(this.tahn);
+
+            if(super.manager.input.isKeyDown(sfKeyUp))
+                this.tahn.yLevel = this.tahn.yLevel + 1; // += doesn't work for some reason.
+            if(super.manager.input.isKeyDown(sfKeyDown))
+                this.tahn.yLevel = this.tahn.yLevel - 1;
 
             super.updateScene(window, deltaTime);
             super.renderScene(window);
