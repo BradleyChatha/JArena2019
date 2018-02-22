@@ -48,6 +48,7 @@ class Test : Scene, IPostBox
     mixin(IPostBox.generateOnMail!Test);
 
     StaticObject tahn;
+    MailTimer timer;
 
     public
     {
@@ -67,6 +68,9 @@ class Test : Scene, IPostBox
             super.register("Tahn", this.tahn);
             super.register("TahnBig", new StaticObject("TahnBig.png"));
             super.register("Jash", new StaticObject("Jash.jpg", vec2(500, 0), 3));
+
+            super.eventOffice.subscribe(69, (_, __){writeln("Tick");});
+            this.timer = new MailTimer(super.eventOffice, new CommandMail(69), GameTime.fromSeconds(3));
         }
 
         void onSwap(PostOffice office)
@@ -100,6 +104,8 @@ class Test : Scene, IPostBox
                 this.tahn.yLevel = this.tahn.yLevel + 1; // += doesn't work for some reason.
             if(super.manager.input.isKeyDown(sfKeyDown))
                 this.tahn.yLevel = this.tahn.yLevel - 1;
+
+            this.timer.onUpdate(deltaTime);
 
             super.updateScene(window, deltaTime);
             super.renderScene(window);

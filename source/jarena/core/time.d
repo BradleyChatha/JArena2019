@@ -6,6 +6,9 @@ private
 }
 
 ///
+alias TimerFunc = void delegate();
+
+///
 struct GameTime
 {
     public
@@ -22,6 +25,33 @@ struct GameTime
 
             return format("GameTime(%s seconds, %s ms, %s microseconds)", 
                           this.asSeconds, this.asMilliseconds, this.asMicroseconds).assumeWontThrow;
+        }
+
+        ///
+        static GameTime fromSeconds(float seconds)
+        {
+            GameTime time;
+            time.handle = sfSeconds(seconds);
+
+            return time;
+        }
+
+        ///
+        static GameTime fromMilliseconds(int ms)
+        {
+            GameTime time;
+            time.handle = sfMilliseconds(ms);
+
+            return time;
+        }
+
+        ///
+        static GameTime fromMicroseconds(long micro)
+        {
+            GameTime time;
+            time.handle = sfMicroseconds(micro);
+
+            return time;
         }
 
         ///
@@ -89,6 +119,79 @@ class Clock
         GameTime restart() nothrow
         {
             return GameTime(sfClock_restart(this.handle));
+        }
+    }
+}
+
+/++
+ + Repeatedly sends a given `Mail` to a PostOffice after a delay.
+ +
+ + This class is useful for subscribing a certain kind of event to a post office, such as "apply Death to Daniel",
+ + and then having that event fire off every 2 seconds, for example.
+ + ++/
+class MailTimer
+{
+    import jarena.core.post;
+
+    private
+    {
+        PostOffice  _office;
+        Mail        _mail;
+        GameTime    _delay;
+        GameTime    _current;
+        bool        _isStopped;
+    }
+
+    public
+    {
+        /++
+         + Params:
+         +  office = The `PostOffice` to send the mail to.
+         +  mail   = The `Mail` to send. This mail won't be changed (inside of this class at least) between repeated maililngs.
+         +  delay  = A `GameTime` which specifies the delay between each mailing.
+         + ++/
+        @safe @nogc
+        this(PostOffice office, Mail mail, GameTime delay) nothrow pure
+        {
+            assert(office !is null);
+            assert(mail !is null);
+
+            this._office = office;
+            this._mail = mail;
+            this._delay = delay;
+        }
+
+        ///
+        void onUpdate(GameTime deltaTime)
+        {
+            if(this._isStopped)
+                return;
+
+            this._current.handle.microseconds += deltaTime.handle.microseconds;
+            if(this._current.handle.microseconds >= this._delay.handle.microseconds)
+            {
+                this._office.mail(this._mail);
+                this._current = GameTime();
+            }
+        }
+
+        ///
+        void stop()
+        {
+            this._isStopped = true;
+        }
+
+        ///
+        void start()
+        {
+            this._isStopped = false;
+        }
+
+        ///
+        void restart()
+        {
+            this.start();
+            this._delay = GameTime();
         }
     }
 }
