@@ -138,6 +138,7 @@ class StaticObject : DrawableObject
             assert(sprite !is null);
             this._sprite = sprite;
             this.yLevel = yLevel;
+            sprite.position = position;
         }
 
         /++
@@ -199,6 +200,7 @@ class StaticObject : DrawableObject
                 // I really need to find a clean/shorter way to access that cache T.T
                 auto texture = super.scene.manager.commonTextures.loadOrGet(this._texturePath);
                 this._sprite = new Sprite(texture);
+                this.sprite.position = this._initialPosition;
             }
         }
 

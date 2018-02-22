@@ -65,9 +65,8 @@ class Test : Scene, IPostBox
 
             this.tahn = new StaticObject("Tahn.png", vec2(0), 1);
             super.register("Tahn", this.tahn);
-
-            // meh, testing code, can't be botehred ot make a variable for it
             super.register("TahnBig", new StaticObject("TahnBig.png"));
+            super.register("Jash", new StaticObject("Jash.jpg", vec2(500, 0), 3));
         }
 
         void onSwap(PostOffice office)
