@@ -181,6 +181,14 @@ class Window
         {
             return this._renderer;
         }
+
+        /// Returns:
+        ///  The size of the window
+        @property @trusted @nogc
+        uvec2 size() nothrow const
+        {
+            return sfRenderWindow_getSize(this.handle).to!uvec2;
+        }
     }
 }
 

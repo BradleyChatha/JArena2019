@@ -1,5 +1,6 @@
 import std.stdio;
 import derelict.sfml2.graphics, derelict.sfml2.system, derelict.sfml2.window;
+import jarena.core, jarena.graphics, jarena.gameplay;
 
 void main()
 {
@@ -13,6 +14,8 @@ void main()
     auto input = new InputManager(office);
     auto fps = new FPS();
     auto scenes = new SceneManager(office, input);
+
+    InitInfo.windowSize = window.size;
 
     office.reserveTypes!(Window.Event);
     office.subscribe(Window.Event.Close,
@@ -40,8 +43,6 @@ void main()
     }
 }
 
-import jarena.core.maths, jarena.core.post, jarena.graphics.window, jarena.graphics.sprite, jarena.core.cache;
-import jarena.core.time, jarena.gameplay.scene;
 class Test : Scene, IPostBox
 {
     mixin(IPostBox.generateOnMail!Test);
@@ -60,6 +61,8 @@ class Test : Scene, IPostBox
     {
         void onInit()
         {
+            writeln("Window Size: ", InitInfo.windowSize);
+
             this.tahn = new StaticObject("Tahn.png", vec2(0), 1);
             super.register("Tahn", this.tahn);
 
