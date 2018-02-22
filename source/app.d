@@ -95,10 +95,10 @@ class Test : Scene, IPostBox
             if(super.manager.input.isKeyDown(sfKeyS))
                 this.tahn.move(speedVertical);
 
-            if(super.manager.input.isKeyDown(sfKeyE) && !super.isRegistered(this.tahn))
-                super.register(this.tahn.name, this.tahn);
-            if(super.manager.input.isKeyDown(sfKeyF) && super.isRegistered(this.tahn))
-                super.unregister(this.tahn);
+            if(super.manager.input.isKeyDown(sfKeyE))
+                this.tahn.isHidden = true;
+            if(super.manager.input.isKeyDown(sfKeyF))
+                this.tahn.isHidden = false;
 
             if(super.manager.input.isKeyDown(sfKeyUp))
                 this.tahn.yLevel = this.tahn.yLevel + 1; // += doesn't work for some reason.

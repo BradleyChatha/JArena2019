@@ -201,7 +201,8 @@ abstract class Scene
          + ++/
         void renderScene(Window window)
         {
-            foreach(object; this._drawOrder)
+            import std.algorithm : filter;
+            foreach(object; this._drawOrder.filter!(o => !o.isHidden))
                 object.onRender(window);
         }
 
@@ -450,7 +451,8 @@ abstract class GameObject
         {
             None = 0,
 
-            IS_AUTO_RENDERED = 1 << 0
+            IS_AUTO_RENDERED = 1 << 0, // only useful for DrawableObjects
+            IS_HIDDEN        = 1 << 1, // only useful for DrawableObjects
         }
 
         string _name;
@@ -545,6 +547,23 @@ abstract class DrawableObject : GameObject
                 super.scene.unregisterDrawable(this);
                 super.scene.registerDrawable(this);
             }
+        }
+
+        /// Whether ths object is hidden from the scene or not.
+        @property @safe @nogc
+        bool isHidden() nothrow const
+        {
+            return (this._flags & Flags.IS_HIDDEN) > 0;
+        }
+
+        /// ditto
+        @property @safe @nogc
+        void isHidden(bool hidden) nothrow
+        {
+            if(hidden)
+                this._flags |= Flags.IS_HIDDEN;
+            else
+                this._flags &= ~Flags.IS_HIDDEN;
         }
     }
 
