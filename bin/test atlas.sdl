@@ -1,0 +1,17 @@
+name "Test Atlas"
+texture "Atlas.png"
+
+sprite "Jash" {
+	position 0 0
+	size 256 256
+}
+
+sprite "TahnBig" {
+	position 256 0
+	size 256 256
+}
+
+sprite "Tahn" {
+	position 512 0
+	size 32 32
+}

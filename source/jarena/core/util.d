@@ -7,7 +7,9 @@ private
 }
 
 private enum isSFMLVector(T) = (is(T == sfVector2f) || is(T == sfVector2i) || is(T == sfVector2u));
+private enum isSFMLRect(T)   = (is(T == sfFloatRect) || is(T == sfIntRect));
 private enum isDLSLVector(T) = isVector!T;
+private enum isJArenaRect(T) = (is(T == RectangleF) || is(T == RectangleI)); // TODO : Generic test for rects, instead of a hard coded one
 
 /// Implementation of the `to` function for - DLSL Vector -> SFML Vector
 sfVect toSF(sfVect, dlslVect)(dlslVect vect)
@@ -51,6 +53,14 @@ if(isSFMLVector!sfVect && isDLSLVector!dlslVect)
 unittest
 {
     assert(sfVector2i(20, 40).to!ivec2 == ivec2(20, 40));
+}
+
+/// Implementation of the `to` function for - SFML Rectangle -> JArena Rectangle
+jarenaRect to(jarenaRect, sfRect)(sfRect rect)
+if(isSFMLRect!sfRect && isJArenaRect!jarenaRect)
+{
+    alias V = jarenaRect.VecType;
+    return jarenaRect(V(rect.left, rect.top), V(rect.width, rect.height));
 }
 
 /++

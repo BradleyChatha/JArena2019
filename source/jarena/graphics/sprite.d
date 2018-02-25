@@ -39,11 +39,19 @@ class Texture
                 sfTexture_destroy(this.handle);
         }
 
+        ///
         @property @safe @nogc
         inout(sfTexture*) handle() nothrow inout
         {
             assert(this._handle !is null);
             return this._handle;
+        }
+
+        ///
+        @property @trusted @nogc
+        inout(uvec2) size() nothrow inout
+        {
+            return sfTexture_getSize(this.handle).to!uvec2;
         }
     }
 }
@@ -102,6 +110,20 @@ class Sprite
         void position(vec2 pos) nothrow
         {
             sfSprite_setPosition(this.handle, pos.toSF!sfVector2f);
+        }
+
+        ///
+        @property @trusted @nogc
+        inout(RectangleI) textureRect() nothrow inout
+        {
+            return sfSprite_getTextureRect(this.handle).to!RectangleI;
+        }
+
+        ///
+        @property @trusted @nogc
+        void textureRect(RectangleI rect) nothrow
+        {
+            sfSprite_setTextureRect(this.handle, rect.toSF!sfIntRect);
         }
     }
 }
@@ -234,4 +256,72 @@ Texture loadOrGet(Cache!Texture cache, string path)
     }
 
     return cached;
+}
+
+///
+class SpriteAtlas
+{
+    private
+    {
+        Texture             _texture;
+        RectangleI[string]  _sprites;
+    }
+
+    public
+    {
+        ///
+        this(Texture texture)
+        {
+            assert(texture !is null);
+            this._texture = texture;
+        }
+
+        ///
+        void register(string spriteName, RectangleI frame)
+        {
+            // Enforce is used here, as this function will most likely be called using data from a file
+            // so rather than it being a code bug, it's an input bug.
+            import std.exception : enforce;
+            import std.format    : format;
+
+            auto texSize = this._texture.size;
+            auto maxX    = frame.position.x + frame.size.x;
+            auto maxY    = frame.position.y + frame.size.y;
+
+            tracef("Registering sprite frame '%s' with frame rect of %s", spriteName, frame);
+            enforce((spriteName in this._sprites) is null, format("Attempted to register sprite frame called '%s' twice.", spriteName));
+            enforce(frame.position.x >= 0, format("The X position for sprite frame '%s' cannot be lower than 0. Value = %s", spriteName, frame.position.x));
+            enforce(frame.position.y >= 0, format("The Y position for sprite frame '%s' cannot be lower than 0. Value = %s", spriteName, frame.position.y));
+            enforce(maxX <= texSize.x, format("The sprite frame '%s' is too wide. Atlas width = %s | frameX + frameWidth = %s", spriteName, texSize.x, maxX));
+            enforce(maxY <= texSize.y, format("The sprite frame '%s' is too high. Atlas height = %s | frameY + frameHeight = %s", spriteName, texSize.y, maxY));
+            
+            this._sprites[spriteName] = frame;
+        }
+
+        ///
+        RectangleI getSpriteRect(string spriteName)
+        {
+            import std.exception : enforce;
+            enforce((spriteName in this._sprites) !is null, "Cannot find sprite frame called: " ~ spriteName);
+
+            return this._sprites[spriteName];
+        }
+
+        ///
+        Sprite makeSprite(string spriteName, vec2 position = vec2(0, 0))
+        {
+            auto sprite = new Sprite(this._texture);
+            sprite.textureRect = this.getSpriteRect(spriteName);
+            sprite.position = position;
+
+            return sprite;
+        }
+
+        ///
+        Sprite changeSprite(return Sprite sprite, string spriteName)
+        {
+            sprite.textureRect = this.getSpriteRect(spriteName);
+            return sprite;
+        }
+    }
 }

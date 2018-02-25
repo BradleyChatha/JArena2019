@@ -280,7 +280,7 @@ abstract class Scene
          +
          + Notes:
          +  `office` is $(B not) the proxy office each scene contains, but rather the proper, main post office.
-         +  in most cases the proxy will be fine, and onSwap/onUnswap will be fairly useless, but there may be cases
+         +  In most cases the proxy will be fine, and onSwap/onUnswap will be fairly useless, but there may be cases
          +  where a proxy isn't what's needed.
          +
          +  The main example is for when a Scene wants to listen and react to a certain mail event, while not being

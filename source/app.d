@@ -50,6 +50,7 @@ class Test : Scene, IPostBox
 
     StaticObject tahn;
     MailTimer timer;
+    SpriteAtlas atlas;
 
     public
     {
@@ -65,7 +66,11 @@ class Test : Scene, IPostBox
         {
             writeln("Window Size: ", InitInfo.windowSize);
 
-            this.tahn = new StaticObject("Tahn.png", vec2(0), 1);
+            atlas = new SpriteAtlas(new Texture("Atlas.png"));
+            atlas.register("Tahn", RectangleI(512, 0, 32, 32));
+            atlas.register("TahnBig", RectangleI(256, 0, 256, 256));
+
+            this.tahn = new StaticObject(atlas.makeSprite("Tahn"), vec2(0), 1);
             super.register("Tahn", this.tahn);
             super.register("TahnBig", new StaticObject("TahnBig.png"));
             super.register("Jash", new StaticObject("Jash.jpg", vec2(500, 0), 3));
@@ -100,6 +105,11 @@ class Test : Scene, IPostBox
                 this.tahn.isHidden = true;
             if(super.manager.input.isKeyDown(sfKeyF))
                 this.tahn.isHidden = false;
+
+            if(super.manager.input.wasKeyTapped(sfKeyJ))
+                this.atlas.changeSprite(this.tahn, "TahnBig");
+            if(super.manager.input.wasKeyTapped(sfKeyK))
+                this.atlas.changeSprite(this.tahn, "Tahn");
 
             if(super.manager.input.wasKeyTapped(sfKeyUp) && !super.manager.input.wasKeyRepeated(sfKeyUp))
                 this.tahn.yLevel = this.tahn.yLevel + 1; // += doesn't work for some reason.

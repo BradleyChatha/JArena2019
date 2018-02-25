@@ -18,6 +18,35 @@ struct Rectangle(T)
     
     /// The size of the rectangle.
     VecType size;
+
+    ///
+    @safe @nogc
+    this(VecType pos, VecType size) nothrow pure
+    {
+        this.position = pos;
+        this.size = size;
+    }
+
+    ///
+    @safe @nogc
+    this(T x, T y, T width, T height) nothrow pure
+    {
+        this(VecType(x, y), VecType(width, height));
+    }
+
+    ///
+    @safe @nogc
+    this(T x, T y, VecType size) nothrow pure
+    {
+        this(VecType(x, y), size);
+    }
+
+    ///
+    @safe @nogc
+    this(VecType pos, T width, T height) nothrow pure
+    {
+        this(pos, VecType(width, height));
+    }
 }
 
 ///
