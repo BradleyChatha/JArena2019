@@ -262,7 +262,15 @@ class InputManager
 {
     private
     {
-        bool[sfKeyCount] _keyStates; // true = down, false = up
+        struct KeyState
+        {
+            bool isDown;      // True = down, false = up
+            bool wasTapped;   // True = tapped this frame, false = either up, or has been down longer than 1 frame.
+            bool wasRepeated; // True = The window/OS repeated the key input. False = no repeat has happened.
+        }
+
+        KeyState[sfKeyCount] _keyStates;
+        sfKeyCode[]          _tapped;    // Any sfKey in this array was tapped down this frame.
 
         void onKeyEvent(PostOffice office, Mail m)
         {
@@ -270,10 +278,15 @@ class InputManager
             assert(mail !is null);
 
             auto keyCode = mail.value.code;
-            auto newState = (m.type == Window.Event.KeyDown) ? true : false;
-
             assert(keyCode < this._keyStates.length);
-            this._keyStates[keyCode] = newState;
+
+            auto state        = &this._keyStates[keyCode];
+            state.wasRepeated = (state.isDown && m.type == Window.Event.KeyDown);
+            state.isDown      = (m.type == Window.Event.KeyDown) ? true : false;
+            state.wasTapped   = state.isDown;
+
+            if(state.wasTapped)
+                this._tapped ~= keyCode;
         }
     }
 
@@ -284,22 +297,54 @@ class InputManager
         {
             assert(office !is null);
 
+            this._tapped.reserve(this._keyStates.length);
+
             office.subscribe(Window.Event.KeyDown, &this.onKeyEvent);
             office.subscribe(Window.Event.KeyUp,   &this.onKeyEvent);
+        }
+
+        /// $(B Important: This function should be called _before_ the window processes it's events, or at the very end of a frame's update)
+        void onUpdate()
+        {
+            foreach(keyCode; this._tapped)
+                this._keyStates[keyCode].wasTapped = false;
+
+            this._tapped.length = 0;
         }
 
         ///
         bool isKeyDown(sfKeyCode key)
         {
             assert(key < this._keyStates.length);
-            return this._keyStates[key];
+            return this._keyStates[key].isDown;
         }
 
         ///
         bool isKeyUp(sfKeyCode key)
         {
             assert(key < this._keyStates.length);
-            return !this._keyStates[key];
+            return !this._keyStates[key].isDown;
+        }
+
+        /++
+         + Returns:
+         +  `true` if `key` was only pressed down this specific frame.
+         +  `false` if `key` isn't pressed down, or if `key` has been held down for longer than 1 frame.
+         + ++/
+        bool wasKeyTapped(sfKeyCode key)
+        {
+            assert(key < this._keyStates.length);
+            return this._keyStates[key].wasTapped;
+        }
+
+        /++
+         + Returns:
+         +  `true` if the `key` has had it's input repeated by the OS (in the case that key repeation is enabled for the window).
+         + ++/
+        bool wasKeyRepeated(sfKeyCode key)
+        {
+            assert(key < this._keyStates.length);
+            return this._keyStates[key].wasRepeated;
         }
     }
 }

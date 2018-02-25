@@ -29,6 +29,7 @@ void main()
     while(window.isOpen)
     {
         fps.onUpdate();
+        input.onUpdate();
         window.handleEvents(office);
 
         if(input.isKeyDown(sfKeyEscape))
@@ -100,9 +101,9 @@ class Test : Scene, IPostBox
             if(super.manager.input.isKeyDown(sfKeyF))
                 this.tahn.isHidden = false;
 
-            if(super.manager.input.isKeyDown(sfKeyUp))
+            if(super.manager.input.wasKeyTapped(sfKeyUp) && !super.manager.input.wasKeyRepeated(sfKeyUp))
                 this.tahn.yLevel = this.tahn.yLevel + 1; // += doesn't work for some reason.
-            if(super.manager.input.isKeyDown(sfKeyDown))
+            if(super.manager.input.wasKeyTapped(sfKeyDown) && !super.manager.input.wasKeyRepeated(sfKeyDown))
                 this.tahn.yLevel = this.tahn.yLevel - 1;
 
             this.timer.onUpdate(deltaTime);
