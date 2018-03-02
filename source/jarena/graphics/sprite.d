@@ -1,3 +1,4 @@
+///
 module jarena.graphics.sprite;
 
 private

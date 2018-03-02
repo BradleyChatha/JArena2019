@@ -1,3 +1,4 @@
+///
 module jarena.core.time;
 
 private
