@@ -17,8 +17,11 @@ class SdlangLoader
          +
          + Notes:
          +  The path used to load the texture is a normalised path built from `baseDirectory` and the texture path in the `tag`.
-         +  For example, if the `baseDirectory` was `./data/atlases/` and the texture path was "../texture/texture.png`
-         +  then the final path would be "./data/texture/texture.png".
+         +  For example, if the `baseDirectory` was `./data/atlases/` and the texture path was "../textures/texture.png`
+         +  then the final path would be "./data/textures/texture.png".
+         +
+         +  It is $(B heavily) recommended that all paths that reference other files are kept relative to the directory
+         +  where the atlas' .sdl file is, in order for certain data resolution features to work.
          +
          +  If `atlasName` is `null`, then it is set to the same value as the noramlised texture path.
          +
@@ -55,6 +58,7 @@ class SdlangLoader
         {
             // Here be a very long-tailed dragon.
             import std.algorithm : filter, all, map;
+            import std.range     : takeExactly;
             import std.exception : enforce;
             import std.path      : buildNormalizedPath;
             import std.format    : format;
@@ -125,18 +129,15 @@ class SdlangLoader
                             "[%s] All values of the '%s' tag must be integers.".format(tag.location, tag.name));
 
                     int[2] ints;
-                    auto range = tag.values.map!(v => v.get!int);
-                    ints[0] = range.front;
-                    range.popFront();
-                    ints[1] = range.front;
+                    auto range = tag.values.map!(v => v.get!int).takeExactly(2);
+                    ints[0] = range[0];
+                    ints[1] = range[1];
                     return ints;
                 }
 
                 auto position = getInts(posTag);
                 auto size = getInts(sizeTag);
                 auto frame = RectangleI(position[0], position[1], size[0], size[1]);
-
-                tracef("Registering sprite called '%s', with frame of %s", name, frame);
                 atlas.register(name, frame);
             }
 
