@@ -4,6 +4,7 @@ private
 {
     import std.experimental.logger;
     import derelict.sfml2.system, derelict.sfml2.graphics;
+    import sdlang;
     import jarena.core, jarena.gameplay, jarena.graphics;
 }
 
@@ -277,6 +278,7 @@ class SpriteAtlas
         }
 
         ///
+        @safe
         void register(string spriteName, RectangleI frame)
         {
             // Enforce is used here, as this function will most likely be called using data from a file
@@ -299,6 +301,7 @@ class SpriteAtlas
         }
 
         ///
+        @safe
         RectangleI getSpriteRect(string spriteName)
         {
             import std.exception : enforce;
@@ -308,6 +311,7 @@ class SpriteAtlas
         }
 
         ///
+        @safe
         Sprite makeSprite(string spriteName, vec2 position = vec2(0, 0))
         {
             auto sprite = new Sprite(this._texture);
@@ -318,6 +322,7 @@ class SpriteAtlas
         }
 
         ///
+        @safe
         Sprite changeSprite(return Sprite sprite, string spriteName)
         {
             sprite.textureRect = this.getSpriteRect(spriteName);

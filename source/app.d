@@ -1,6 +1,6 @@
 import std.stdio;
 import derelict.sfml2.graphics, derelict.sfml2.system, derelict.sfml2.window;
-import jarena.core, jarena.graphics, jarena.gameplay;
+import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders;
 
 void main()
 {
@@ -66,9 +66,12 @@ class Test : Scene, IPostBox
         {
             writeln("Window Size: ", InitInfo.windowSize);
 
-            atlas = new SpriteAtlas(new Texture("Atlas.png"));
-            atlas.register("Tahn", RectangleI(512, 0, 32, 32));
-            atlas.register("TahnBig", RectangleI(256, 0, 256, 256));
+            //atlas = new SpriteAtlas(new Texture("Atlas.png"));
+            //atlas.register("Tahn", RectangleI(512, 0, 32, 32));
+            //atlas.register("TahnBig", RectangleI(256, 0, 256, 256));
+
+            import sdlang;
+            atlas = SdlangLoader.parseAtlasTag(parseFile("test atlas.sdl"), "Test Atlas", null, null, super.manager.commonTextures);
 
             this.tahn = new StaticObject(atlas.makeSprite("Tahn"), vec2(0), 1);
             super.register("Tahn", this.tahn);
