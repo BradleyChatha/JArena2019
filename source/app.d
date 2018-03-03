@@ -1,6 +1,6 @@
 import std.stdio;
 import derelict.sfml2.graphics, derelict.sfml2.system, derelict.sfml2.window;
-import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders;
+import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jarena.gameplay.gui;
 
 void main()
 {
@@ -51,6 +51,7 @@ class Test : Scene, IPostBox
     StaticObject tahn;
     MailTimer timer;
     SpriteAtlas atlas;
+    StackContainer gui;
 
     public
     {
@@ -80,6 +81,11 @@ class Test : Scene, IPostBox
 
             super.eventOffice.subscribe(69, (_, __){writeln("Tick");});
             this.timer = new MailTimer(super.eventOffice, new CommandMail(69), GameTime.fromSeconds(3));
+
+            this.gui = new StackContainer(vec2(10, 400));
+
+            new TestControl(vec2(0,0), vec2(50, 30), colour(128, 0, 128, 255)).parent = gui;
+            new TestControl(vec2(0,0), vec2(25, 60), colour(0, 128, 128, 255)).parent = gui;
         }
 
         void onSwap(PostOffice office)
@@ -123,6 +129,7 @@ class Test : Scene, IPostBox
 
             super.updateScene(window, deltaTime);
             super.renderScene(window);
+            this.gui.onRender(window);
         }
     }
 }
