@@ -8,40 +8,12 @@ void main()
     DerelictSFML2System.load();
     DerelictSFML2Window.load();
 
-    // test
-    auto window = new Window("Test Window", uvec2(860, 720));
-    auto office = new PostOffice();
-    auto input = new InputManager(office);
-    auto fps = new FPS();
-    auto scenes = new SceneManager(office, input);
+    auto engine = new Engine();
+    engine.onInit();
 
-    InitInfo.windowSize = window.size;
-
-    office.reserveTypes!(Window.Event);
-    office.subscribe(Window.Event.Close,
-    (po, m)
-    {
-        window.close();
-    });
-
-    scenes.register(new Test());
-    scenes.swap("Test");
-    while(window.isOpen)
-    {
-        fps.onUpdate();
-        input.onUpdate();
-        window.handleEvents(office);
-
-        if(input.isKeyDown(sfKeyEscape))
-            window.close();
-        
-        //writefln("Delta Time: %s | FPS: %s", fps.elapsedTime, fps.frameCount);
-
-        window.renderer.clear();
-        scenes.onUpdate(window, fps.elapsedTime);
-        window.renderer.drawRect(vec2(100, 50), vec2(200, 150));
-        window.renderer.displayChanges();
-    }
+    engine.scenes.register(new Test());
+    engine.scenes.swap("Test");
+    engine.doLoop();
 }
 
 class Test : Scene, IPostBox

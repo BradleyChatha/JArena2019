@@ -197,6 +197,90 @@ class MailTimer
     }
 }
 
+class Timers
+{
+    alias TimerEvent = void delegate();
+
+    private
+    {
+        struct After
+        {
+            GameTime delay;
+            GameTime lastUpdateTime;
+            TimerEvent func;
+        }
+
+        alias Every = After; // To make the different yet similar code more understandable.
+
+        After[] _after;
+        Every[] _every;
+        GameTime _currentTime;
+    }
+
+    public
+    {
+        /++
+         + After a certain delay, execute a function once.
+         +
+         + Params:
+         +  delay = The delay until the function is executed.
+         +  func = The function to execute.
+         + ++/
+        @safe
+        void after(GameTime delay, TimerEvent func) nothrow
+        {
+            this._after ~= After(delay, this._currentTime, func);
+        }
+
+        /++
+         + Every `delay`, execute a function.
+         +
+         + Params:
+         +  delay = The delay between every execution.
+         +  func = The function to execute.
+         + ++/
+        @safe
+        void every(GameTime delay, TimerEvent func) nothrow
+        {
+            this._every ~= Every(delay, this._currentTime, func);
+        }
+
+        ///
+        void onUpdate(GameTime deltaTime)
+        {
+            this._currentTime.handle.microseconds += deltaTime.asMicroseconds;
+
+            bool processEvent(ref After event)
+            {
+                auto elapsed = (this._currentTime.asMicroseconds - event.lastUpdateTime.asMicroseconds);
+                if(elapsed >= event.delay.asMicroseconds)
+                {
+                    event.lastUpdateTime = this._currentTime;
+                    event.func();
+                    return true;
+                }
+
+                return false;
+            }
+
+            for(size_t i = 0; i < this._after.length; i++)
+            {
+                auto eventCalled = processEvent(this._after[i]);
+                if(eventCalled)
+                {
+                    import std.algorithm    : countUntil;
+                    import jarena.core.post : removeAt;
+                    this._after.removeAt(this._after.countUntil!"a.func == b.func"(this._after[i]));
+                    i--;
+                }
+            }
+            
+            foreach(ref every; this._every)
+                processEvent(every); // TODO: Add a function to remove .every events
+        }
+    }
+}
+
 ///
 class FPS
 {
