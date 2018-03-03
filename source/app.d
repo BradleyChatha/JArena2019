@@ -52,6 +52,7 @@ class Test : Scene, IPostBox
     MailTimer timer;
     SpriteAtlas atlas;
     StackContainer gui;
+    StackContainer gui2;
 
     public
     {
@@ -76,16 +77,20 @@ class Test : Scene, IPostBox
 
             this.tahn = new StaticObject(atlas.makeSprite("Tahn"), vec2(0), 1);
             super.register("Tahn", this.tahn);
-            super.register("TahnBig", new StaticObject("TahnBig.png"));
-            super.register("Jash", new StaticObject("Jash.jpg", vec2(500, 0), 3));
+            super.register("TahnBig", new StaticObject(atlas.makeSprite("TahnBig")));
+            super.register("Jash", new StaticObject(atlas.makeSprite("Jash"), vec2(500, 0), 3));
 
             super.eventOffice.subscribe(69, (_, __){writeln("Tick");});
             this.timer = new MailTimer(super.eventOffice, new CommandMail(69), GameTime.fromSeconds(3));
 
-            this.gui = new StackContainer(vec2(10, 400));
+            this.gui  = new StackContainer(vec2(10, 400));
+            this.gui2 = new StackContainer(vec2(80, 400), StackContainer.Direction.Horizontal);
 
             new TestControl(vec2(0,0), vec2(50, 30), colour(128, 0, 128, 255)).parent = gui;
             new TestControl(vec2(0,0), vec2(25, 60), colour(0, 128, 128, 255)).parent = gui;
+
+            new TestControl(vec2(0,0), vec2(50, 30), colour(128, 0, 128, 255)).parent = gui2;
+            new TestControl(vec2(0,0), vec2(25, 60), colour(0, 128, 128, 255)).parent = gui2;
         }
 
         void onSwap(PostOffice office)
@@ -116,7 +121,7 @@ class Test : Scene, IPostBox
                 this.tahn.isHidden = false;
 
             if(super.manager.input.wasKeyTapped(sfKeyJ))
-                this.atlas.changeSprite(this.tahn, "TahnBig");
+                this.atlas.changeSprite(this.tahn, "Jash");
             if(super.manager.input.wasKeyTapped(sfKeyK))
                 this.atlas.changeSprite(this.tahn, "Tahn");
 
@@ -125,11 +130,20 @@ class Test : Scene, IPostBox
             if(super.manager.input.wasKeyTapped(sfKeyDown) && !super.manager.input.wasKeyRepeated(sfKeyDown))
                 this.tahn.yLevel = this.tahn.yLevel - 1;
 
+            if(super.manager.input.wasKeyTapped(sfKeyG) && !super.manager.input.wasKeyRepeated(sfKeyG))
+            {
+                if(gui.children.length == 1)
+                    gui2.children[0].parent = gui;
+                else
+                    gui.children[0].parent = gui2;
+            }
+
             this.timer.onUpdate(deltaTime);
 
             super.updateScene(window, deltaTime);
             super.renderScene(window);
             this.gui.onRender(window);
+            this.gui2.onRender(window);
         }
     }
 }
