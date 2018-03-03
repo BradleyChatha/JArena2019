@@ -52,7 +52,17 @@ class Window
          + Mail:
          +  `ValueMail`!sfKeyEvent
          + ++/
-        KeyUp = 102
+        KeyUp = 102,
+
+        /++
+         + Sent when text is entered into the window.
+         +
+         + See: https://www.sfml-dev.org/tutorials/2.0/window-events.php#the-textentered-event
+         +
+         + Mail:
+         +  `ValueMail!dchar`
+         + ++/
+        TextEntered = 103
     }
 
     private
@@ -64,6 +74,7 @@ class Window
         // we instead just reuse the objects.
         CommandMail             _commandMail; // Mail used for events without extra data (e.g. closing the window)
         ValueMail!sfKeyEvent    _keyMail;     // Mail used for key events.
+        ValueMail!dchar         _textMail;    // Mail used for the Text Entered event.
 
         @property @safe @nogc
         inout(sfRenderWindow*) handle() nothrow inout
@@ -100,6 +111,7 @@ class Window
             trace("Setting up reusuable mail");
             this._commandMail = new CommandMail(0);
             this._keyMail     = new ValueMail!sfKeyEvent(0, sfKeyEvent());
+            this._textMail    = new ValueMail!dchar(0, '\0');
         }
 
         ~this()
@@ -144,6 +156,13 @@ class Window
                         this._keyMail.type = Window.Event.KeyUp;
                         this._keyMail.value = e.key;
                         office.mail(this._keyMail);
+                        break;
+
+                    case sfEvtTextEntered:
+                        import std.conv : to;
+                        this._textMail.type = Window.Event.TextEntered;
+                        this._textMail.value = e.text.unicode.to!dchar;
+                        office.mail(this._textMail);
                         break;
 
                     default:
@@ -279,11 +298,11 @@ class InputManager
             assert(mail !is null);
 
             auto keyCode = mail.value.code;
-            assert(keyCode < this._keyStates.length);
+            //assert(keyCode < this._keyStates.length); //Caps lock is enough to crash it...
 
             auto state        = &this._keyStates[keyCode];
             state.wasRepeated = (state.isDown && m.type == Window.Event.KeyDown);
-            state.isDown      = (m.type == Window.Event.KeyDown) ? true : false;
+            state.isDown      = (m.type == Window.Event.KeyDown);
             state.wasTapped   = state.isDown;
 
             if(state.wasTapped)
