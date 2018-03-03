@@ -222,7 +222,7 @@ class StaticObject : DrawableObject
             if(this._sprite is null && this._texturePath !is null)
             {
                 // I really need to find a clean/shorter way to access that cache T.T
-                auto texture = super.scene.manager.commonTextures.loadOrGet(this._texturePath);
+                auto texture = super.scene.manager.cache.loadOrGet(this._texturePath);
                 this._sprite = new Sprite(texture);
                 this.sprite.position = this._initialPosition;
             }
@@ -258,6 +258,13 @@ Texture loadOrGet(Cache!Texture cache, string path)
     }
 
     return cached;
+}
+
+/// ditto
+Texture loadOrGet(Multi_Cache)(Multi_Cache cache, string path)
+if(isMultiCache!Multi_Cache)
+{
+    return cache.getCache!Texture.loadOrGet(path);
 }
 
 ///

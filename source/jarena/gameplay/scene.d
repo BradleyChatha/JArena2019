@@ -314,12 +314,14 @@ abstract class Scene
 /// Manages multiple `Scene`s and is required for certain utility functions that a `Scene` provides.
 class SceneManager
 {
+    alias SceneMultiCache = MultiCache!(Texture, SpriteAtlas);
+
     private
     {
         Cache!Scene     _scenes;                // Cache of all scenes.
         Scene           _currentScene;          // Current scene to update
         PostOffice      _eventOffice;           // Main event office.
-        Cache!Texture   _commonTextureCache;    // Shared texture cache.
+        SceneMultiCache _sharedCache;           // A MultiCache used to share assests between scenes.
         InputManager    _input;                 // Input Manager for the game's window.
     }
 
@@ -329,20 +331,20 @@ class SceneManager
          + Notes:
          +  If `input` is `null`, then one is created, and paired with the `eventOffice`.
          +
-         +  If `commonTextures` is `null`, then one is created.
+         +  If `cache` is `null`, then one is created.
          +
          + Params:
          +  eventOffice = A `PostOffice` that is recieving events from core game features, such as the `Window`.
          +  input = An `InputManager` that should be paried with the `eventOffice`.
-         +  commonTextures = A texture cache to contain common textures shared between all scenes.
+         +  cache = A multi cache to contain common assets shared between all scenes.
          + ++/
-        this(PostOffice eventOffice, InputManager input = null, Cache!Texture commonTextures = null)
+        this(PostOffice eventOffice, InputManager input = null, SceneMultiCache cache = null)
         {
             assert(eventOffice !is null);
 
             this._eventOffice = eventOffice;
             this._scenes = new Cache!Scene;
-            this._commonTextureCache = (commonTextures is null) ? new Cache!Texture() : commonTextures;
+            this._sharedCache = (cache is null) ? new SceneMultiCache() : cache;
             this._input = (input is null) ? new InputManager(eventOffice) : input;
         }
 
@@ -435,11 +437,20 @@ class SceneManager
             GC.collect(); // Forcing a collection here should hopefully make the GC feel less inclined to collect during a Scene's update function.
         }
 
-        /// A texture cache shared between all `Scene`s
+        /++
+         + A `MultiCache` shared between all `Scene`s, which should be used so things like
+         + `Texture`s and `SpriteAtlas`s are only loaded in once.
+         +
+         + Returns:
+         +  A `MultiCache` shared between all `Scene`s.
+         +
+         + See_Also:
+         +  `SceneManager.SceneMultiCache` to see what types are stored in the cache.
+         + ++/
         @property @safe @nogc
-        Cache!Texture commonTextures() nothrow
+        inout(SceneMultiCache) cache() nothrow inout
         {
-            return this._commonTextureCache;
+            return this._sharedCache;
         }
 
         /// An `InputManager` provided for easy access for `Scene`s to get user input.

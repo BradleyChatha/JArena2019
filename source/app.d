@@ -73,7 +73,7 @@ class Test : Scene, IPostBox
             //atlas.register("TahnBig", RectangleI(256, 0, 256, 256));
 
             import sdlang;
-            atlas = SdlangLoader.parseAtlasTag(parseFile("test atlas.sdl"), "Test Atlas", null, null, super.manager.commonTextures);
+            atlas = SdlangLoader.parseAtlasTag(parseFile("test atlas.sdl"), "Test Atlas", null, null, super.manager.cache.getCache!Texture);
 
             this.tahn = new StaticObject(atlas.makeSprite("Tahn"), vec2(0), 1);
             super.register("Tahn", this.tahn);
