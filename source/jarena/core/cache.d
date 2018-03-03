@@ -79,7 +79,7 @@ enum isMultiCache(T) = is(typeof(_isMultiCache(T.init)));
  + Notes:
  +  For each type given, a new `Cache` is instantiated and stored in this cache.
  +
- +  For each type given, two functions are generated.
+ +  For each type given, three functions are generated.
  +
  +  The first is a 'get' function which is identicle to the `Cache.get` function.
  +  However, you must specify which type you want to get using a template parameter.
@@ -87,6 +87,8 @@ enum isMultiCache(T) = is(typeof(_isMultiCache(T.init)));
  +
  +  The second is a 'getCache' function which returns the `Cache` for a certain type.
  +  e.g `multCache.getCache!int` returns the `Cache!int` that's being used internally.
+ +
+ +  The third is an `add` function, which is identicle to the `Cache.add` function.
  +
  + Params:
  +  Types = The types to store in this cache.
@@ -107,6 +109,7 @@ if(allSatisfy!(isType, Types))
     public
     {
         mixin(genConstructor());
+        mixin(msg, genAddFunctions());
         mixin(genGetFunctions());
         mixin(genGetCacheFunctions());
     }
@@ -138,6 +141,28 @@ if(allSatisfy!(isType, Types))
                     builder.putf("%s = new Cache!(%s)();", makeCacheName!type, fullyQualifiedName!type);
                 }
             });
+
+            return builder.data.idup;
+        }
+
+        dstring genAddFunctions()
+        {
+            import codebuilder;
+            auto builder = new CodeBuilder();
+
+            foreach(type; Types)
+            {
+                import std.traits : fullyQualifiedName;
+                auto cacheName = makeCacheName!type;
+                auto typeName  = fullyQualifiedName!type;
+
+                builder.putf("%s add(T = %s)(string key)", typeName, typeName);
+                builder.putf("if(is(T == %s))", typeName);
+                builder.putScope((_)
+                {
+                    builder.putf("return %s.add(key);", cacheName);
+                });
+            }
 
             return builder.data.idup;
         }

@@ -121,7 +121,7 @@ class Test : Scene, IPostBox
                 this.tahn.isHidden = false;
 
             if(super.manager.input.wasKeyTapped(sfKeyJ))
-                this.atlas.changeSprite(this.tahn, "Jash");
+                this.atlas.changeSprite(this.tahn, "TahnBig");
             if(super.manager.input.wasKeyTapped(sfKeyK))
                 this.atlas.changeSprite(this.tahn, "Tahn");
 
