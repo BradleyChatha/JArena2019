@@ -109,7 +109,7 @@ if(allSatisfy!(isType, Types))
     public
     {
         mixin(genConstructor());
-        mixin(msg, genAddFunctions());
+        mixin(genAddFunctions());
         mixin(genGetFunctions());
         mixin(genGetCacheFunctions());
     }
