@@ -16,3 +16,4 @@ trace.log
 trace.def
 trace.html
 profilegc.log
+bin/*.dll
