@@ -1,0 +1,7 @@
+animations {
+    file "Animations/test animation.sdl"
+}
+
+atlases {
+    file "Atlases/test atlas.sdl"
+}

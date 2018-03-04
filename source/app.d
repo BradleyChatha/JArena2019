@@ -39,20 +39,25 @@ class Test : Scene, IPostBox
         void onInit()
         {
             writeln("Window Size: ", InitInfo.windowSize);
+            SdlangLoader.parseDataListFile(super.manager.cache.getCache!AnimationInfo,
+                                           super.manager.cache.getCache!SpriteAtlas,
+                                           super.manager.cache.getCache!Texture);
 
             //atlas = new SpriteAtlas(new Texture("Atlas.png"));
             //atlas.register("Tahn", RectangleI(512, 0, 32, 32));
             //atlas.register("TahnBig", RectangleI(256, 0, 256, 256));
 
             import sdlang;
-            atlas = SdlangLoader.parseAtlasTag(parseFile("Data/test atlas.sdl"), "Test Atlas", "Data/", null, super.manager.cache.getCache!Texture);
+            //atlas = SdlangLoader.parseAtlasTag(parseFile("Data/Atlases/test atlas.sdl"), "Test Atlas", "Data/", null, super.manager.cache.getCache!Texture);
+            atlas = super.manager.cache.get!SpriteAtlas("Test Atlas");
 
             this.tahn = new StaticObject(atlas.makeSprite("Tahn"), vec2(0), 1);
             super.register("Tahn", this.tahn);
             super.register("TahnBig", new StaticObject(atlas.makeSprite("TahnBig")));
             super.register("Jash", new StaticObject(atlas.makeSprite("Jash"), vec2(500, 0), 3));
 
-            auto info = SdlangLoader.parseSpriteSheetAnimationTag(parseFile("Data/test animation.sdl"), "Test", "Data/", "Test Atlas", super.manager.cache);
+            //auto info = SdlangLoader.parseSpriteSheetAnimationTag(parseFile("Data/test animation.sdl"), "Data/", "Test Atlas", super.manager.cache);
+            auto info = super.manager.cache.get!AnimationInfo("Test Animation");
             super.register("AnimatedTahn", new AnimatedObject(new AnimatedSprite(info), vec2(500, 500)));
 
             super.eventOffice.subscribe(69, (_, __){writeln("Tick");});

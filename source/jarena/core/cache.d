@@ -23,15 +23,30 @@ if(isType!T)
         const TName = T.stringof;
 
         T[string] _cache;
+
+        @safe
+        string fixPathStrings(string key) const
+        {
+            import std.array     : array;
+            import std.algorithm : substitute, canFind;
+            import std.conv      : to;
+
+            if(key.canFind("\\"))
+                key = key.substitute('\\', '/').array.to!string;
+
+            return key;
+        }
     }
 
     public
     {
-        ///
+        /// Notes: Any escaped-backslashes '\\' will be replaced with foward slashes '/'
         T add(string key, T object)
         {
             import std.exception : enforce;
             import std.format    : format;
+
+            key = this.fixPathStrings(key);
 
             tracef("Cacheing the %s with the key of '%s'", TName, key);
             enforce((key in this._cache) is null, 
@@ -45,6 +60,8 @@ if(isType!T)
         T get(string key, T default_ = defaultValue)
         {
             tracef("Fetching the %s with the key of '%s' from the cache", TName, key);
+
+            key = this.fixPathStrings(key);
             
             auto ptr = (key in this._cache);
             if(ptr is null)
@@ -60,9 +77,10 @@ if(isType!T)
         }
 
         ///
-        @safe @nogc
-        bool hasKey(string key) nothrow const
+        @safe 
+        bool hasKey(string key) const
         {
+            key = this.fixPathStrings(key);
             return (key in this._cache) !is null;
         }
     }

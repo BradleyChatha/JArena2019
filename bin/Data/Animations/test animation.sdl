@@ -1,4 +1,6 @@
-atlasRef "test atlas.sdl"
+name "Test Animation"
+
+atlasRef "../Atlases/test atlas.sdl"
 spriteSheetRef "TahnAnimation"
 
 frameDelayMS 500

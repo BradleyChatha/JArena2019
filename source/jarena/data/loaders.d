@@ -12,7 +12,13 @@ class SdlangLoader
 
     private static
     {
-        SpriteAtlas loadAtlas(Cache!SpriteAtlas atlases, string atlasName)
+        struct FileInfo
+        {
+            string path;    // Path to the file.
+            string baseDir; // Directory the file is in.
+        }
+
+        SpriteAtlas loadAtlas(Cache!SpriteAtlas atlases, string atlasName, bool isPath = true)
         {
             import std.experimental.logger : tracef;
 
@@ -24,12 +30,49 @@ class SdlangLoader
                     tracef("Atlas is cached, returning...");
                     return cachedAtlas;
                 }
+
+                if(isPath)
+                {
+                    tracef("No atlas was cached with the key of '%s', but it is flagged as being a path, attempting to read a name from it to try again.", atlasName);
+                    auto tag = parseFile(atlasName);
+                    auto name = tag.getTagValue!string("name");
+
+                    if(name !is null)
+                    {
+                        tracef("A name tag was found, attempting to reload the atlas.");
+                        return loadAtlas(atlases, name, false);
+                    }
+                    else
+                        tracef("No name tag was found...");
+                }
+
                 tracef("No atlas was cached with the key of '%s', creating a new one...", atlasName);
             }
             else
                 tracef("The given atlas cache is null, so a new atlas will be loaded...");
 
             return null;
+        }
+
+        FileInfo[] getFileInfo(Tag tag, string baseDir)
+        {
+            import std.path : buildNormalizedPath, dirName;
+
+            FileInfo[] files;
+            switch(tag.name)
+            {
+                case "file":
+                    auto path = tag.expectValue!string;
+                    path = baseDir.buildNormalizedPath(path);
+
+                    files ~= FileInfo(path, path.dirName);
+                    break;
+
+                default:
+                    assert(0, "Bother to make an exception here");
+            }
+
+            return files;
         }
     }
 
@@ -46,7 +89,7 @@ class SdlangLoader
          +  It is $(B heavily) recommended that all paths that reference other files are kept relative to the directory
          +  where the atlas' .sdl file is, in order for certain data resolution features to work.
          +
-         +  If `atlasName` is `null`, then it is set to the same value as the noramlised texture path.
+         +  The 'name' tag in the given `tag` will be refferred to as `atlasName`.
          +
          +  If `atlases` is not `null`, then it is first checked to see if it contains an atlas with the key of `atlasName`.
          +  If an atlas is found (or if the cache is `null`), then it is returned with no modifications, otherwise the function proceeds to create a new atlas.
@@ -59,6 +102,7 @@ class SdlangLoader
          + Format:
          +  ```
          +  texture "path_to_texture/relative_to_baseDirectory.png" // Mandatory
+         +  name "Atlas name here" // Mandatory
          +
          +  // Any number of 'sprite' and 'spriteSheet' tags can be added
          +  sprite "name_of_sprite" {
@@ -84,7 +128,6 @@ class SdlangLoader
          +  The parsed/cached `SpriteAtlas`.
          + ++/
         SpriteAtlas parseAtlasTag(Tag tag, 
-                                  string atlasName = null, 
                                   string baseDirectory = null, 
                                   Cache!SpriteAtlas atlases = null, 
                                   Cache!Texture textures = null)
@@ -108,13 +151,11 @@ class SdlangLoader
 
             tracef("Loading sprite atlas using the texture at '%s'", texturePath);
 
-            if(atlasName is null)
-                atlasName = texturePath;
-
+            auto atlasName = tag.expectTagValue!string("name");
             tracef("atlasName = '%s'", atlasName);
 
             // Look through the caches for the atlas.
-            auto cached = SdlangLoader.loadAtlas(atlases, atlasName);
+            auto cached = SdlangLoader.loadAtlas(atlases, atlasName, false);
             if(cached !is null)
                 return cached;
 
@@ -190,6 +231,8 @@ class SdlangLoader
          + Parses a tag containing information about a sprite sheet based animation.
          +
          + Notes:
+         +  The `name` tag inside of the given `tag` will be reffered to as `animationName`.
+         +
          +  If `animations` is not `null`, and it contains an animation called `animationName`, then
          +  that animation is returned. Otherwise one is loaded in and then cached under `animationName`.
          +
@@ -205,6 +248,7 @@ class SdlangLoader
          +
          + Format:
          + ```
+         +  name "Name of animation" // Name of the animation. Mandatory.
          +  atlasRef "path_to_atlas_definition.sdl" // Path to the .sdl file defining the atlas that has the animation sheet. Mandatory. Relative to baseDirectory.
          +  spriteSheetRef "name_of_sheet_in_atlas" // The name of the animation sprite sprite sheet inside of the referenced atlas. Mandatory.
          +  frameDelayMS 0 // In milliseconds, how much time to wait before advancing between frames.
@@ -213,7 +257,6 @@ class SdlangLoader
          +
          + Params:
          +  tag = The tag to parse.
-         +  animationName = The name of the animation.
          +  baseDirectory = The directory to act as the base for the atlas path (see notes).
          +  animations = A cache of animations.
          +  atlasName = The name of the atlas to use (see notes).
@@ -223,8 +266,7 @@ class SdlangLoader
          + Returns:
          +  The parsed animation.
          + ++/
-        AnimationInfo parseSpriteSheetAnimationTag(Tag tag, 
-                                                   string animationName, 
+        AnimationInfo parseSpriteSheetAnimationTag(Tag tag,
                                                    string baseDirectory = null, 
                                                    Cache!AnimationInfo animations = null, 
                                                    string atlasName = null,
@@ -237,6 +279,7 @@ class SdlangLoader
             import std.file      : getcwd;
             import std.experimental.logger : trace, tracef;
 
+            auto animationName = tag.expectTagValue!string("name");
             if(animations !is null)
             {
                 tracef("Checking to see if the animation called '%s' is already cached...", animationName);
@@ -268,7 +311,7 @@ class SdlangLoader
 
             auto atlas = SdlangLoader.loadAtlas(atlases, atlasName);
             if(atlas is null)
-                atlas = SdlangLoader.parseAtlasTag(parseFile(atlasPath), atlasName, baseDirectory, atlases, textures);
+                atlas = SdlangLoader.parseAtlasTag(parseFile(atlasPath), baseDirectory, atlases, textures);
 
             // Find the sprite sheet
             auto sheetName = tag.expectTagValue!string("spriteSheetRef");
@@ -290,7 +333,6 @@ class SdlangLoader
 
         /// ditto
         AnimationInfo parseSpriteSheetAnimationTag(Multi_Cache)(Tag tag, 
-                                                                string animationName, 
                                                                 string baseDirectory = null, 
                                                                 string atlasName = null,
                                                                 Multi_Cache cache = null)
@@ -312,7 +354,51 @@ class SdlangLoader
                     textures = cache.getCache!Texture;
             }
 
-            return SdlangLoader.parseSpriteSheetAnimationTag(tag, animationName, baseDirectory, animations, atlasName, atlases, textures);
+            return SdlangLoader.parseSpriteSheetAnimationTag(tag, baseDirectory, animations, atlasName, atlases, textures);
+        }
+
+        /++
+         + Loads a list of files from a data file (hard coded to "Data/data.sdl" right now).  
+         + ++/
+        void parseDataListFile(Cache!AnimationInfo animations,
+                               Cache!SpriteAtlas atlases,
+                               Cache!Texture textures)
+        {
+            import std.algorithm : each;
+            import std.experimental.logger : tracef;
+
+            auto baseDir = "Data/";
+            auto dataTag = parseFile("Data/data.sdl");
+            auto animTag = dataTag.expectTag("animations");
+            auto atlasTag = dataTag.expectTag("atlases");
+
+            FileInfo[] atlasFiles;
+            FileInfo[] animFiles;
+
+            animTag.tags.each!(t => animFiles ~= SdlangLoader.getFileInfo(t, baseDir));
+            atlasTag.tags.each!(t => atlasFiles ~= SdlangLoader.getFileInfo(t, baseDir));
+
+            foreach(info; animFiles)
+            {
+                SdlangLoader.parseSpriteSheetAnimationTag(
+                    parseFile(info.path),
+                    info.baseDir,
+                    animations,
+                    null,
+                    atlases,
+                    textures
+                );
+            }
+
+            foreach(info; atlasFiles)
+            {
+                SdlangLoader.parseAtlasTag(
+                    parseFile(info.path),
+                    info.baseDir,
+                    atlases,
+                    textures
+                );
+            }
         }
     }
 }

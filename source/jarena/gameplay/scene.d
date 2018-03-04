@@ -314,7 +314,7 @@ abstract class Scene
 /// Manages multiple `Scene`s and is required for certain utility functions that a `Scene` provides.
 class SceneManager
 {
-    alias SceneMultiCache = MultiCache!(Texture, SpriteAtlas);
+    alias SceneMultiCache = MultiCache!(Texture, SpriteAtlas, AnimationInfo);
 
     private
     {
