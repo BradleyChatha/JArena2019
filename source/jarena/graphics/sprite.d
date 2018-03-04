@@ -151,159 +151,39 @@ class Sprite
     }
 }
 
-/++
- + A simple object that does nothing other than draw a sprite to the screen.
- +
- + This class is `alias this`ed to it's sprite, to make it work exactly like a normal sprite.
- + ++/
-class StaticObject : DrawableObject
-{
-    alias sprite this;
-
-    private
-    {
-        Sprite _sprite;
-        string _texturePath;
-        vec2   _initialPosition;
-    }
-
-    public
-    {
-        /++
-         + Creates a new StaticObject using a pre-made sprite.
-         +
-         + Params:
-         +  sprite = The Sprite to use.
-         +  position = The position to set the sprite at.
-         +  yLevel = The yLevel to use
-         + ++/
-        @safe
-        this(Sprite sprite, vec2 position = vec2(0), int yLevel = 0)
-        {
-            assert(sprite !is null);
-            this._sprite = sprite;
-            this.yLevel = yLevel;
-            sprite.position = position;
-        }
-
-        /++
-         + Creates a new StaticObject, alongside a new sprite, using a given texture.
-         +
-         + Params:
-         +  texture = The texture to use.
-         +  position = The position to set the sprite at.
-         +  yLevel = The yLevel to use
-         + ++/
-        @safe
-        this(Texture texture, vec2 position = vec2(0), int yLevel = 0)
-        {
-            this(new Sprite(texture), position, yLevel);
-        }
-
-        /++
-         + Creates a new StaticObject, using the texture provided by a path.
-         +
-         + Notes:
-         +  The texture, and therefor the StaticObject's sprite, won't be loaded until
-         +  the StaticObject is registered with a scene when this constructor is used.
-         +
-         + Params:
-         +  texturePath = The path to the texture to use.
-         +  position = The position to set the sprite at.
-         +  yLevel = The yLevel to use
-         + ++/
-        @safe
-        this(string texturePath, vec2 position = vec2(0), int yLevel = 0)
-        {
-            this._texturePath = texturePath;
-            this._initialPosition = position;
-            this.yLevel = yLevel;
-        }
-
-        /// The sprite for this StaticObject.
-        @property
-        Sprite sprite()
-        {
-            assert(this._sprite !is null, "The sprite hasn't been created yet.");
-            return this._sprite;
-        }
-    }
-
-    public override
-    {
-        ///
-        void onUnregister(PostOffice office){}
-        
-        ///
-        void onUpdate(Window window, GameTime deltaTime){}
-
-        ///
-        void onRegister(PostOffice office)
-        {
-            if(this._sprite is null && this._texturePath !is null)
-            {
-                // I really need to find a clean/shorter way to access that cache T.T
-                auto texture = super.scene.manager.cache.loadOrGet(this._texturePath);
-                this._sprite = new Sprite(texture);
-                this.sprite.position = this._initialPosition;
-            }
-        }
-
-        ///
-        void onRender(Window window)
-        {
-            window.renderer.drawSprite(this._sprite);
-        }
-    }
-}
-
-/++
- + Will either return a cached texture, or load in, cache, then return a texture.
- +
- + Params:
- +  cache = The texture cache to use.
- +  path = The path to the texture.
- +
- + Returns:
- +  If `cache` contains a texture called `path`, then the cached texture is returned.
- +
- +  Otherwise, a new texture is loaded in from the `path`, cached into the `cache`, and then returned.
- + ++/
-Texture loadOrGet(Cache!Texture cache, string path)
-{
-    auto cached = cache.get(path);
-    if(cached is null)
-    {
-        cached = new Texture(path);
-        cache.add(path, cached);
-    }
-
-    return cached;
-}
-
-/// ditto
-Texture loadOrGet(Multi_Cache)(Multi_Cache cache, string path)
-if(isMultiCache!Multi_Cache && canCache!(Multi_Cache, Texture))
-{
-    return cache.getCache!Texture.loadOrGet(path);
-}
-
 ///
 class SpriteAtlas
 {
+    /// Contains information about a sprite sheet
     struct Sheet
     {
+        /// How many columns the sheet has.
         uint columns;
+        
+        /// How many rows the sheet has.
         uint rows;
+
+        /// The frames that make up the sheet.
         RectangleI[] frames;
+
+        /// The atlas that the sheet belongs to.
         SpriteAtlas atlas;
         
+        ///
         @safe @nogc
         this(SpriteAtlas atlas) nothrow
         {
             this.atlas = atlas;
         }
 
+        /++
+         + Params:
+         +  column = The column of the frame.
+         +  row    = The row of the frame.
+         +
+         + Returns:
+         +  The frame at (column, row).
+         + ++/
         @safe
         const(RectangleI) getFrame(uint column, uint row) const
         {
@@ -316,6 +196,7 @@ class SpriteAtlas
             return this.frames[(this.columns * row) + column];
         }
 
+        ///
         @safe
         Sprite makeSprite(uint column, uint row, vec2 position = vec2(0))
         {
@@ -326,6 +207,7 @@ class SpriteAtlas
             return sprite;
         }
 
+        ///
         @safe
         Sprite changeSprite(return Sprite sprite, uint column, uint row)
         {
@@ -495,14 +377,23 @@ class SpriteAtlas
     }
 }
 
+/// Contains information about an animation.
 struct AnimationInfo
 {
+    /// The name of the animation.
     string name;
+
+    /// The sprite sheet that contains the animation's frames.
     SpriteAtlas.Sheet spriteSheet;
+
+    /// How many milliseconds to wait between each frame.
     uint delayPerFrameMS;
+
+    /// Whether the animation should repeat or not.
     bool repeat;
 }
 
+/// Adds the ability for a `Sprite` to be animated.
 class AnimatedSprite : Sprite
 {
     private
@@ -538,6 +429,9 @@ class AnimatedSprite : Sprite
             this._animations = animations;
         }
 
+        /++
+         + Updates the animation.
+         + ++/
         @safe
         void onUpdate(GameTime delta)
         {
@@ -570,6 +464,7 @@ class AnimatedSprite : Sprite
             }
         }
 
+        /// Sets the current animation of the sprite. (Doesn't require a cache).
         @property @safe
         void animation(AnimationInfo info)
         {
@@ -578,12 +473,14 @@ class AnimatedSprite : Sprite
             info.spriteSheet.changeSprite(this, 0, 0);
         }
 
+        /// Returns: The current animation of the sprite.
         @property @safe
         AnimationInfo animation()
         {
             return this._currentAnimation;
         }
 
+        /// Returns: Whether the current animation has finished. Always `false` for repeating animations.
         @property @safe @nogc
         bool finished() nothrow const
         {
@@ -654,4 +551,141 @@ class AnimatedObject : DrawableObject
             window.renderer.drawSprite(this._sprite);
         }
     }
+}
+
+/++
+ + A simple object that does nothing other than draw a sprite to the screen.
+ +
+ + This class is `alias this`ed to it's sprite, to make it work exactly like a normal sprite.
+ + ++/
+class StaticObject : DrawableObject
+{
+    alias sprite this;
+
+    private
+    {
+        Sprite _sprite;
+        string _texturePath;
+        vec2   _initialPosition;
+    }
+
+    public
+    {
+        /++
+         + Creates a new StaticObject using a pre-made sprite.
+         +
+         + Params:
+         +  sprite = The Sprite to use.
+         +  position = The position to set the sprite at.
+         +  yLevel = The yLevel to use
+         + ++/
+        @safe
+        this(Sprite sprite, vec2 position = vec2(0), int yLevel = 0)
+        {
+            assert(sprite !is null);
+            this._sprite = sprite;
+            this.yLevel = yLevel;
+            sprite.position = position;
+        }
+
+        /++
+         + Creates a new StaticObject, alongside a new sprite, using a given texture.
+         +
+         + Params:
+         +  texture = The texture to use.
+         +  position = The position to set the sprite at.
+         +  yLevel = The yLevel to use
+         + ++/
+        @safe
+        this(Texture texture, vec2 position = vec2(0), int yLevel = 0)
+        {
+            this(new Sprite(texture), position, yLevel);
+        }
+
+        /++
+         + Creates a new StaticObject, using the texture provided by a path.
+         +
+         + Notes:
+         +  The texture, and therefor the StaticObject's sprite, won't be loaded until
+         +  the StaticObject is registered with a scene when this constructor is used.
+         +
+         + Params:
+         +  texturePath = The path to the texture to use.
+         +  position = The position to set the sprite at.
+         +  yLevel = The yLevel to use
+         + ++/
+        @safe
+        this(string texturePath, vec2 position = vec2(0), int yLevel = 0)
+        {
+            this._texturePath = texturePath;
+            this._initialPosition = position;
+            this.yLevel = yLevel;
+        }
+
+        /// The sprite for this StaticObject.
+        @property
+        Sprite sprite()
+        {
+            assert(this._sprite !is null, "The sprite hasn't been created yet.");
+            return this._sprite;
+        }
+    }
+
+    public override
+    {
+        ///
+        void onUnregister(PostOffice office){}
+        
+        ///
+        void onUpdate(Window window, GameTime deltaTime){}
+
+        ///
+        void onRegister(PostOffice office)
+        {
+            if(this._sprite is null && this._texturePath !is null)
+            {
+                // I really need to find a clean/shorter way to access that cache T.T
+                auto texture = super.scene.manager.cache.loadOrGet(this._texturePath);
+                this._sprite = new Sprite(texture);
+                this.sprite.position = this._initialPosition;
+            }
+        }
+
+        ///
+        void onRender(Window window)
+        {
+            window.renderer.drawSprite(this._sprite);
+        }
+    }
+}
+
+/++
+ + Will either return a cached texture, or load in, cache, then return a texture.
+ +
+ + Params:
+ +  cache = The texture cache to use.
+ +  path = The path to the texture.
+ +
+ + Returns:
+ +  If `cache` contains a texture called `path`, then the cached texture is returned.
+ +
+ +  Otherwise, a new texture is loaded in from the `path`, cached into the `cache`, and then returned.
+ + ++/
+Texture loadOrGet(Cache!Texture cache, string path)
+{
+    auto cached = cache.get(path);
+    if(cached is null)
+    {
+        cached = new Texture(path);
+        cache.add(path, cached);
+    }
+
+    return cached;
+}
+
+/// ditto
+Texture loadOrGet(Multi_Cache)(Multi_Cache cache, string path)
+if(isMultiCache!Multi_Cache && canCache!(Multi_Cache, Texture))
+{
+    return cache.getCache!Texture.loadOrGet(path);
 }

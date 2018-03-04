@@ -83,7 +83,11 @@ class SdlangLoader
          + Returns:
          +  The parsed/cached `SpriteAtlas`.
          + ++/
-        SpriteAtlas parseAtlasTag(Tag tag, string atlasName = null, string baseDirectory = null, Cache!SpriteAtlas atlases = null, Cache!Texture textures = null)
+        SpriteAtlas parseAtlasTag(Tag tag, 
+                                  string atlasName = null, 
+                                  string baseDirectory = null, 
+                                  Cache!SpriteAtlas atlases = null, 
+                                  Cache!Texture textures = null)
         {
             // Here be a very long-tailed dragon.
             import std.algorithm : filter, all, map;
@@ -182,6 +186,43 @@ class SdlangLoader
             return atlas;
         }
 
+        /++
+         + Parses a tag containing information about a sprite sheet based animation.
+         +
+         + Notes:
+         +  If `animations` is not `null`, and it contains an animation called `animationName`, then
+         +  that animation is returned. Otherwise one is loaded in and then cached under `animationName`.
+         +
+         +  If `baseDirectory` is `null`, then it defaults to the current working directory.
+         +  See `parseSpriteAtlasTag` for a better description of this parameter.
+         +
+         +  If `atlasName` is `null`, then it is set to the normalised path of "baseDirectory/atlasRef".
+         +  Where 'atlasRef' is the value of the 'atlasRef' tag in the given `tag`.
+         +
+         +  If `atlases` is not `null`, then an atlas under `atlasName` will be looked for.
+         +  If no atlas is found, then `parseSpriteAtlasTag` is called using the normalised path
+         +  of "baseDirectory/atlasRef", with the appropriate parameters forwarded.
+         +
+         + Format:
+         + ```
+         +  atlasRef "path_to_atlas_definition.sdl" // Path to the .sdl file defining the atlas that has the animation sheet. Mandatory. Relative to baseDirectory.
+         +  spriteSheetRef "name_of_sheet_in_atlas" // The name of the animation sprite sprite sheet inside of the referenced atlas. Mandatory.
+         +  frameDelayMS 0 // In milliseconds, how much time to wait before advancing between frames.
+         +  repeat true // Whether the animation should repeat itself once it's finished.
+         + ```
+         +
+         + Params:
+         +  tag = The tag to parse.
+         +  animationName = The name of the animation.
+         +  baseDirectory = The directory to act as the base for the atlas path (see notes).
+         +  animations = A cache of animations.
+         +  atlasName = The name of the atlas to use (see notes).
+         +  atlases = A cache of atlases.
+         +  texutres = A cache of textures. (used only if an atlas needs to be loaded in with `parseSpriteAtlasTag`).
+         +
+         + Returns:
+         +  The parsed animation.
+         + ++/
         AnimationInfo parseSpriteSheetAnimationTag(Tag tag, 
                                                    string animationName, 
                                                    string baseDirectory = null, 
