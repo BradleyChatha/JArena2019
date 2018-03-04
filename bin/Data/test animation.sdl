@@ -1,7 +1,5 @@
-spriteSheetAnimation "Test" {
-    atlasRef "animation atlas.sdl"
-    spriteSheetRef "TahnAnimation"
+atlasRef "test atlas.sdl"
+spriteSheetRef "TahnAnimation"
 
-    frameDelayMS 500
-    repeat true
-}
+frameDelayMS 500
+repeat true

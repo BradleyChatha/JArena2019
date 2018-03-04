@@ -52,10 +52,8 @@ class Test : Scene, IPostBox
             super.register("TahnBig", new StaticObject(atlas.makeSprite("TahnBig")));
             super.register("Jash", new StaticObject(atlas.makeSprite("Jash"), vec2(500, 0), 3));
 
-            // temp
-                auto info = AnimationInfo("Test", atlas.getSpriteSheet("TahnAnimation"), 500, true);
-                super.register("AnimatedTahn", new AnimatedObject(new AnimatedSprite(info), vec2(500, 500)));
-            // end temp
+            auto info = SdlangLoader.parseSpriteSheetAnimationTag(parseFile("Data/test animation.sdl"), "Test", "Data/", "Test Atlas", super.manager.cache);
+            super.register("AnimatedTahn", new AnimatedObject(new AnimatedSprite(info), vec2(500, 500)));
 
             super.eventOffice.subscribe(69, (_, __){writeln("Tick");});
             this.timer = new MailTimer(super.eventOffice, new CommandMail(69), GameTime.fromSeconds(3));

@@ -10,6 +10,29 @@ class SdlangLoader
     import jarena.graphics;
     import sdlang;
 
+    private static
+    {
+        SpriteAtlas loadAtlas(Cache!SpriteAtlas atlases, string atlasName)
+        {
+            import std.experimental.logger : tracef;
+
+            if(atlases !is null)
+            {
+                auto cachedAtlas = atlases.get(atlasName, null);
+                if(cachedAtlas !is null)
+                {
+                    tracef("Atlas is cached, returning...");
+                    return cachedAtlas;
+                }
+                tracef("No atlas was cached with the key of '%s', creating a new one...", atlasName);
+            }
+            else
+                tracef("The given atlas cache is null, so a new atlas will be loaded...");
+
+            return null;
+        }
+    }
+
     public static
     {
         /++
@@ -41,6 +64,12 @@ class SdlangLoader
          +  sprite "name_of_sprite" {
          +      position 0, 0 // x, y. The top-left corner of the sprite's first pixel. Mandatory
          +      size 0, 0     // width, height. The size of the sprite. Mandatory
+         +  }
+         +
+         +  spriteSheet "name_of_sheet" {
+         +      position 0 0
+         +      size 0 0
+         +      frameSize 0 0
          +  }
          +  ```
          +
@@ -81,18 +110,9 @@ class SdlangLoader
             tracef("atlasName = '%s'", atlasName);
 
             // Look through the caches for the atlas.
-            if(atlases !is null)
-            {
-                auto cachedAtlas = atlases.get(atlasName, null);
-                if(cachedAtlas !is null)
-                {
-                    tracef("Atlas is cached, returning...");
-                    return cachedAtlas;
-                }
-                tracef("No atlas was cached with the key of '%s', creating a new one...", atlasName);
-            }
-            else
-                tracef("The given atlas cache is null, so a new atlas will be loaded...");
+            auto cached = SdlangLoader.loadAtlas(atlases, atlasName);
+            if(cached !is null)
+                return cached;
 
             // Load the texture.
             Texture texture;
@@ -160,6 +180,94 @@ class SdlangLoader
                 atlases.add(atlasName, atlas);
 
             return atlas;
+        }
+
+        AnimationInfo parseSpriteSheetAnimationTag(Tag tag, 
+                                                   string animationName, 
+                                                   string baseDirectory = null, 
+                                                   Cache!AnimationInfo animations = null, 
+                                                   string atlasName = null,
+                                                   Cache!SpriteAtlas atlases = null,
+                                                   Cache!Texture textures = null)
+        {
+            import std.exception : enforce;
+            import std.path      : buildNormalizedPath;
+            import std.format    : format;
+            import std.file      : getcwd;
+            import std.experimental.logger : trace, tracef;
+
+            if(animations !is null)
+            {
+                tracef("Checking to see if the animation called '%s' is already cached...", animationName);
+                auto cachedAni = animations.get(animationName);
+                if(cachedAni != AnimationInfo.init)
+                {
+                    trace("The animation was cached, returning...");
+                    return cachedAni;
+                }
+                else
+                    trace("The animation is not cached, so a new animation will be loaded in");
+            }
+            else
+                trace("The animation cache is null, so a new animation will be loaded in");
+
+            // Load in the atlas.
+            if(baseDirectory is null)
+                baseDirectory = getcwd();
+
+            auto atlasPath = tag.expectTagValue!string("atlasRef");
+                 atlasPath = buildNormalizedPath(baseDirectory, atlasPath);
+
+            tracef("Loading sprite atlas from it's .sdl definition at path: %s", atlasPath);
+
+            if(atlasName is null)
+                atlasName = atlasPath;
+
+            tracef("atlasName = %s", atlasName);
+
+            auto atlas = SdlangLoader.loadAtlas(atlases, atlasName);
+            if(atlas is null)
+                atlas = SdlangLoader.parseAtlasTag(parseFile(atlasPath), atlasName, baseDirectory, atlases, textures);
+
+            // Find the sprite sheet
+            auto sheetName = tag.expectTagValue!string("spriteSheetRef");
+            tracef("Animation is using sprite sheet called '%s'", sheetName);
+            auto sheet = atlas.getSpriteSheet(sheetName);
+
+            // Load in the extra animation info
+            auto frameDelayMS = tag.expectTagValue!int("frameDelayMS");
+            auto repeat = tag.expectTagValue!bool("repeat");
+
+            tracef("Animation %s and has a frame delay of %sms", repeat ? "is repeating" : "does not repeat", frameDelayMS);
+
+            return AnimationInfo(animationName, sheet, frameDelayMS, repeat);
+        }
+
+        /// ditto
+        AnimationInfo parseSpriteSheetAnimationTag(Multi_Cache)(Tag tag, 
+                                                                string animationName, 
+                                                                string baseDirectory = null, 
+                                                                string atlasName = null,
+                                                                Multi_Cache cache = null)
+        if(isMultiCache!Multi_Cache)
+        {
+            Cache!AnimationInfo animations;
+            Cache!SpriteAtlas atlases;
+            Cache!Texture textures;
+
+            if(cache !is null)
+            {
+                static if(canCache!(Multi_Cache, AnimationInfo))
+                    animations = cache.getCache!AnimationInfo;
+
+                static if(canCache!(Multi_Cache, SpriteAtlas))
+                    atlases = cache.getCache!SpriteAtlas;
+
+                static if(canCache!(Multi_Cache, Texture))
+                    textures = cache.getCache!Texture;
+            }
+
+            return SdlangLoader.parseSpriteSheetAnimationTag(tag, animationName, baseDirectory, animations, atlasName, atlases, textures);
         }
     }
 }

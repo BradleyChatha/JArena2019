@@ -583,6 +583,12 @@ class AnimatedSprite : Sprite
         {
             return this._currentAnimation;
         }
+
+        @property @safe @nogc
+        bool finished() nothrow const
+        {
+            return this._finished;
+        }
     }
 }
 
