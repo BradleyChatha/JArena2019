@@ -4,9 +4,10 @@ private
 {
     import std.experimental.logger;
     import derelict.sfml2.graphics, derelict.sfml2.system;
-    import jarena.core, jarena.graphics;
+    import jarena.core, jarena.graphics, jarena.gameplay;
 }
 
+///
 class Font
 {
     private
@@ -59,6 +60,7 @@ class Text
         dchar[] _unicodeBuffer;
         char[]  _asciiBuffer;
 
+        @trusted
         this(Font font, vec2 position, uint charSize, uvec4b colour)
         {
             assert(font !is null);
@@ -76,6 +78,7 @@ class Text
     public
     {
         ///
+        @trusted
         this(Font font, const(dchar[]) text, vec2 position = vec2(0), uint charSize = 14, uvec4b colour = jarena.core.colour(0, 0, 0, 255))
         {
             this(font, position, charSize, colour);
@@ -83,6 +86,7 @@ class Text
         }
 
         ///
+        @trusted
         this(Font font, const(char[]) text, vec2 postion = vec2(0), uint charSize = 14, uvec4b colour = jarena.core.colour(0, 0, 0, 255))
         {
             this(font, position, charSize, colour);
@@ -151,6 +155,8 @@ class Text
         @property @trusted
         void unicodeText(const(dchar[]) text) nothrow
         {
+            this._asciiBuffer.length = 0;
+
             this._unicodeBuffer.length = text.length + 1;
             this._unicodeBuffer[0..$-1] = text[];
             this._unicodeBuffer[$-1] = '\0';
@@ -168,6 +174,8 @@ class Text
         @property @trusted
         void asciiText(const(char[]) text) nothrow
         {
+            this._unicodeBuffer.length = 0;
+
             this._asciiBuffer.length = text.length + 1;
             this._asciiBuffer[0..$-1] = text[];
             this._asciiBuffer[$-1] = '\0';
@@ -180,6 +188,66 @@ class Text
         {
             assert(this._handle !is null);
             return this._handle;
+        }
+    }
+}
+
+/++
+ + A simple object that does nothing other than draw text.
+ +
+ + This class is `alias this`ed to it's `Text`, to make it work exactly like a normal sprite.
+ + ++/
+class TextObject : DrawableObject
+{
+    alias text this;
+
+    private
+    {
+        Text _text;
+    }
+
+    public
+    {
+        /++
+         + Creates a new TextObject using a pre-made `Text`.
+         +
+         + Params:
+         +  text = The Text to use.
+         +  position = The position to set the text at.
+         +  yLevel = The yLevel to use
+         + ++/
+        @safe
+        this(Text text, int yLevel = 0)
+        {
+            assert(text !is null);
+            this._text = text;
+            this.yLevel = yLevel;
+        }
+
+        /// The text for this TextOBject.
+        @property
+        Text text()
+        {
+            assert(this._text !is null, "The text hasn't been created yet.");
+            return this._text;
+        }
+    }
+
+    public override
+    {
+        ///
+        void onUnregister(PostOffice office){}
+        
+        ///
+        void onUpdate(Window window, GameTime deltaTime){}
+
+        ///
+        void onRegister(PostOffice office){}
+
+        ///
+        void onRender(Window window)
+        {
+            window.renderer.drawText(this.text);
         }
     }
 }
