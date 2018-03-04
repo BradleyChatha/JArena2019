@@ -18,6 +18,11 @@ class SdlangLoader
             string baseDir; // Directory the file is in.
         }
 
+        // Tries to load `atlasName` from cache.
+        //      If it fails, and isPath is true.
+        //          Use `atlasName` as a path, and load a .sdl file from it.
+        //          Look for a 'name' tag in the loaded file, and re-call this function using it as the `atlasName`.
+        //      Otherwise, return null.
         SpriteAtlas loadAtlas(Cache!SpriteAtlas atlases, string atlasName, bool isPath = true)
         {
             import std.experimental.logger : tracef;
@@ -54,6 +59,7 @@ class SdlangLoader
             return null;
         }
 
+        // Used to parse 'file' and 'glob' tags, getting any useful data from them.
         FileInfo[] getFileInfo(Tag tag, string baseDir)
         {
             import std.path : buildNormalizedPath, dirName;
@@ -152,7 +158,7 @@ class SdlangLoader
             tracef("Loading sprite atlas using the texture at '%s'", texturePath);
 
             auto atlasName = tag.expectTagValue!string("name");
-            tracef("atlasName = '%s'", atlasName);
+            tracef("The name of this atlas is '%s'", atlasName);
 
             // Look through the caches for the atlas.
             auto cached = SdlangLoader.loadAtlas(atlases, atlasName, false);
@@ -359,6 +365,8 @@ class SdlangLoader
 
         /++
          + Loads a list of files from a data file (hard coded to "Data/data.sdl" right now).  
+         +
+         + All files are cached and parsed as usual.
          + ++/
         void parseDataListFile(Cache!AnimationInfo animations,
                                Cache!SpriteAtlas atlases,
