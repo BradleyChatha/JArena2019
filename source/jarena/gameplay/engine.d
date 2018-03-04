@@ -7,6 +7,10 @@ private
 
 const WINDOW_NAME = "JArena";
 const WINDOW_SIZE = uvec2(860, 720);
+const DEBUG_FONT = "Data/Fonts/crackdown.ttf";
+const DEBUG_FONT_SIZE = 14;
+const DEBUG_TEXT_POSITION = vec2(0);
+const DEBUG_TEXT_COLOUR = colour(128, 128, 128, 255);
 
 final class Engine
 {
@@ -24,7 +28,10 @@ final class Engine
         SceneManager _scenes;
         Timers       _timers;
 
-        MailTimer _temp;
+        // Debug text
+        char[512]  _debugBuffer;
+        Font       _debugFont;
+        Text       _debugText;
     }
 
     public
@@ -39,6 +46,8 @@ final class Engine
             this._fps           = new FPS();
             this._scenes        = new SceneManager(this._eventOffice, this._input);
             this._timers        = new Timers();
+            this._debugFont     = new Font(DEBUG_FONT);
+            this._debugText     = new Text(this._debugFont, ""d, DEBUG_TEXT_POSITION, DEBUG_FONT_SIZE, DEBUG_TEXT_COLOUR);
 
             // Setup init info
             InitInfo.windowSize = this._window.size;
@@ -48,8 +57,12 @@ final class Engine
             this._eventOffice.reserveTypes!(Engine.Event);
 
             // Add in other stuff
-            import std.stdio : writeln;
-            this.events.subscribe(Event.UpdateFPSDisplay, (_, __){ writeln("FPS: ", this._fps.frameCount, " | Delta: ", this._fps.elapsedTime); });
+            this.events.subscribe(Event.UpdateFPSDisplay, (_, __)
+            {
+                import std.format : sformat;
+                this._debugText.asciiText = sformat(this._debugBuffer, "FPS: %s\nFrameTime: %sms", 
+                                                    this._fps.frameCount, this._fps.elapsedTime.asMilliseconds);
+            });
 
             debug this.timers.every(GameTime.fromSeconds(1), (){this.events.mailCommand(Event.UpdateFPSDisplay);});
         }
@@ -69,6 +82,7 @@ final class Engine
             this._window.renderer.clear();
             this._timers.onUpdate(this._fps.elapsedTime);
             this._scenes.onUpdate(this._window, this._fps.elapsedTime);
+            this._window.renderer.drawText(this._debugText);
             this._window.renderer.displayChanges();
         }
 
