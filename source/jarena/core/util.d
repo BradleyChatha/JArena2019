@@ -64,6 +64,12 @@ if(isSFMLRect!sfRect && isJArenaRect!jarenaRect)
     return jarenaRect(V(rect.left, rect.top), V(rect.width, rect.height));
 }
 
+/// Implementation of the `to` function for - sfColor -> uvec4b
+uvec4b to(T : uvec4b)(sfColor colour)
+{
+    return uvec4b(cast(ubyte)colour.r, cast(ubyte)colour.g, cast(ubyte)colour.b, cast(ubyte)colour.a);
+}
+
 /++
  + To get around limitations with how DLSL's `Vector` is implemented (or rather, how D works), this function is provided
  + to easily create a `uvec4b`, which is really only used for colours.

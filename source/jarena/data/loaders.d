@@ -407,6 +407,10 @@ class SdlangLoader
                     textures
                 );
             }
+
+            // The amount of extra memory parts of this code can use is scary
+            import core.memory : GC;
+            GC.collect();
         }
     }
 }

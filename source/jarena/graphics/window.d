@@ -6,7 +6,7 @@ private
     import std.experimental.logger;
     import derelict.sfml2.system, derelict.sfml2.window, derelict.sfml2.graphics;
     import jarena.core.maths, jarena.core.post, jarena.core.util;
-    import jarena.graphics.sprite;
+    import jarena.graphics.sprite, jarena.graphics.text;
     
     enum BITS_PER_PIXEL = 32;
     enum FPS            = 60;
@@ -273,6 +273,13 @@ class Renderer
         {
             assert(sprite !is null);
             sfRenderWindow_drawSprite(this._window.handle, sprite.handle, null);
+        }
+
+        /// Draws `Text` to the screen.
+        void drawText(Text text)
+        {
+            assert(text !is null);
+            sfRenderWindow_drawText(this._window.handle, text.handle, null);
         }
     }
 }

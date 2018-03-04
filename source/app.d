@@ -46,8 +46,6 @@ class Test : Scene, IPostBox
             //atlas = new SpriteAtlas(new Texture("Atlas.png"));
             //atlas.register("Tahn", RectangleI(512, 0, 32, 32));
             //atlas.register("TahnBig", RectangleI(256, 0, 256, 256));
-
-            import sdlang;
             //atlas = SdlangLoader.parseAtlasTag(parseFile("Data/Atlases/test atlas.sdl"), "Test Atlas", "Data/", null, super.manager.cache.getCache!Texture);
             atlas = super.manager.cache.get!SpriteAtlas("Test Atlas");
 
@@ -59,9 +57,6 @@ class Test : Scene, IPostBox
             //auto info = SdlangLoader.parseSpriteSheetAnimationTag(parseFile("Data/test animation.sdl"), "Data/", "Test Atlas", super.manager.cache);
             auto info = super.manager.cache.get!AnimationInfo("Test Animation");
             super.register("AnimatedTahn", new AnimatedObject(new AnimatedSprite(info), vec2(500, 500)));
-
-            super.eventOffice.subscribe(69, (_, __){writeln("Tick");});
-            this.timer = new MailTimer(super.eventOffice, new CommandMail(69), GameTime.fromSeconds(3));
 
             this.gui  = new StackContainer(vec2(10, 400));
             this.gui2 = new StackContainer(vec2(80, 400), StackContainer.Direction.Horizontal);
@@ -117,8 +112,6 @@ class Test : Scene, IPostBox
                 else
                     gui.children[0].parent = gui2;
             }
-
-            this.timer.onUpdate(deltaTime);
 
             super.updateScene(window, deltaTime);
             super.renderScene(window);

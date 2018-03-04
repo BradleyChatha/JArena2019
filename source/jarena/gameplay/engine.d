@@ -23,6 +23,10 @@ final class Engine
         FPS          _fps;
         SceneManager _scenes;
         Timers       _timers;
+        
+        // Temp
+        Font _font;
+        Text _text;
 
         MailTimer _temp;
     }
@@ -39,6 +43,8 @@ final class Engine
             this._fps           = new FPS();
             this._scenes        = new SceneManager(this._eventOffice, this._input);
             this._timers        = new Timers();
+            this._font          = new Font("Data/Fonts/crackdown.ttf");
+            this._text          = new Text(this._font, "A B C D E F G 1 2 3"d, vec2(0,500), 14, colour(128, 0, 128, 255));
 
             // Setup init info
             InitInfo.windowSize = this._window.size;
@@ -49,7 +55,7 @@ final class Engine
 
             // Add in other stuff
             import std.stdio : writeln;
-            this.events.subscribe(Event.UpdateFPSDisplay, (_, __){ writeln("FPS: ", this._fps.frameCount); });
+            this.events.subscribe(Event.UpdateFPSDisplay, (_, __){ writeln("FPS: ", this._fps.frameCount, " | Delta: ", this._fps.elapsedTime); });
 
             debug this.timers.every(GameTime.fromSeconds(1), (){this.events.mailCommand(Event.UpdateFPSDisplay);});
         }
@@ -69,6 +75,7 @@ final class Engine
             this._window.renderer.clear();
             this._timers.onUpdate(this._fps.elapsedTime);
             this._scenes.onUpdate(this._window, this._fps.elapsedTime);
+            this._window.renderer.drawText(this._text);
             this._window.renderer.displayChanges();
         }
 
