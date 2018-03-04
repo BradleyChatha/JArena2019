@@ -20,7 +20,7 @@ if(isType!T)
     
     private
     {
-        const TName = fullyQualifiedName!T;
+        const TName = T.stringof;
 
         T[string] _cache;
     }

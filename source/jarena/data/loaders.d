@@ -62,14 +62,14 @@ class SdlangLoader
          +
          +  // Any number of 'sprite' and 'spriteSheet' tags can be added
          +  sprite "name_of_sprite" {
-         +      position 0, 0 // x, y. The top-left corner of the sprite's first pixel. Mandatory
-         +      size 0, 0     // width, height. The size of the sprite. Mandatory
+         +      position 0 0 // x, y. The top-left corner of the sprite's first pixel. Mandatory
+         +      size 0 0     // width, height. The size of the sprite. Mandatory
          +  }
          +
          +  spriteSheet "name_of_sheet" {
-         +      position 0 0
-         +      size 0 0
-         +      frameSize 0 0
+         +      position 0 0    // x, y. The top-left corner of the sprite sheet. Mandatory
+         +      size 0 0        // width, height. The size of the sheet. Mandatory
+         +      frameSize 0 0   // width, height. The size of a single frame in the sheet. Mandatory
          +  }
          +  ```
          +
@@ -238,9 +238,13 @@ class SdlangLoader
             auto frameDelayMS = tag.expectTagValue!int("frameDelayMS");
             auto repeat = tag.expectTagValue!bool("repeat");
 
-            tracef("Animation %s and has a frame delay of %sms", repeat ? "is repeating" : "does not repeat", frameDelayMS);
+            tracef("The animation %s and has a frame delay of %sms", repeat ? "is repeating" : "does not repeat", frameDelayMS);
 
-            return AnimationInfo(animationName, sheet, frameDelayMS, repeat);
+            auto animation = AnimationInfo(animationName, sheet, frameDelayMS, repeat);
+            if(animations !is null)
+                animations.add(animationName, animation);
+
+            return animation;
         }
 
         /// ditto
