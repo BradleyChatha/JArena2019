@@ -34,6 +34,7 @@ abstract class Scene
         @safe
         void registerDrawable(DrawableObject object)
         {
+            import std.range : retro, enumerate;
             object._flags |= GameObject.Flags.IS_AUTO_RENDERED;
 
             bool wasInsertion = false;
@@ -44,8 +45,8 @@ abstract class Scene
                     auto toMove = this._drawOrder[i..$];
                     this._drawOrder.length += 1;
 
-                    foreach(i2, spr; toMove)
-                        this._drawOrder[i + (i2 + 1)] = spr;
+                    foreach(i2, spr; toMove.retro.enumerate)
+                        this._drawOrder[($ - 1) - i2] = spr;
 
                     this._drawOrder[i] = object;
                     wasInsertion = true;
@@ -56,6 +57,14 @@ abstract class Scene
             // If there was no insertion, then that means there's no obbjects with a higher y-level than this object.
             if(!wasInsertion)
                 this._drawOrder ~= object;
+
+            debug
+            {
+                import std.algorithm : map, joiner;
+
+                auto names = this._drawOrder.map!(o => "\"" ~ o.name ~ "\"").joiner(", ");
+                tracef("<IM HERE PLS LOOK AT ME> Draw Order after addition: [%s]", names);
+            }
         }
 
         @trusted
