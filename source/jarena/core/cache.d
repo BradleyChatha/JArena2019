@@ -73,6 +73,9 @@ private void _isMultiCache(Types...)(MultiCache!Types) {}
 ///
 enum isMultiCache(T) = is(typeof(_isMultiCache(T.init)));
 
+///
+enum canCache(C, T) = isMultiCache!C && is(typeof(C.init.getCache!T));
+
 /++
  + A cache that holds multiple different caches for different types.
  +
@@ -231,4 +234,10 @@ version(release)
 {
 }
 else
+{
     alias __TestCache = MultiCache!(int, string, float);
+    static assert(canCache!(__TestCache, string));
+    static assert(canCache!(__TestCache, int));
+    static assert(canCache!(__TestCache, float));
+    static assert(!canCache!(__TestCache, __TestCache));
+}

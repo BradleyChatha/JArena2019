@@ -1,0 +1,7 @@
+spriteSheetAnimation "Test" {
+    atlasRef "animation atlas.sdl"
+    spriteSheetRef "TahnAnimation"
+
+    frameDelayMS 500
+    repeat true
+}

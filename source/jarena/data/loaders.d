@@ -37,7 +37,7 @@ class SdlangLoader
          +  ```
          +  texture "path_to_texture/relative_to_baseDirectory.png" // Mandatory
          +
-         +  // Any number of 'sprite' tags can be added
+         +  // Any number of 'sprite' and 'spriteSheet' tags can be added
          +  sprite "name_of_sprite" {
          +      position 0, 0 // x, y. The top-left corner of the sprite's first pixel. Mandatory
          +      size 0, 0     // width, height. The size of the sprite. Mandatory
@@ -113,6 +113,18 @@ class SdlangLoader
                 texture = new Texture(texturePath);
             }
 
+            int[2] getInts(Tag tag)
+            {
+                enforce(tag.values.all!(v => v.type == typeid(int)), 
+                        "[%s] All values of the '%s' tag must be integers.".format(tag.location, tag.name));
+
+                int[2] ints;
+                auto range = tag.values.map!(v => v.get!int).takeExactly(2);
+                ints[0] = range[0];
+                ints[1] = range[1];
+                return ints;
+            }
+
             // Begin to create the new atlas.
             auto atlas = new SpriteAtlas(texture);
 
@@ -123,22 +135,25 @@ class SdlangLoader
                 auto posTag = spriteTag.expectTag("position");
                 auto sizeTag = spriteTag.expectTag("size");
 
-                int[2] getInts(Tag tag)
-                {
-                    enforce(tag.values.all!(v => v.type == typeid(int)), 
-                            "[%s] All values of the '%s' tag must be integers.".format(tag.location, tag.name));
-
-                    int[2] ints;
-                    auto range = tag.values.map!(v => v.get!int).takeExactly(2);
-                    ints[0] = range[0];
-                    ints[1] = range[1];
-                    return ints;
-                }
-
                 auto position = getInts(posTag);
                 auto size = getInts(sizeTag);
                 auto frame = RectangleI(position[0], position[1], size[0], size[1]);
                 atlas.register(name, frame);
+            }
+
+            // Load in sprite sheets
+            foreach(sheetTag; tag.tags.filter!(t => t.name == "spriteSheet"))
+            {
+                auto name = sheetTag.expectValue!string;
+                auto posTag = sheetTag.expectTag("position");
+                auto sizeTag = sheetTag.expectTag("size");
+                auto frameTag = sheetTag.expectTag("frameSize");
+
+                auto position = getInts(posTag);
+                auto size = getInts(sizeTag);
+                auto frameSize = getInts(frameTag);
+                auto frame = RectangleI(position[0], position[1], size[0], size[1]);
+                atlas.registerSpriteSheet(name, frame, ivec2(frameSize[0], frameSize[1]));
             }
 
             if(atlases !is null)

@@ -45,12 +45,17 @@ class Test : Scene, IPostBox
             //atlas.register("TahnBig", RectangleI(256, 0, 256, 256));
 
             import sdlang;
-            atlas = SdlangLoader.parseAtlasTag(parseFile("test atlas.sdl"), "Test Atlas", null, null, super.manager.cache.getCache!Texture);
+            atlas = SdlangLoader.parseAtlasTag(parseFile("Data/test atlas.sdl"), "Test Atlas", "Data/", null, super.manager.cache.getCache!Texture);
 
             this.tahn = new StaticObject(atlas.makeSprite("Tahn"), vec2(0), 1);
             super.register("Tahn", this.tahn);
             super.register("TahnBig", new StaticObject(atlas.makeSprite("TahnBig")));
             super.register("Jash", new StaticObject(atlas.makeSprite("Jash"), vec2(500, 0), 3));
+
+            // temp
+                auto info = AnimationInfo("Test", atlas.getSpriteSheet("TahnAnimation"), 500, true);
+                super.register("AnimatedTahn", new AnimatedObject(new AnimatedSprite(info), vec2(500, 500)));
+            // end temp
 
             super.eventOffice.subscribe(69, (_, __){writeln("Tick");});
             this.timer = new MailTimer(super.eventOffice, new CommandMail(69), GameTime.fromSeconds(3));
@@ -58,11 +63,11 @@ class Test : Scene, IPostBox
             this.gui  = new StackContainer(vec2(10, 400));
             this.gui2 = new StackContainer(vec2(80, 400), StackContainer.Direction.Horizontal);
 
-            new TestControl(vec2(0,0), vec2(50, 30), colour(128, 0, 128, 255)).parent = gui;
-            new TestControl(vec2(0,0), vec2(25, 60), colour(0, 128, 128, 255)).parent = gui;
+            gui.addChild(new TestControl(vec2(0,0), vec2(50, 30), colour(128, 0, 128, 255)));
+            gui.addChild(new TestControl(vec2(0,0), vec2(25, 60), colour(0, 128, 128, 255)));
 
-            new TestControl(vec2(0,0), vec2(50, 30), colour(128, 0, 128, 255)).parent = gui2;
-            new TestControl(vec2(0,0), vec2(25, 60), colour(0, 128, 128, 255)).parent = gui2;
+            gui2.addChild(new TestControl(vec2(0,0), vec2(50, 30), colour(128, 0, 128, 255)));
+            gui2.addChild(new TestControl(vec2(0,0), vec2(25, 60), colour(0, 128, 128, 255)));
         }
 
         void onSwap(PostOffice office)

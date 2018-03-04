@@ -229,6 +229,18 @@ final class TestControl : UIElement
 /// NOTE: For containers, `UIElement.size` doesn't actually have any real effect, but it's still useful for alignment within other containers.
 abstract class Container : UIElement
 {
+    public
+    {
+        ///
+        UIElement addChild(UIElement child)
+        {
+            assert(child !is null);
+            child.parent = this;
+
+            return child;
+        }
+    }
+
     abstract
     {
         /// Returns: The children for this container.

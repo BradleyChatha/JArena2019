@@ -19,3 +19,9 @@ sprite "Sword" {
 	position 512 32
 	size 21 74
 }
+
+spriteSheet "TahnAnimation" {
+    position 512 106
+    size 160 64
+    frameSize 32 32
+}
