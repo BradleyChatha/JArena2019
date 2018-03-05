@@ -21,12 +21,9 @@ class Test : Scene, IPostBox
     mixin(IPostBox.generateOnMail!Test);
 
     StaticObject tahn;
-    MailTimer timer;
     SpriteAtlas atlas;
     StackContainer gui;
     StackContainer gui2;
-    // Temp
-    Font _font;
 
     public
     {
@@ -66,8 +63,8 @@ class Test : Scene, IPostBox
             gui2.addChild(new TestControl(vec2(0,0), vec2(50, 30), colour(128, 0, 128, 255)));
             gui2.addChild(new TestControl(vec2(0,0), vec2(25, 60), colour(0, 128, 128, 255)));
 
-            this._font = super.manager.cache.get!Font("Crackdown");
-            super.register("Some random text", new TextObject(new Text(this._font, "A B C D E F G 1 2 3"d, vec2(0,500), 14, colour(128, 0, 128, 255)), 0));
+            auto font = super.manager.cache.get!Font("Crackdown");
+            super.register("Some random text", new TextObject(font, "A B C D E F G 1 2 3"d, vec2(0,500), 14, colour(128, 0, 128, 255), 0));
         }
 
         void onSwap(PostOffice office)

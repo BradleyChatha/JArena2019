@@ -224,6 +224,20 @@ class TextObject : DrawableObject
             this.yLevel = yLevel;
         }
 
+        /++
+         + A shortcut to create a new `Text` and assign it to this object.
+         + ++/
+        @safe
+        this(Font font, 
+             dstring uniText, 
+             vec2 position = vec2(0), 
+             uint charSize = 14, 
+             uvec4b colour = jarena.core.colour(0, 0, 0, 255), 
+             int yLevel = 0)
+        {
+            this(new Text(font, uniText, position, charSize, colour), yLevel);
+        }
+
         /// The text for this TextOBject.
         @property
         Text text()
