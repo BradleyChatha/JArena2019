@@ -2,7 +2,7 @@ module jarena.gameplay.engine;
 
 private
 {
-    import jarena.core, jarena.graphics, jarena.gameplay;
+    import jarena.core, jarena.graphics, jarena.gameplay, jarena.data;
 }
 
 const WINDOW_NAME = "JArena";
@@ -63,6 +63,12 @@ final class Engine
                 this._debugText.asciiText = sformat(this._debugBuffer, "FPS: %s\nFrameTime: %sms", 
                                                     this._fps.frameCount, this._fps.elapsedTime.asMilliseconds);
             });
+
+            // Load in assets
+            SdlangLoader.parseDataListFile(this._scenes.cache.getCache!AnimationInfo,
+                                           this._scenes.cache.getCache!SpriteAtlas,
+                                           this._scenes.cache.getCache!Texture,
+                                           this._scenes.cache.getCache!Font);
 
             debug this.timers.every(GameTime.fromSeconds(1), (){this.events.mailCommand(Event.UpdateFPSDisplay);});
         }

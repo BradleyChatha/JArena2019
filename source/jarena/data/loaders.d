@@ -16,6 +16,7 @@ class SdlangLoader
         {
             string path;    // Path to the file.
             string baseDir; // Directory the file is in.
+            string name;    // Some tags allow you to specify the name to cache the file as.
         }
 
         // Tries to load `atlasName` from cache.
@@ -61,8 +62,10 @@ class SdlangLoader
 
         // Used to parse 'file' and 'glob' tags, getting any useful data from them.
         FileInfo[] getFileInfo(Tag tag, string baseDir)
-        {
+        {  
+            import std.exception : enforce;
             import std.path : buildNormalizedPath, dirName;
+            import std.format : format;
 
             FileInfo[] files;
             switch(tag.name)
@@ -72,6 +75,17 @@ class SdlangLoader
                     path = baseDir.buildNormalizedPath(path);
 
                     files ~= FileInfo(path, path.dirName);
+                    break;
+
+                case "namedFile":
+                    auto values = tag.values;
+                    enforce(values.length == 2, format("Expected 2 values for 'namedFile' tag, got %s values instead.", values.length));
+
+                    // [0] = name. [1] = path.
+                    auto path = values[1].get!string;
+                    path = baseDir.buildNormalizedPath(path);
+
+                    files ~= FileInfo(path, path.dirName, values[0].get!string);
                     break;
 
                 default:
@@ -370,21 +384,26 @@ class SdlangLoader
          + ++/
         void parseDataListFile(Cache!AnimationInfo animations,
                                Cache!SpriteAtlas atlases,
-                               Cache!Texture textures)
+                               Cache!Texture textures,
+                               Cache!Font fonts)
         {
             import std.algorithm : each;
+            import std.exception : enforce;
             import std.experimental.logger : tracef;
 
             auto baseDir = "Data/";
             auto dataTag = parseFile("Data/data.sdl");
             auto animTag = dataTag.expectTag("animations");
             auto atlasTag = dataTag.expectTag("atlases");
+            auto fontTag = dataTag.expectTag("fonts");
 
             FileInfo[] atlasFiles;
             FileInfo[] animFiles;
+            FileInfo[] fontFiles;
 
             animTag.tags.each!(t => animFiles ~= SdlangLoader.getFileInfo(t, baseDir));
             atlasTag.tags.each!(t => atlasFiles ~= SdlangLoader.getFileInfo(t, baseDir));
+            fontTag.tags.each!(t => fontFiles ~= SdlangLoader.getFileInfo(t, baseDir));
 
             foreach(info; animFiles)
             {
@@ -406,6 +425,12 @@ class SdlangLoader
                     atlases,
                     textures
                 );
+            }
+
+            foreach(info; fontFiles)
+            {
+                enforce(info.name !is null, "Fonts need be given a name, please use 'namedFile' instead of 'file'");
+                fonts.add(info.name, new Font(info.path));
             }
 
             // The amount of extra memory parts of this code can use is scary

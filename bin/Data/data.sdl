@@ -5,3 +5,7 @@ animations {
 atlases {
     file "Atlases/test atlas.sdl"
 }
+
+fonts {
+    namedFile "Crackdown" "Fonts/crackdown.ttf"
+}

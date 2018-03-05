@@ -6,8 +6,7 @@ private
     import std.experimental.logger;
     import std.typecons : Flag;
 
-    import jarena.core.cache, jarena.core.maths, jarena.core.post, jarena.core.time;
-    import jarena.graphics.sprite, jarena.graphics.window;
+    import jarena.core, jarena.graphics;
 }
 
 alias AutoRender = Flag!"render";
@@ -63,7 +62,7 @@ abstract class Scene
                 import std.algorithm : map, joiner;
 
                 auto names = this._drawOrder.map!(o => "\"" ~ o.name ~ "\"").joiner(", ");
-                tracef("<IM HERE PLS LOOK AT ME> Draw Order after addition: [%s]", names);
+                //tracef("Draw Order after addition: [%s]", names);
             }
         }
 
@@ -323,7 +322,7 @@ abstract class Scene
 /// Manages multiple `Scene`s and is required for certain utility functions that a `Scene` provides.
 class SceneManager
 {
-    alias SceneMultiCache = MultiCache!(Texture, SpriteAtlas, AnimationInfo);
+    alias SceneMultiCache = MultiCache!(Texture, SpriteAtlas, AnimationInfo, Font);
 
     private
     {
