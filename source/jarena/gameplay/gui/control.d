@@ -142,21 +142,21 @@ abstract class UIElement
 
         /// Returns: The position for this UIElement.
         @property @safe @nogc
-        final inout(vec2) position() nothrow inout
+        final const(vec2) position() nothrow const
         {
             return this._position;
         }
 
         /// Returns: The size for this UIElement.
         @property @safe @nogc
-        final inout(vec2) size() nothrow inout
+        final const(vec2) size() nothrow const
         {
             return this._size;
         }
 
         /// Returns: The colour for this UIElement.
         @property @safe @nogc
-        final inout(uvec4b) colour() nothrow inout
+        final const(uvec4b) colour() nothrow const
         {
             return this._colour;
         }
@@ -280,7 +280,7 @@ abstract class Container : UIElement
     public
     {
         ///
-        UIElement addChild(UIElement child)
+        final UI addChild(UI : UIElement)(UI child)
         {
             assert(child !is null);
             child.parent = this;

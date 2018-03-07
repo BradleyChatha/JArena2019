@@ -132,3 +132,67 @@ class SimpleButton : Button
         }
     }
 }
+
+class SimpleLabel : Control
+{
+    private
+    {
+        Text _text;
+    }
+
+    public
+    {
+        this(Text text, vec2 position = vec2(0))
+        {
+            assert(text !is null);
+            this._text = text;
+            super.colour   = text.colour;
+            super.position = position;
+        }
+
+        /// Call this function if it's text is modified outside of the provided functions.
+        void updateLayout()
+        {
+            this._text.position = super.position;
+            this._text.colour   = super.colour;
+            super.size          = this._text.screenSize + vec2(0, this._text.charSize / 2);
+        }
+
+        void updateTextASCII(const(char)[] ascii)
+        {
+            this._text.asciiText = ascii;
+            this.updateLayout();
+        }
+
+        @property @safe @nogc
+        inout(Text) text() nothrow inout
+        {
+            return this._text;
+        }
+    }
+
+    override
+    {
+        protected void onNewParent(UIElement newParent, UIElement oldParent){}
+        protected void onChildStateChanged(UIElement child, StateChange change){}
+        protected void onAddChild(UIElement child){}
+        protected void onRemoveChild(UIElement child){}
+        public void onUpdate(InputManager input, GameTime deltaTime){}
+        protected void onSizeChanged(vec2 oldSize, vec2 newSize){}
+
+        protected void onPositionChanged(vec2 oldPos, vec2 newPos)
+        {
+            this.updateLayout();
+        }
+
+        protected void onColourChanged(uvec4b oldColour, uvec4b newColour)
+        {
+            this.updateLayout();
+        }
+
+        public void onRender(Window window)
+        {
+            window.renderer.drawText(this.text);
+        }
+    }
+}

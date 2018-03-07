@@ -61,6 +61,7 @@ class Test : Scene, IPostBox
             gui.addChild(new TestControl(vec2(0,0), vec2(50, 30), colour(128, 0, 128, 255)));
             gui.addChild(new TestControl(vec2(0,0), vec2(25, 60), colour(0, 128, 128, 255)));
 
+            gui2.autoSize = gui2.AutoSize.no;
             gui2.addChild(new TestControl(vec2(0,0), vec2(50, 30), colour(128, 0, 128, 255)));
             gui2.addChild(new TestControl(vec2(0,0), vec2(25, 60), colour(0, 128, 128, 255)));
 

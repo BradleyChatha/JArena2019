@@ -10,12 +10,25 @@ final class AnimationViewerScene : Scene
 {
     private
     {
-        AnimatedObject _sprite;
+        const GUI_BACKGROUND_COLOUR = colour(128, 64, 128, 255);
+        const TEXT_CHAR_SIZE        = 18;
+        const TEXT_COLOUR           = colour(255, 255, 255, 255);
+
+        AnimatedObject  _sprite;
         AnimationInfo[] _animations;
-        size_t _animIndex;
+        size_t          _animIndex;
+
+        // GUI stuff
+        FreeFormContainer _gui;
+        StackContainer    _dataGui;
+        StackContainer    _instructionGui;
+        SimpleLabel       _labelAnimData;
+        SimpleLabel       _labelInstructions;
 
         void changeAnimation()
         {
+            import std.format : format;
+
             if(this._animIndex >= this._animations.length)
                 assert(false, "Bug");
 
@@ -29,6 +42,21 @@ final class AnimationViewerScene : Scene
             this._sprite.animation = next;
             this._sprite.position  = vec2((InitInfo.windowSize.x / 2) - (this._sprite.textureRect.size.x / 2),
                                           (InitInfo.windowSize.y / 2) - (this._sprite.textureRect.size.y / 2));
+
+            this._labelAnimData.updateTextASCII(
+                format("Animation Name: %s\n"~
+                       "Delay Per Frame: %sms\n"~
+                       "Repeats: %s", 
+                       next.name, 
+                       next.delayPerFrameMS, 
+                       next.repeat
+                      )
+            );
+        }
+
+        SimpleLabel makeLabel(Container gui, Font font)
+        {
+            return gui.addChild(new SimpleLabel(new Text(font, ""d, vec2(0), TEXT_CHAR_SIZE, TEXT_COLOUR)));
         }
     }
 
@@ -49,6 +77,26 @@ final class AnimationViewerScene : Scene
     {
         void onInit()
         {
+            this._gui = new FreeFormContainer();
+
+            this._dataGui           = new StackContainer(vec2(5, 20));
+            this._dataGui.colour    = GUI_BACKGROUND_COLOUR;
+            this._gui.addChild(this._dataGui);
+
+            // Setup instruction gui
+            this._instructionGui            = new StackContainer(StackContainer.Direction.Horizontal);
+            this._instructionGui.colour     = GUI_BACKGROUND_COLOUR;
+            this._instructionGui.autoSize   = StackContainer.AutoSize.no;
+            this._instructionGui.size       = vec2(InitInfo.windowSize.x, TEXT_CHAR_SIZE * 1.5);
+            this._instructionGui.position   = vec2(0, InitInfo.windowSize.y - this._instructionGui.size.y);
+            this._gui.addChild(this._instructionGui);
+
+            auto font               = super.manager.cache.get!Font("Calibri");
+            this._labelAnimData     = this.makeLabel(this._dataGui, font);
+            this._labelInstructions = this.makeLabel(this._instructionGui, font);
+            this._labelInstructions.updateTextASCII(
+                "Left Arrow: Previous Animation | Right Arrow: Next Animation"
+            );
         }
 
         void onSwap(PostOffice office)
@@ -85,7 +133,10 @@ final class AnimationViewerScene : Scene
             }
 
             super.updateScene(window, deltaTime);
+            this._gui.onUpdate(super.manager.input, deltaTime);
+
             super.renderScene(window);
+            this._gui.onRender(window);
         }
     }
 }

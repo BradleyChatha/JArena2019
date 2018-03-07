@@ -8,4 +8,5 @@ atlases {
 
 fonts {
     namedFile "Crackdown" "Fonts/crackdown.ttf"
+    namedFile "Calibri" "Fonts/calibri.ttf"
 }
