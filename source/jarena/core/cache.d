@@ -83,6 +83,13 @@ if(isType!T)
             key = this.fixPathStrings(key);
             return (key in this._cache) !is null;
         }
+
+        /// Returns: Range
+        @property @safe @nogc
+        auto values() nothrow inout
+        {
+            return this._cache.byValue;
+        }
     }
 }
 

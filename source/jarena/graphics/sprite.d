@@ -465,11 +465,16 @@ class AnimatedSprite : Sprite
         }
 
         /// Sets the current animation of the sprite. (Doesn't require a cache).
-        @property @safe
+        @property @trusted
         void animation(AnimationInfo info)
         {
+            // Reset state
             this._currentDelayMS = 0;
+            this._finished = false;
             this._currentAnimation = info;
+            this._currentFrame = uvec2(0);
+
+            sfSprite_setTexture(super.handle, info.spriteSheet.atlas._texture.handle, 1);
             info.spriteSheet.changeSprite(this, 0, 0);
         }
 
@@ -524,7 +529,7 @@ class AnimatedObject : DrawableObject
 
         /// The sprite for this AnimatedObject.
         @property
-        Sprite sprite()
+        AnimatedSprite sprite()
         {
             assert(this._sprite !is null, "The sprite hasn't been created yet.");
             return this._sprite;

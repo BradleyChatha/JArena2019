@@ -1,6 +1,6 @@
 import std.stdio;
 import derelict.sfml2.graphics, derelict.sfml2.system, derelict.sfml2.window;
-import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jarena.gameplay.gui;
+import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jarena.gameplay.gui, jarena.gameplay.scenes;
 
 void main()
 {
@@ -12,6 +12,7 @@ void main()
     engine.onInit();
 
     engine.scenes.register(new Test());
+    engine.scenes.register(new AnimationViewerScene(engine.scenes.cache.getCache!AnimationInfo));
     engine.scenes.swap("Test");
     engine.doLoop();
 }
@@ -92,6 +93,9 @@ class Test : Scene, IPostBox
                 this.tahn.move(-speedVertical);
             if(super.manager.input.isKeyDown(sfKeyS))
                 this.tahn.move(speedVertical);
+
+            if(super.manager.input.wasKeyTapped(sfKeyP))
+                super.manager.swap("Animation Viewer");
 
             if(super.manager.input.isKeyDown(sfKeyE))
                 this.tahn.isHidden = true;
