@@ -11,6 +11,26 @@ private
 
 alias AutoRender = Flag!"render";
 
+/// A UDA to attach onto a `Scene` to provide it's name
+/// The reason a UDA is used is because overriding static functions seems impossible
+/// and leaving it up to the programmer/scene instance itself is just buggy/annoying.
+struct SceneName
+{
+    /// The name to give the scene
+    string name;
+
+    /// Gets a `SceneName.name` from `T`.
+    static string getFrom(T : Scene)()
+    {
+        import std.traits : getUDAs;
+
+        alias udas = getUDAs!(T, SceneName);
+        static assert(udas.length == 1, "Class " ~ T.stringof ~ " has either 0, or more than 1 @SceneName attached. Only 1 is allowed.");
+
+        return udas[0].name;
+    } 
+}
+
 /// Defines a scene, which can be thought of as a gamestate.
 abstract class Scene
 {
@@ -246,13 +266,10 @@ abstract class Scene
     public
     {
         /++
-         + Params:
-         +  name = The name to give the scene.
          + ++/
         @safe
-        this(string name) nothrow
+        this() nothrow
         {
-            this._name = name;
             this._proxyEventOffice = new PostOffice();
         }
 
@@ -264,7 +281,13 @@ abstract class Scene
             return this._manager;
         }
 
-        /// The name of this Scene.
+        /++
+         + Notes:
+         +  The name of a scene is only set after it's registered with a `SceneManager`.
+         +
+         + Returns:
+         +  The name of this scene.
+         + ++/
         @property @safe @nogc
         string name() nothrow const
         {
@@ -367,13 +390,13 @@ class SceneManager
          + ++/
         void register(S : Scene)(S scene)
         {
-            tracef("Registering Scene called '%s'", scene.name);
-
             assert(scene !is null);
             Scene deprecationWorkaround = scene; // Because S is a template param, D doesn't realise that it's valid for this class to access private members.
                                                  // So it gives me a deprecation warning.
             deprecationWorkaround._manager = this;
+            deprecationWorkaround._name = SceneName.getFrom!S;
 
+            tracef("Registering Scene called '%s'", scene.name);
             static if(is(S : IPostBox))
             {
                 trace("The Scene inherits from an IPostBox, so it's onMail function will be subscribed automatically.");
@@ -410,10 +433,11 @@ class SceneManager
          +  If the `Scene` that is getting swapped $(B in) inherits from `IPostBox`, it will be subscribed to the `PostOffice`.
          +
          + Params:
-         +  sceneName = The name of the `Scene` to swap to.
+         +  S = The `Scene` to swap to.
          + ++/
-        void swap(string sceneName)
+        void swap(S : Scene)()
         {
+            auto sceneName = SceneName.getFrom!S;
             tracef("Swapping to scene called '%s'", sceneName);
 
             auto scene = this._scenes.get(sceneName);

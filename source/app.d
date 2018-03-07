@@ -13,10 +13,11 @@ void main()
 
     engine.scenes.register(new Test());
     engine.scenes.register(new AnimationViewerScene(engine.scenes.cache.getCache!AnimationInfo));
-    engine.scenes.swap("Test");
+    engine.scenes.swap!Test;
     engine.doLoop();
 }
 
+@SceneName("Test")
 class Test : Scene, IPostBox
 {
     mixin(IPostBox.generateOnMail!Test);
@@ -30,7 +31,7 @@ class Test : Scene, IPostBox
     {
         this()
         {
-            super("Test");
+            super();
         }
     }
 
@@ -96,7 +97,7 @@ class Test : Scene, IPostBox
                 this.tahn.move(speedVertical);
 
             if(super.manager.input.wasKeyTapped(sfKeyP))
-                super.manager.swap("Animation Viewer");
+                super.manager.swap!AnimationViewerScene;
 
             if(super.manager.input.isKeyDown(sfKeyE))
                 this.tahn.isHidden = true;

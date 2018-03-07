@@ -6,6 +6,7 @@ private
     import jarena.core, jarena.gameplay, jarena.graphics;
 }
 
+@SceneName("Animation Viewer")
 final class AnimationViewerScene : Scene
 {
     private
@@ -76,7 +77,7 @@ final class AnimationViewerScene : Scene
             assert(animations !is null);
 
             this._animations = animations.byValue.map!(v => cast(AnimationInfo)v).array;
-            super("Animation Viewer");
+            super();
         }
     }
 
