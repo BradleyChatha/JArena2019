@@ -6,6 +6,17 @@ private
     import jarena.core, jarena.gameplay, jarena.graphics;
 }
 
+/++
+ + A container that will stack controls either vertically or horizontally.
+ +
+ + Controls added to this container will have their positions managed by the container.
+ +
+ + For this container, setting it's colour will add a background colour to the container's area.
+ +
+ + Notes:
+ +  This container will re-size itself to fit tightly around it's children. The re-size will
+ +  occur anytime a child's state changes, the container moves, or when a child is add or removed.
+ + ++/
 final class StackContainer : Container
 {
     enum Direction
@@ -73,16 +84,17 @@ final class StackContainer : Container
     public
     {
         ///
-        this(Direction direction = Direction.Vertical)
+        this(Direction direction = Direction.Vertical, uvec4b colour = jarena.core.colour(0, 0, 0, 0))
         {
             this._direction = direction;
+            super.colour = colour;
         }
 
         ///
-        this(vec2 position, Direction direction = Direction.Vertical)
+        this(vec2 position, Direction direction = Direction.Vertical, uvec4b colour = jarena.core.colour(0, 0, 0, 0))
         {
-            this(direction);
-            this.position = position;
+            this(direction, colour);
+            super.position = position;
         }
     }
 
@@ -123,7 +135,7 @@ final class StackContainer : Container
 
         public void onRender(Window window)
         {
-            debug window.renderer.drawRect(this.position, this.size, jarena.core.colour(0, 0, 0, 128));
+            window.renderer.drawRect(super.position, super.size, super.colour);
 
             foreach(child; this.children)
                 child.onRender(window);
