@@ -62,7 +62,33 @@ class Window
          + Mail:
          +  `ValueMail!dchar`
          + ++/
-        TextEntered = 103
+        TextEntered = 103,
+
+        /++
+         + Sent when the mouse is moved.
+         + 
+         + See: https://www.sfml-dev.org/tutorials/2.4/window-events.php#the-mousemoved-event
+         +
+         + Mail:
+         +  `ValueMail!vec2`, which contains the mouse's current position, relative to the window.
+         + ++/
+        MouseMoved = 104,
+
+        /++
+         + Sent when a mouse button is pressed.
+         +
+         + Mail:
+         +  `ValueMail!MouseButton`, which contains the button that was pressed.
+         + ++/
+        MouseButtonPressed = 105,
+
+        /++
+         + Sent when a mouse button is released.
+         +
+         + Mail:
+         +  `ValueMail!MouseButton`, which contains the button that was released.
+         + ++/
+        MouseButtonReleased = 106
     }
 
     private
@@ -72,9 +98,11 @@ class Window
 
         // Instead of making a bunch of different objects every frame where the user does something
         // we instead just reuse the objects.
-        CommandMail             _commandMail; // Mail used for events without extra data (e.g. closing the window)
-        ValueMail!sfKeyEvent    _keyMail;     // Mail used for key events.
-        ValueMail!dchar         _textMail;    // Mail used for the Text Entered event.
+        CommandMail             _commandMail;  // Mail used for events without extra data (e.g. closing the window)
+        ValueMail!sfKeyEvent    _keyMail;      // Mail used for key events.
+        ValueMail!dchar         _textMail;     // Mail used for the Text Entered event.
+        ValueMail!vec2          _positionMail; // Mail used for any event that provides a position (e.g. mouse moved)
+        ValueMail!MouseButton   _mouseMail;    // Mail used for mouse button events.
 
         @property @safe @nogc
         inout(sfRenderWindow*) handle() nothrow inout
@@ -109,9 +137,11 @@ class Window
             this._renderer = new Renderer(this);
 
             trace("Setting up reusuable mail");
-            this._commandMail = new CommandMail(0);
-            this._keyMail     = new ValueMail!sfKeyEvent(0, sfKeyEvent());
-            this._textMail    = new ValueMail!dchar(0, '\0');
+            this._commandMail  = new CommandMail(0);
+            this._keyMail      = new ValueMail!sfKeyEvent(0, sfKeyEvent());
+            this._textMail     = new ValueMail!dchar(0, '\0');
+            this._positionMail = new ValueMail!vec2(0, vec2(0));
+            this._mouseMail    = new ValueMail!MouseButton(0, MouseButton.Left);
         }
 
         ~this()
@@ -163,6 +193,24 @@ class Window
                         this._textMail.type = Window.Event.TextEntered;
                         this._textMail.value = e.text.unicode.to!dchar;
                         office.mail(this._textMail);
+                        break;
+
+                    case sfEvtMouseMoved:
+                        this._positionMail.type = Window.Event.MouseMoved;
+                        this._positionMail.value = vec2(e.mouseMove.x, e.mouseMove.y);
+                        office.mail(this._positionMail);
+                        break;
+
+                    case sfEvtMouseButtonPressed:
+                        this._mouseMail.type = Window.Event.MouseButtonPressed;
+                        this._mouseMail.value = e.mouseButton.button.toArenaButton!MouseButton;
+                        office.mail(this._mouseMail);
+                        break;
+
+                    case sfEvtMouseButtonReleased:
+                        this._mouseMail.type = Window.Event.MouseButtonReleased;
+                        this._mouseMail.value = e.mouseButton.button.toArenaButton!MouseButton;
+                        office.mail(this._mouseMail);
                         break;
 
                     default:
@@ -285,6 +333,19 @@ class Renderer
 }
 
 ///
+enum MouseButton : ubyte
+{
+    ///
+    Left = 1 << 0,
+    
+    ///
+    Right = 1 << 1,
+    
+    ///
+    Middle = 1 << 2
+}
+
+///
 class InputManager
 {
     private
@@ -296,8 +357,15 @@ class InputManager
             bool wasRepeated; // True = The window/OS repeated the key input. False = no repeat has happened.
         }
 
+        struct MouseState
+        {
+            vec2 position;
+            MouseButton buttonMask;
+        }
+
         KeyState[sfKeyCount] _keyStates;
         sfKeyCode[]          _tapped;    // Any sfKey in this array was tapped down this frame.
+        MouseState           _mouse;
 
         void onKeyEvent(PostOffice office, Mail m)
         {
@@ -307,6 +375,9 @@ class InputManager
             auto keyCode = mail.value.code;
             //assert(keyCode < this._keyStates.length); //Caps lock is enough to crash it...
 
+            if(keyCode > this._keyStates.length)
+                return;
+
             auto state        = &this._keyStates[keyCode];
             state.wasRepeated = (state.isDown && m.type == Window.Event.KeyDown);
             state.isDown      = (m.type == Window.Event.KeyDown);
@@ -314,6 +385,25 @@ class InputManager
 
             if(state.wasTapped)
                 this._tapped ~= keyCode;
+        }
+
+        void onMouseMoved(PostOffice office, Mail m)
+        {
+            auto mail = cast(ValueMail!vec2)m;
+            assert(mail !is null);
+
+            this._mouse.position = mail.value;
+        }
+
+        void onMouseButton(PostOffice office, Mail m)
+        {
+            auto mail = cast(ValueMail!MouseButton)m;
+            assert(mail !is null);
+
+            if(m.type == Window.Event.MouseButtonPressed)
+                this._mouse.buttonMask |= mail.value;
+            else
+                this._mouse.buttonMask &= ~(mail.value);
         }
     }
 
@@ -326,8 +416,9 @@ class InputManager
 
             this._tapped.reserve(this._keyStates.length);
 
-            office.subscribe(Window.Event.KeyDown, &this.onKeyEvent);
-            office.subscribe(Window.Event.KeyUp,   &this.onKeyEvent);
+            office.subscribe(Window.Event.KeyDown,      &this.onKeyEvent);
+            office.subscribe(Window.Event.KeyUp,        &this.onKeyEvent);
+            office.subscribe(Window.Event.MouseMoved,   &this.onMouseMoved);
         }
 
         /// $(B Important: This function should be called _before_ the window processes it's events, or at the very end of a frame's update)
@@ -340,17 +431,11 @@ class InputManager
         }
 
         ///
-        bool isKeyDown(sfKeyCode key)
+        @safe @nogc
+        bool isKeyDown(sfKeyCode key) nothrow const
         {
             assert(key < this._keyStates.length);
             return this._keyStates[key].isDown;
-        }
-
-        ///
-        bool isKeyUp(sfKeyCode key)
-        {
-            assert(key < this._keyStates.length);
-            return !this._keyStates[key].isDown;
         }
 
         /++
@@ -358,7 +443,8 @@ class InputManager
          +  `true` if `key` was only pressed down this specific frame.
          +  `false` if `key` isn't pressed down, or if `key` has been held down for longer than 1 frame.
          + ++/
-        bool wasKeyTapped(sfKeyCode key)
+        @safe @nogc
+        bool wasKeyTapped(sfKeyCode key) nothrow const
         {
             assert(key < this._keyStates.length);
             return this._keyStates[key].wasTapped;
@@ -368,10 +454,40 @@ class InputManager
          + Returns:
          +  `true` if the `key` has had it's input repeated by the OS (in the case that key repeation is enabled for the window).
          + ++/
-        bool wasKeyRepeated(sfKeyCode key)
+        @safe @nogc
+        bool wasKeyRepeated(sfKeyCode key) nothrow const
         {
             assert(key < this._keyStates.length);
             return this._keyStates[key].wasRepeated;
         }
+
+        ///
+        @safe @nogc
+        bool isMouseButtonDown(MouseButton button) nothrow const
+        {
+            return (this._mouse.buttonMask & button) > 0;
+        }
+
+        /// Returns: The last known position of the mouse.
+        @property @safe @nogc
+        vec2 mousePostion() nothrow const
+        {
+            return this._mouse.position;
+        }
+    }
+}
+
+private MouseButton toArenaButton(T : MouseButton)(sfMouseButton button)
+{
+    final switch(button)
+    {
+        case sfMouseLeft:
+            return MouseButton.Left;
+
+        case sfMouseRight:
+            return MouseButton.Right;
+
+        case sfMouseMiddle:
+            return MouseButton.Middle;
     }
 }
