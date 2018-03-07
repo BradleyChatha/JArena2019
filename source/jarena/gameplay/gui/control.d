@@ -10,7 +10,8 @@ abstract class UIElement
     enum StateChange
     {
         PositionChanged,
-        SizeChanged
+        SizeChanged,
+        ColourChanged
     }
 
     private
@@ -18,6 +19,7 @@ abstract class UIElement
         UIElement _parent;
         vec2      _position;
         vec2      _size;
+        uvec4b    _colour;
     }
 
     protected
@@ -106,6 +108,31 @@ abstract class UIElement
             this.onSizeChanged(old, newSize);
         }
 
+        /++
+         + Sets the colour for this UIElement.
+         +
+         + Notes:
+         +  All inheriting classes should assure that their actual colour on screen is kept in sync,
+         +  and also respects the colour set by this function.
+         +
+         +  [The following functions are called in order]
+         +
+         +  * parent.onChildStateChanged(this, StateChange.ColourChanged); [if parent is not null]
+         +
+         +  * this.onColourChanged(oldSize, newSize);
+         + ++/
+        @property
+        final void colour(uvec4b newColour)
+        {
+            auto old = this._colour;
+            this._colour = newColour;
+
+            if(this.parent !is null)
+                this.parent.onChildStateChanged(this, StateChange.ColourChanged);
+
+            this.onColourChanged(old, newColour);
+        }
+
         /// Returns: The parent for this UIElement.
         @property @safe @nogc
         final inout(UIElement) parent() nothrow inout
@@ -125,6 +152,13 @@ abstract class UIElement
         final inout(vec2) size() nothrow inout
         {
             return this._size;
+        }
+
+        /// Returns: The colour for this UIElement.
+        @property @safe @nogc
+        final inout(uvec4b) colour() nothrow inout
+        {
+            return this._colour;
         }
     }
 
@@ -151,6 +185,10 @@ abstract class UIElement
 
         /++
          + Called whenever the parent of this UIElement is changed.
+         +
+         + Note:
+         +  It is expected that the parent be responsible for aligning the child's position,
+         +  if needed (for example, with containers).
          +
          + Params:
          +  newParent = The new UIElement acting as this element's parent. May be null.
@@ -185,8 +223,17 @@ abstract class UIElement
          + ++/
         protected void onSizeChanged(vec2 oldSize, vec2 newSize);
 
+        /++
+         + Called whenever the colour for this UIElement is changed.
+         +
+         + Params:
+         +  oldColour = The old colour for this UIElement.
+         +  newColour = The new colour for this UIElement.
+         + ++/
+        protected void onColourChanged(uvec4b oldColour, uvec4b newColour);
+
         ///
-        public void onUpdate(GameTime deltaTime);
+        public void onUpdate(InputManager input, GameTime deltaTime);
 
         ///
         public void onRender(Window window);
@@ -217,7 +264,8 @@ final class TestControl : UIElement
         protected void onAddChild(UIElement child){}
         protected void onRemoveChild(UIElement child){}
         protected void onPositionChanged(vec2 oldPos, vec2 newPos){}
-        public void onUpdate(GameTime deltaTime){}
+        protected void onColourChanged(uvec4b oldColour, uvec4b newColour){}
+        public void onUpdate(InputManager input, GameTime deltaTime){}
 
         public void onRender(Window window)
         {
@@ -239,6 +287,12 @@ abstract class Container : UIElement
 
             return child;
         }
+
+        ///
+        inout(UI) getChild(UI : UIElement)(size_t index) inout
+        {
+            return cast(inout(UI))this.children[index];
+        }
     }
 
     abstract
@@ -249,180 +303,30 @@ abstract class Container : UIElement
     }
 }
 
-final class StackContainer : Container
+/// Base class for all button-like controls.
+/// This class intentionally leaves the logic of "is mouse over and mouse button down?" logic to inheriting classes.
+abstract class Button : Control
 {
-    enum Direction
-    {
-        Horizontal,
-        Vertical
-    }
-
+    alias OnClickFunc = void delegate(Button caller);
     private
     {
-        const float _padding = 4; // TODO: Make this changeable.
-        UIElement[] _children;
-        bool        _ignoreStateChanges;
-        Direction   _direction;
-
-        void sortPositions()
-        {
-            this._ignoreStateChanges = true;
-
-            if(this._direction == Direction.Vertical)
-                this.sortVertical();
-            else
-                this.sortHorizontal();
-
-            this._ignoreStateChanges = false;
-        }
-
-        void sortHorizontal()
-        {
-            vec2 newSize = vec2(0);
-            vec2 nextPos = this.position;
-            foreach(child; this._children)
-            {
-                child.position = nextPos;
-
-                if(child.size.y > newSize.y)
-                    newSize.y = child.size.y;
-
-                newSize.x = (child.position.x + child.size.x) - this.position.x;
-                nextPos.x = nextPos.x + child.size.x + this._padding; // += doesn't work.
-            }
-
-            this.size = newSize;
-        }
-
-        void sortVertical()
-        {
-            vec2 newSize = vec2(0);
-            vec2 nextPos = this.position;
-            foreach(child; this._children)
-            {
-                child.position = nextPos;
-
-                if(child.size.x > newSize.x)
-                    newSize.x = child.size.x;
-
-                newSize.y = (child.position.y + child.size.y) - this.position.y;
-                nextPos.y = nextPos.y + child.size.y + this._padding; // += doesn't work.
-            }
-
-            this.size = newSize;
-        }
+        OnClickFunc _onClick;
     }
 
     public
     {
-        ///
-        this(Direction direction = Direction.Vertical)
+        /// Returns: The function that is called when this button is clicked.
+        @property @safe @nogc
+        inout(OnClickFunc) onClick() nothrow inout
         {
-            this._direction = direction;
+            return this._onClick;
         }
 
-        ///
-        this(vec2 position, Direction direction = Direction.Vertical)
+        /// Sets the function that should be called when this button is clicked.
+        @property @safe @nogc
+        void onClick(OnClickFunc func) nothrow
         {
-            this(direction);
-            this.position = position;
-        }
-    }
-
-    override
-    {
-        protected void onNewParent(UIElement newParent, UIElement oldParent){}
-        protected void onSizeChanged(vec2 oldSize, vec2 newSize){}
-        protected void onChildStateChanged(UIElement child, StateChange change)
-        {
-            if(!this._ignoreStateChanges)
-                this.sortPositions();
-        }
-
-        protected void onAddChild(UIElement child)
-        {
-            this._children ~= child;
-            this.sortPositions();
-        }
-
-        protected void onRemoveChild(UIElement child)
-        {
-            import std.algorithm : countUntil;
-            this._children.removeAt(this._children.countUntil(child));
-            this.sortPositions();
-        }
-        
-        protected void onPositionChanged(vec2 oldPos, vec2 newPos)
-        {
-            this.sortPositions();
-        }
-
-        public void onUpdate(GameTime deltaTime)
-        {
-            foreach(child; this.children)
-                child.onUpdate(deltaTime);
-        }
-
-        public void onRender(Window window)
-        {
-            debug window.renderer.drawRect(this.position, this.size, colour(0, 0, 0, 128));
-
-            foreach(child; this.children)
-                child.onRender(window);
-        }
-
-        @property
-        inout(UIElement[]) children() inout
-        {
-            return this._children;
-        }
-    }
-}
-
-/// A container that doesn't give a single damn about keeping things aligned with itself.
-/// Size and position for this container are completely useless.
-final class FreeFormContainer : Container
-{
-    private
-    {
-        UIElement[] _children;
-    }
-
-    override
-    {        
-        protected void onNewParent(UIElement newParent, UIElement oldParent){}
-        protected void onSizeChanged(vec2 oldSize, vec2 newSize){}
-        protected void onChildStateChanged(UIElement child, StateChange change){}
-
-        protected void onAddChild(UIElement child)
-        {
-            this._children ~= child;
-        }
-
-        protected void onRemoveChild(UIElement child)
-        {
-            import std.algorithm : countUntil;
-            this._children.removeAt(this._children.countUntil(child));
-        }
-        
-        protected void onPositionChanged(vec2 oldPos, vec2 newPos){}
-
-        public void onUpdate(GameTime deltaTime)
-        {
-            foreach(child; this.children)
-                child.onUpdate(deltaTime);
-        }
-
-        public void onRender(Window window)
-        {
-            foreach(child; this.children)
-                child.onRender(window);
-        }
-
-        @property
-        inout(UIElement[]) children() inout
-        {
-            return this._children;
+            this._onClick = func;
         }
     }
 }

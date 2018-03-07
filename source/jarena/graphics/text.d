@@ -130,6 +130,14 @@ class Text
             sfText_setCharacterSize(this.handle, size);
         }
 
+        /// Returns: The size of the text on screen.
+        @property @trusted @nogc
+        const(vec2) screenSize() nothrow const
+        {
+            auto rect = sfText_getLocalBounds(this.handle);
+            return vec2(rect.width, rect.height);
+        }
+
         ///
         @property @trusted @nogc
         const(uvec4b) colour() nothrow const

@@ -335,6 +335,8 @@ class Renderer
 ///
 enum MouseButton : ubyte
 {
+    None = 0,
+
     ///
     Left = 1 << 0,
     
@@ -416,9 +418,11 @@ class InputManager
 
             this._tapped.reserve(this._keyStates.length);
 
-            office.subscribe(Window.Event.KeyDown,      &this.onKeyEvent);
-            office.subscribe(Window.Event.KeyUp,        &this.onKeyEvent);
-            office.subscribe(Window.Event.MouseMoved,   &this.onMouseMoved);
+            office.subscribe(Window.Event.KeyDown,              &this.onKeyEvent);
+            office.subscribe(Window.Event.KeyUp,                &this.onKeyEvent);
+            office.subscribe(Window.Event.MouseMoved,           &this.onMouseMoved);
+            office.subscribe(Window.Event.MouseButtonPressed,   &this.onMouseButton);
+            office.subscribe(Window.Event.MouseButtonReleased,  &this.onMouseButton);
         }
 
         /// $(B Important: This function should be called _before_ the window processes it's events, or at the very end of a frame's update)

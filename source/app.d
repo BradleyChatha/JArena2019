@@ -64,7 +64,11 @@ class Test : Scene, IPostBox
             gui2.addChild(new TestControl(vec2(0,0), vec2(25, 60), colour(0, 128, 128, 255)));
 
             auto font = super.manager.cache.get!Font("Crackdown");
-            super.register("Some random text", new TextObject(font, "A B C D E F G 1 2 3"d, vec2(0,500), 14, colour(128, 0, 128, 255), 0));
+            super.register("Some random text", new TextObject(font, "A B C D E F G 1 2 3"d, vec2(0,550), 14, colour(128, 0, 128, 255), 0));
+            
+            auto btnText = new Text(font, "Click Me"d, vec2(0), 14, colour(255, 255, 255, 255));
+            gui.addChild(new SimpleButton(btnText, btn => writeln("Button position: ", btn.position)));
+            gui.getChild!SimpleButton(gui.children.length - 1).fitToText();
         }
 
         void onSwap(PostOffice office)
@@ -113,9 +117,10 @@ class Test : Scene, IPostBox
             }
 
             super.updateScene(window, deltaTime);
+            this.gui.onUpdate(super.manager.input, deltaTime);
             super.renderScene(window);
-            this.gui.onRender(window);
             this.gui2.onRender(window);
+            this.gui.onRender(window);
         }
     }
 }

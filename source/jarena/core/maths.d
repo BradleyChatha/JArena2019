@@ -48,6 +48,16 @@ struct Rectangle(T)
     {
         this(pos, VecType(width, height));
     }
+
+    ///
+    bool contains(Vect)(Vect point)
+    if(isVector!Vect && Vect.dimension == 2)
+    {
+        return point.x >= this.position.x
+            && point.y >= this.position.y
+            && point.x < this.position.x + this.size.x
+            && point.y < this.position.y + this.size.y;
+    }
 }
 
 ///
