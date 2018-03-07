@@ -3,22 +3,23 @@ module jarena.gameplay.gui.containers;
 
 private
 {
+    import std.typecons : Flag;
     import jarena.core, jarena.gameplay, jarena.graphics;
 }
 
 /++
  + A container that will stack controls either vertically or horizontally.
  +
- + Controls added to this container will have their positions managed by the container.
+ + Controls added to this container will have their positions managed by the container,
+ + meaning any changes made to the positions of this container's children will have no effect.
  +
  + For this container, setting it's colour will add a background colour to the container's area.
- +
- + Notes:
- +  This container will re-size itself to fit tightly around it's children. The re-size will
- +  occur anytime a child's state changes, the container moves, or when a child is add or removed.
  + ++/
 final class StackContainer : Container
 {
+    /// Determines whether the contain auto re-sizes itself.
+    alias AutoSize = Flag!"autoSize";
+
     enum Direction
     {
         Horizontal,
@@ -31,6 +32,7 @@ final class StackContainer : Container
         UIElement[] _children;
         bool        _ignoreStateChanges;
         Direction   _direction;
+        AutoSize    _shouldResize = AutoSize.yes;
 
         void sortPositions()
         {
@@ -59,7 +61,8 @@ final class StackContainer : Container
                 nextPos.x = nextPos.x + child.size.x + this._padding; // += doesn't work.
             }
 
-            this.size = newSize;
+            if(this.autoSize)
+                this.size = newSize;
         }
 
         void sortVertical()
@@ -77,7 +80,8 @@ final class StackContainer : Container
                 nextPos.y = nextPos.y + child.size.y + this._padding; // += doesn't work.
             }
 
-            this.size = newSize;
+            if(this.autoSize)
+                this.size = newSize;
         }
     }
 
@@ -95,6 +99,26 @@ final class StackContainer : Container
         {
             this(direction, colour);
             super.position = position;
+        }
+
+        /// Returns: Whether the container will automatically change it's size or not.
+        @property @safe @nogc
+        bool autoSize() nothrow const
+        {
+            return this._shouldResize;
+        }
+
+        /++
+         + Determines whether the container will automatically change it's
+         + size to tightly fit around it's children.
+         +
+         + It may be desirable to disable this feature in some cases, such as making use of
+         + the container's background colour.
+         + ++/
+        @property @safe @nogc
+        void autoSize(AutoSize flag) nothrow
+        {
+            this._shouldResize = flag;
         }
     }
 
