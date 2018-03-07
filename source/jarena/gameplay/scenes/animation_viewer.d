@@ -120,6 +120,9 @@ final class AnimationViewerScene : Scene
         {
             import std.format : format;
 
+            if(super.manager.input.wasKeyTapped(sfKeyBack))
+                super.manager.swap!MenuScene;
+
             if(this._animations.length == 0)
                 return;
 

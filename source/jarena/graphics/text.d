@@ -87,7 +87,7 @@ class Text
 
         ///
         @trusted
-        this(Font font, const(char[]) text, vec2 postion = vec2(0), uint charSize = 14, uvec4b colour = jarena.core.colour(0, 0, 0, 255))
+        this(Font font, const(char[]) text, vec2 position = vec2(0), uint charSize = 14, uvec4b colour = jarena.core.colour(0, 0, 0, 255))
         {
             this(font, position, charSize, colour);
             this.asciiText = text;
