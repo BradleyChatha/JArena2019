@@ -130,6 +130,20 @@ class Text
             sfText_setCharacterSize(this.handle, size);
         }
 
+        ///
+        @property @trusted @nogc
+        float outlineThickness() nothrow const
+        {
+            return sfText_getOutlineThickness(this.handle);
+        }
+
+        ///
+        @property @trusted @nogc
+        void outlineThickness(float thicc) nothrow
+        {
+            sfText_setOutlineThickness(this.handle, thicc);
+        }
+
         /// Returns: The size of the text on screen.
         @property @trusted @nogc
         const(vec2) screenSize() nothrow const
@@ -150,6 +164,20 @@ class Text
         void colour(uvec4b col) nothrow
         {
             sfText_setColor(this.handle, col.toSF!sfColor);
+        }
+
+        ///
+        @property @trusted @nogc
+        const(uvec4b) outlineColour() nothrow const
+        {
+            return sfText_getOutlineColor(this.handle).to!uvec4b;
+        }
+
+        ///
+        @property @trusted @nogc
+        void outlineColour(uvec4b col) nothrow
+        {
+            sfText_setOutlineColor(this.handle, col.toSF!sfColor);
         }
 
         ///

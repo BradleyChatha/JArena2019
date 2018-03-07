@@ -8,9 +8,10 @@ private
 const WINDOW_NAME = "JArena";
 const WINDOW_SIZE = uvec2(860, 720);
 const DEBUG_FONT = "Data/Fonts/crackdown.ttf";
-const DEBUG_FONT_SIZE = 8;
+const DEBUG_FONT_SIZE = 10;
 const DEBUG_TEXT_POSITION = vec2(0);
 const DEBUG_TEXT_COLOUR = colour(53, 188, 0, 255);
+const DEBUG_TEXT_THICC = 2;
 
 final class Engine
 {
@@ -48,6 +49,7 @@ final class Engine
             this._timers        = new Timers();
             this._debugFont     = new Font(DEBUG_FONT);
             this._debugText     = new Text(this._debugFont, ""d, DEBUG_TEXT_POSITION, DEBUG_FONT_SIZE, DEBUG_TEXT_COLOUR);
+            this._debugText.outlineThickness(DEBUG_TEXT_THICC);
 
             // Setup init info
             InitInfo.windowSize = this._window.size;

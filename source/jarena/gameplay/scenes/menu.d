@@ -8,6 +8,8 @@ private
 
 const TEXT_SIZE = 18;
 const TEXT_COLOUR = colour(255, 255, 255, 255);
+const MENU_COLOUR = colour(0, 255, 0, 128);
+const MENU_POSITION = vec2(5, 20);
 
 @SceneName("Menu")
 final class MenuScene : Scene
@@ -23,8 +25,8 @@ final class MenuScene : Scene
     {
         void onInit()
         {
-            this._list = new StackContainer(vec2(5, 20));
-            this._list.colour = colour(0, 255, 0, 128);
+            this._list = new StackContainer(MENU_POSITION);
+            this._list.colour = MENU_COLOUR;
 
             auto font = super.manager.cache.get!Font("Calibri");
             foreach(item; SCENES)
