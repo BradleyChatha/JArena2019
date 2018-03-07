@@ -23,6 +23,7 @@ final class AnimationViewerScene : Scene
         StackContainer    _dataGui;
         StackContainer    _instructionGui;
         SimpleLabel       _labelAnimData;
+        SimpleLabel       _labelHasFinished;
         SimpleLabel       _labelInstructions;
 
         void changeAnimation()
@@ -40,16 +41,22 @@ final class AnimationViewerScene : Scene
             }
 
             this._sprite.animation = next;
-            this._sprite.position  = vec2((InitInfo.windowSize.x / 2) - (this._sprite.textureRect.size.x / 2),
-                                          (InitInfo.windowSize.y / 2) - (this._sprite.textureRect.size.y / 2));
+            this._sprite.position  = vec2((InitInfo.windowSize.x / 2) - (this._sprite.bounds.size.x / 2),
+                                          (InitInfo.windowSize.y / 2) - (this._sprite.bounds.size.y / 2));
 
             this._labelAnimData.updateTextASCII(
                 format("Animation Name: %s\n"~
                        "Delay Per Frame: %sms\n"~
-                       "Repeats: %s", 
+                       "Repeats: %s\n"~
+                       "Rows: %s\n"~
+                       "Columns: %s\n"~
+                       "Frame Count: %s",
                        next.name, 
                        next.delayPerFrameMS, 
-                       next.repeat
+                       next.repeat,
+                       next.spriteSheet.rows,
+                       next.spriteSheet.columns,
+                       next.spriteSheet.columns * next.spriteSheet.rows
                       )
             );
         }
@@ -68,7 +75,7 @@ final class AnimationViewerScene : Scene
             import std.algorithm : map;
             assert(animations !is null);
 
-            this._animations = animations.values.map!(v => cast(AnimationInfo)v).array;
+            this._animations = animations.byValue.map!(v => cast(AnimationInfo)v).array;
             super("Animation Viewer");
         }
     }
@@ -93,9 +100,10 @@ final class AnimationViewerScene : Scene
 
             auto font               = super.manager.cache.get!Font("Calibri");
             this._labelAnimData     = this.makeLabel(this._dataGui, font);
+            this._labelHasFinished  = this.makeLabel(this._dataGui, font);
             this._labelInstructions = this.makeLabel(this._instructionGui, font);
             this._labelInstructions.updateTextASCII(
-                "Left Arrow: Previous Animation | Right Arrow: Next Animation"
+                "Left Arrow: Previous Animation | Right Arrow: Next Animation | R: Restart"
             );
         }
 
@@ -109,6 +117,8 @@ final class AnimationViewerScene : Scene
 
         void onUpdate(Window window, GameTime deltaTime)
         {
+            import std.format : format;
+
             if(this._animations.length == 0)
                 return;
 
@@ -131,6 +141,12 @@ final class AnimationViewerScene : Scene
 
                 this.changeAnimation();
             }
+
+            if(super.manager.input.isKeyDown(sfKeyR) && this._sprite !is null)
+                this._sprite.restart();
+
+            if(this._sprite !is null)
+                this._labelHasFinished.updateTextASCII(format("Finished: %s", this._sprite.finished));
 
             super.updateScene(window, deltaTime);
             this._gui.onUpdate(super.manager.input, deltaTime);

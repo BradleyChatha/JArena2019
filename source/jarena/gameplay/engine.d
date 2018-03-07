@@ -8,9 +8,9 @@ private
 const WINDOW_NAME = "JArena";
 const WINDOW_SIZE = uvec2(860, 720);
 const DEBUG_FONT = "Data/Fonts/crackdown.ttf";
-const DEBUG_FONT_SIZE = 14;
+const DEBUG_FONT_SIZE = 8;
 const DEBUG_TEXT_POSITION = vec2(0);
-const DEBUG_TEXT_COLOUR = colour(128, 128, 128, 255);
+const DEBUG_TEXT_COLOUR = colour(53, 188, 0, 255);
 
 final class Engine
 {

@@ -86,7 +86,7 @@ if(isType!T)
 
         /// Returns: Range
         @property @safe @nogc
-        auto values() nothrow inout
+        auto byValue() nothrow inout
         {
             return this._cache.byValue;
         }

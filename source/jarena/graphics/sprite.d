@@ -405,6 +405,12 @@ class AnimatedSprite : Sprite
         uvec2 _currentFrame;
         uint _currentDelayMS;
         bool _finished;
+
+        @safe
+        void changeFrame()
+        {
+            this._currentAnimation.spriteSheet.changeSprite(this, this._currentFrame.x, this._currentFrame.y);
+        }
     }
 
     public
@@ -459,9 +465,20 @@ class AnimatedSprite : Sprite
                     }
                 }
 
-                this._currentAnimation.spriteSheet.changeSprite(this, this._currentFrame.x, this._currentFrame.y);
+                this.changeFrame();
                 this._currentDelayMS = 0;
             }
+        }
+
+        /// Restarts the animation.
+        void restart()
+        {
+            this._currentDelayMS = 0;
+            this._finished = false;
+            this._currentFrame = uvec2(0);
+
+            if(this._currentAnimation.spriteSheet.columns > 0)
+                this.changeFrame();
         }
 
         /// Sets the current animation of the sprite. (Doesn't require a cache).
@@ -469,10 +486,8 @@ class AnimatedSprite : Sprite
         void animation(AnimationInfo info)
         {
             // Reset state
-            this._currentDelayMS = 0;
-            this._finished = false;
+            this.restart();
             this._currentAnimation = info;
-            this._currentFrame = uvec2(0);
 
             sfSprite_setTexture(super.handle, info.spriteSheet.atlas._texture.handle, 1);
             info.spriteSheet.changeSprite(this, 0, 0);

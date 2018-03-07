@@ -1,0 +1,7 @@
+name "Tile Animation"
+
+atlasRef "../Atlases/test atlas.sdl"
+spriteSheetRef "TileAnimation"
+
+frameDelayMS 1500
+repeat false

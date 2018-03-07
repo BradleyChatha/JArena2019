@@ -1,5 +1,6 @@
 animations {
     file "Animations/test animation.sdl"
+    file "Animations/tile animation.sdl"
 }
 
 atlases {
