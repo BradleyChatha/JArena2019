@@ -81,12 +81,12 @@ if(isType!T)
         {
             bool removed = this._cache.remove(key);
         
-            tracef("Attempting to remove %s from cache", key);
+            tracef("Attempting to remove the %s called '%s' from cache", TName, key);
 
             if(removed)
-                tracef("Removed %s from cache", key);
+                tracef("Removed the %s called '%s' from cache", TName, key);
             else
-                tracef("Unable to remove %s from cache, key not found", key);
+                tracef("Unable to remove the %s called '%s' from cache, key not found", TName, key);
 
             return removed;
         }
