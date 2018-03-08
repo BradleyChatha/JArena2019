@@ -453,11 +453,28 @@ class AnimatedSprite : Sprite
         }
 
         /++
+         + Changes the current animation using the cache given to this class' constructor.
+         +
+         + Notes:
+         +  If the cache given was null, then this function does nothing.
+         +
+         + Params:
+         +  animName = The name of the animation to lookup in the cache.
+         + ++/
+        @trusted
+        void changeAnimation(string animName)
+        {
+            if(this._animations !is null)
+                this.animation = this._animations.get(animName);
+        }
+
+        /++
          + Restarts the animation.
          +
          + For manual animations - this function will reset the `currentFrame` to 0, and then
          + call `changeFrame`.
          + ++/
+        @safe
         void restart()
         {
             this._currentDelayMS = 0;
