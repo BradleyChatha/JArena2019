@@ -300,7 +300,7 @@ class SdlangLoader
             }
         }
 
-                /++
+        /++
          + Parses a tag containing a list of animations.
          +
          + For information about most of the parameters, please see the other relevent
@@ -459,32 +459,6 @@ class SdlangLoader
                 animations.add(animationName, animation);
 
             return animation;
-        }
-
-        /// ditto
-        AnimationInfo parseAnimationSpriteSheetTag(Multi_Cache)(Tag tag, 
-                                                                string baseDirectory = null, 
-                                                                string atlasName = null,
-                                                                Multi_Cache cache = null)
-        if(isMultiCache!Multi_Cache)
-        {
-            Cache!AnimationInfo animations;
-            Cache!SpriteAtlas atlases;
-            Cache!Texture textures;
-
-            if(cache !is null)
-            {
-                static if(canCache!(Multi_Cache, AnimationInfo))
-                    animations = cache.getCache!AnimationInfo;
-
-                static if(canCache!(Multi_Cache, SpriteAtlas))
-                    atlases = cache.getCache!SpriteAtlas;
-
-                static if(canCache!(Multi_Cache, Texture))
-                    textures = cache.getCache!Texture;
-            }
-
-            return SdlangLoader.parseAnimationSpriteSheetTag(tag, baseDirectory, animations, atlasName, atlases, textures);
         }
 
         /++
