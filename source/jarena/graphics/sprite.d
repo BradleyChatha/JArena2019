@@ -405,12 +405,6 @@ class AnimatedSprite : Sprite
         uvec2 _currentFrame;
         uint _currentDelayMS;
         bool _finished;
-
-        @safe
-        void changeFrame()
-        {
-            this._currentAnimation.spriteSheet.changeSprite(this, this._currentFrame.x, this._currentFrame.y);
-        }
     }
 
     public
@@ -437,6 +431,11 @@ class AnimatedSprite : Sprite
 
         /++
          + Updates the animation.
+         +
+         + Notes:
+         +  If you wish for the animation to be controlled manually/via some other
+         +  automated way, please look at `advance`, `retreat`, `currentFrame`,
+         +  and `changeFrame`. Remember to stop calling this function as well.
          + ++/
         @safe
         void onUpdate(GameTime delta)
@@ -447,30 +446,18 @@ class AnimatedSprite : Sprite
             this._currentDelayMS += delta.asMilliseconds;
             if(this._currentDelayMS >= this.animation.delayPerFrameMS)
             {
-                this._currentFrame.x = this._currentFrame.x + 1;
-                if(this._currentFrame.x >= this._currentAnimation.spriteSheet.columns)
-                {
-                    this._currentFrame.x = 0;
-                    this._currentFrame.y = this._currentFrame.y + 1;
-
-                    if(this._currentFrame.y >= this._currentAnimation.spriteSheet.rows)
-                    {
-                        if(!this._currentAnimation.repeat)
-                        {
-                            this._finished = true;
-                            return;
-                        }
-                        else
-                            this._currentFrame.y = 0;
-                    }
-                }
-
+                this.advance(1);
                 this.changeFrame();
                 this._currentDelayMS = 0;
             }
         }
 
-        /// Restarts the animation.
+        /++
+         + Restarts the animation.
+         +
+         + For manual animations - this function will reset the `currentFrame` to 0, and then
+         + call `changeFrame`.
+         + ++/
         void restart()
         {
             this._currentDelayMS = 0;
@@ -479,6 +466,92 @@ class AnimatedSprite : Sprite
 
             if(this._currentAnimation.spriteSheet.columns > 0)
                 this.changeFrame();
+        }
+
+        /++
+         + Update's the sprite to display the `currentFrame` of the animation.
+         +
+         + Notes:
+         +  This function is only useful for manual animations.
+         +
+         +  If either the x or y position of the `currentFrame` are out of bounds, an assert will fail.
+         +  `AnimatedSprite.animation.spriteSheet` will contain the number of columns and rows the animation
+         +  contains, which can be used to properly keep them in bounds.
+         + ++/
+        @safe
+        void changeFrame()
+        {
+            this._currentAnimation.spriteSheet.changeSprite(this, this._currentFrame.x, this._currentFrame.y);
+        }
+
+        /++
+         + Advances the animation by a certain amount of frames.
+         +
+         + Notes:
+         +  This is likely only useful for manual animations.
+         +
+         +  This will automatically advance onto the next row (y-axis) of animations if needed.
+         +
+         +  For non-repeating animations, once the last frame of animation is reached, the current frame
+         +  will no longer be altered, and the `finished` flag is set. To clear this flag, a call to
+         +  `restart` must be made.
+         +
+         +  For repeating animations, once the final frame has been reached, this function will simply
+         +  loop back to the first frame of animation, and go from there. $(B The `finished` flag will never
+         +  be set in this case).
+         +
+         +  $(B This function only changes the value of `currentFrame`, it does not update the sprite.
+         +      Please use the `changeFrame` function to update the sprite to the current frame.)
+         +
+         +  This function will always keep the `currentFrame` in-bounds, meaning it is safe to call `changeFrame`
+         +  without any kind of checking.
+         + ++/
+        @safe @nogc
+        void advance(uint frameCount = 1) nothrow
+        {
+            @safe @nogc
+            void nextFrame() nothrow
+            {
+                this._currentFrame.x = this._currentFrame.x + 1;
+                if(this._currentFrame.x >= this._currentAnimation.spriteSheet.columns)
+                {
+                    this._currentFrame.x = 0;
+                    this._currentFrame.y = this._currentFrame.y + 1;
+
+                    if(this._currentAnimation.repeat && this._currentFrame.y >= this._currentAnimation.spriteSheet.rows)
+                        this._currentFrame.y = 0;
+                }
+
+                if(this._currentFrame.x >= this.animation.spriteSheet.columns - 1
+                && this._currentFrame.y >= this.animation.spriteSheet.rows - 1
+                && !this.animation.repeat)
+                    this._finished = true;
+            }
+
+            // TODO: Make an optimised version of this function.
+            foreach(_; 0..frameCount)
+            {
+                if(!this.finished)
+                    nextFrame();
+            }
+        }
+
+        /++
+         + Notes:
+         +  This function is generally only useful for manual animations.
+         +  Though there are cases you may want this when using an automatic animation.
+         +
+         +  Because a reference is returned, code such as `myAnimation.currentFrame += uvec2(20, 10)` will work.
+         +
+         +  A call to `changeFrame` must be made for the sprite to be updated.
+         +
+         + Returns:
+         +  A reference to a vector containing information about the current frame of the animation.
+         + ++/
+        @property @safe @nogc
+        ref inout(uvec2) currentFrame() nothrow inout
+        {
+            return this._currentFrame;
         }
 
         /// Sets the current animation of the sprite. (Doesn't require a cache).
@@ -494,8 +567,8 @@ class AnimatedSprite : Sprite
         }
 
         /// Returns: The current animation of the sprite.
-        @property @safe
-        AnimationInfo animation()
+        @property @safe @nogc
+        inout(AnimationInfo) animation() nothrow inout
         {
             return this._currentAnimation;
         }
