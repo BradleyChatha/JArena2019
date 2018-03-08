@@ -11,7 +11,7 @@
 		"eventcore": "0.8.30",
 		"fluent-asserts": "0.9.0",
 		"libasync": "0.8.3",
-		"libdparse": "0.8.0-alpha.5",
+		"libdparse": "0.7.2-alpha.6",
 		"libevent": "2.0.2+2.0.16",
 		"libinputvisitor": "1.2.2",
 		"memutils": "0.4.10",

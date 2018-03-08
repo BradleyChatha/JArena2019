@@ -77,6 +77,21 @@ if(isType!T)
         }
 
         ///
+        bool remove(string key)
+        {
+            bool removed = this._cache.remove(key);
+        
+            tracef("Attempting to remove %s from cache", key);
+
+            if(removed)
+                tracef("Removed %s from cache", key);
+            else
+                tracef("Unable to remove %s from cache, key not found", key);
+
+            return removed;
+        }
+
+        ///
         @safe 
         bool hasKey(string key) const
         {
@@ -136,6 +151,7 @@ if(allSatisfy!(isType, Types))
 
     public
     {
+        mixin(genRemoveFunctions());
         mixin(genConstructor());
         mixin(genAddFunctions());
         mixin(genGetFunctions());
@@ -247,6 +263,28 @@ if(allSatisfy!(isType, Types))
                 builder.putScope((_)
                 {
                     builder.putf("return %s;", cacheName);
+                });
+            }
+
+            return builder.data.idup;
+        }
+
+        dstring genRemoveFunctions()
+        {
+            import codebuilder;
+            auto builder = new CodeBuilder();
+            
+            foreach(type; Types)
+            {
+                import std.traits : fullyQualifiedName;
+                auto cacheName = makeCacheName!type;
+                auto typeName  = fullyQualifiedName!type;
+
+                builder.putf("bool remove(T = %s)(string key)", typeName);
+                builder.putf("if(is(T == %s))", typeName);
+                builder.putScope((_)
+                {
+                    builder.putf("return %s.remove(key);", cacheName);
                 });
             }
 
