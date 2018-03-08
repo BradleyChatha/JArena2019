@@ -393,7 +393,22 @@ struct AnimationInfo
     bool repeat;
 }
 
-/// Adds the ability for a `Sprite` to be animated.
+/++
+ + Adds the ability for a `Sprite` to be animated.
+ +
+ + There are two built-in ways to animate a sprite using this function.
+ +
+ + The first is automatic animation, which is where the programmer calls `AnimatedSprite.onUpdate`,
+ + which will allow the class to update it's animation with respect to the information within
+ + it's current animation (`AnimationInfo`).
+ +
+ + The second is manual animation, which is where `AnimatedSprite.onUpdate` is $(B not) called, and the programmer
+ + instead uses `AnimatedSprite.currentFrame`, `AnimatedSprite.changeFrame`, and `AnimatedSprite.advance` to
+ + finely-control the frame that sprite is displaying.
+ +
+ + Of course, this class can be inherited from, and other systems can be built to provide different automatic
+ + animation options.
+ + ++/
 class AnimatedSprite : Sprite
 {
     private
