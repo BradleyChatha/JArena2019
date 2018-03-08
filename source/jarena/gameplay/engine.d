@@ -65,6 +65,7 @@ final class Engine
                 this._debugText.asciiText = sformat(this._debugBuffer, "FPS: %s\nFrameTime: %sms", 
                                                     this._fps.frameCount, this._fps.elapsedTime.asMilliseconds);
             });
+            this.events.subscribe(Window.Event.Close, (_,__) => this._window.close());
 
             // Load in assets
             SdlangLoader.parseDataListFile(this._scenes.cache.getCache!AnimationInfo,
