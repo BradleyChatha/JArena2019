@@ -12,11 +12,25 @@ class SdlangLoader
 
     private static
     {
+        const DATA_FILE_TYPE             = "DataFile";
+        const SPRITE_ATLAS_TYPE          = "SpriteAtlas";
+        const ANIMATION_SPRITESHEET_TYPE = "Animation:spriteSheet";
+        const ANIMATION_LIST_TYPE        = "Animation:list";
+
         struct FileInfo
         {
             string path;    // Path to the file.
             string baseDir; // Directory the file is in.
             string name;    // Some tags allow you to specify the name to cache the file as.
+        }
+
+        void enforceType(Tag tag, string type)
+        {
+            import std.exception : enforce;
+            import std.format    : format;
+
+            auto got = tag.expectTagValue!string("type");
+            enforce(got == type, format("Expected file type '%s' but got '%s'.", type, got));
         }
 
         // Tries to load `atlasName` from cache.
@@ -121,6 +135,7 @@ class SdlangLoader
          +
          + Format:
          +  ```
+         +  type "SpriteAtlas"
          +  texture "path_to_texture/relative_to_baseDirectory.png" // Mandatory
          +  name "Atlas name here" // Mandatory
          +
@@ -161,6 +176,7 @@ class SdlangLoader
             import std.file      : getcwd;
             import std.experimental.logger : tracef;
             enforce(tag !is null, "Cannot parse a null tag");
+            enforceType(tag, SPRITE_ATLAS_TYPE);
 
             if(baseDirectory is null)
                 baseDirectory = getcwd();
@@ -248,6 +264,97 @@ class SdlangLoader
         }
 
         /++
+         + Parses any known animation tag.
+         +
+         + For information about the most of the parameters, please check the relevent
+         + animation parsing functions, since this function only passes them through.
+         +
+         + Params:
+         +  tag = The tag to parse.
+         +
+         + Returns:
+         +  All `AnimationInfo`s that were loaded/retrieved from the `atlases` cache.
+         + ++/
+        AnimationInfo[] parseAnimationTag(Tag tag,
+                                          string baseDirectory = null,
+                                          Cache!AnimationInfo animations = null,
+                                          string atlasName = null,
+                                          Cache!SpriteAtlas atlases = null,
+                                          Cache!Texture textures = null)
+        {
+            import std.format    : format;
+            import std.exception : enforce;
+            enforce(tag !is null, "Cannot parse a null tag");
+
+            auto type = tag.expectTagValue!string("type");
+            switch(type)
+            {
+                case ANIMATION_SPRITESHEET_TYPE:
+                    return [SdlangLoader.parseAnimationSpriteSheetTag(tag, baseDirectory, animations, atlasName, atlases, textures)];
+
+                case ANIMATION_LIST_TYPE:
+                    return SdlangLoader.parseAnimationListTag(tag, baseDirectory, animations, atlasName, atlases, textures);
+                
+                default:
+                    throw new Exception(format("Tag type '%s' is not a valid animation tag type.", tag.name));
+            }
+        }
+
+                /++
+         + Parses a tag containing a list of animations.
+         +
+         + For information about most of the parameters, please see the other relevent
+         + animation parsing functions, as this function does nothing other than pass them through.
+         +
+         + Params:
+         +  tag = The tag to parse.
+         +
+         + Format:
+         + ```
+         +  type "Animation:list" // Mandatory
+         +  
+         +  // Any number of 'animation' tags can be used, each tag contains another valid animation tag.
+         +  // This also includes "Animation:list" tags.
+         +  animation {
+         +      // Another valid animation tag, "Animation:spriteSheet", "Animation:list" etc...
+         +  }
+         + ```
+         +
+         + Returns:
+         +  A list of all `AnimationInfo`s that were loaded/retrieved from the `atlases` cache.
+         + ++/
+        AnimationInfo[] parseAnimationListTag(Tag tag,
+                                              string baseDirectory = null,
+                                              Cache!AnimationInfo animations = null,
+                                              string atlasName = null,
+                                              Cache!SpriteAtlas atlases = null,
+                                              Cache!Texture textures = null)
+        {
+            import std.format    : format;
+            import std.exception : enforce;
+            enforce(tag !is null, "Cannot parse a null tag");
+            enforceType(tag, ANIMATION_LIST_TYPE);
+
+            AnimationInfo[] anims;
+            foreach(animTag; tag.tags)
+            {
+                switch(animTag.name)
+                {
+                    case "animation":
+                        anims ~= SdlangLoader.parseAnimationTag(animTag, baseDirectory, animations, atlasName, atlases, textures);
+                        break;
+
+                    case "type": break;
+
+                    default:
+                        throw new Exception(format("Unexpected tag named '%s' was found for an Animation:list tag", animTag.name));
+                }
+            }
+
+            return anims;
+        }
+
+        /++
          + Parses a tag containing information about a sprite sheet based animation.
          +
          + Notes:
@@ -268,6 +375,7 @@ class SdlangLoader
          +
          + Format:
          + ```
+         +  type "Animation:spriteSheet"
          +  name "Name of animation" // Name of the animation. Mandatory.
          +  atlasRef "path_to_atlas_definition.sdl" // Path to the .sdl file defining the atlas that has the animation sheet. Mandatory. Relative to baseDirectory.
          +  spriteSheetRef "name_of_sheet_in_atlas" // The name of the animation sprite sprite sheet inside of the referenced atlas. Mandatory.
@@ -286,7 +394,7 @@ class SdlangLoader
          + Returns:
          +  The parsed animation.
          + ++/
-        AnimationInfo parseSpriteSheetAnimationTag(Tag tag,
+        AnimationInfo parseAnimationSpriteSheetTag(Tag tag,
                                                    string baseDirectory = null, 
                                                    Cache!AnimationInfo animations = null, 
                                                    string atlasName = null,
@@ -298,6 +406,8 @@ class SdlangLoader
             import std.format    : format;
             import std.file      : getcwd;
             import std.experimental.logger : trace, tracef;
+            enforce(tag !is null, "Cannot parse a null tag");
+            enforceType(tag, ANIMATION_SPRITESHEET_TYPE);
 
             auto animationName = tag.expectTagValue!string("name");
             if(animations !is null)
@@ -352,7 +462,7 @@ class SdlangLoader
         }
 
         /// ditto
-        AnimationInfo parseSpriteSheetAnimationTag(Multi_Cache)(Tag tag, 
+        AnimationInfo parseAnimationSpriteSheetTag(Multi_Cache)(Tag tag, 
                                                                 string baseDirectory = null, 
                                                                 string atlasName = null,
                                                                 Multi_Cache cache = null)
@@ -374,7 +484,7 @@ class SdlangLoader
                     textures = cache.getCache!Texture;
             }
 
-            return SdlangLoader.parseSpriteSheetAnimationTag(tag, baseDirectory, animations, atlasName, atlases, textures);
+            return SdlangLoader.parseAnimationSpriteSheetTag(tag, baseDirectory, animations, atlasName, atlases, textures);
         }
 
         /++
@@ -393,6 +503,8 @@ class SdlangLoader
 
             auto baseDir = "Data/";
             auto dataTag = parseFile("Data/data.sdl");
+            enforceType(dataTag, DATA_FILE_TYPE);
+
             auto animTag = dataTag.expectTag("animations");
             auto atlasTag = dataTag.expectTag("atlases");
             auto fontTag = dataTag.expectTag("fonts");
@@ -407,7 +519,7 @@ class SdlangLoader
 
             foreach(info; animFiles)
             {
-                SdlangLoader.parseSpriteSheetAnimationTag(
+                SdlangLoader.parseAnimationTag(
                     parseFile(info.path),
                     info.baseDir,
                     animations,

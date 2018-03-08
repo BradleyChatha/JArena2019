@@ -1,6 +1,7 @@
+type "DataFile"
+
 animations {
-    file "Animations/test animation.sdl"
-    file "Animations/tile animation.sdl"
+    file "Animations/Test Animations.sdl"
 }
 
 atlases {

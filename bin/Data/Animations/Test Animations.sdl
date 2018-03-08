@@ -1,0 +1,23 @@
+type "Animation:list"
+
+animation {
+    type "Animation:spriteSheet"
+    name "Test Animation"
+
+    atlasRef "../Atlases/test atlas.sdl"
+    spriteSheetRef "TahnAnimation"
+
+    frameDelayMS 500
+    repeat true
+}
+
+animation {
+    type "Animation:spriteSheet"
+    name "Tile Animation"
+
+    atlasRef "../Atlases/test atlas.sdl"
+    spriteSheetRef "TileAnimation"
+
+    frameDelayMS 1500
+    repeat false
+}

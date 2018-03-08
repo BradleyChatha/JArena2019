@@ -1,3 +1,4 @@
+type "SpriteAtlas"
 texture "../Textures/Atlas.png"
 name "Test Atlas"
 
