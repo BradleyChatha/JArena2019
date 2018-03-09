@@ -40,20 +40,3 @@ build_release_x64:
         - dub build --build=release --arch=x86_64
     variables:
         BUILD_ARCH: "64"
-
-# DLSL can't build properly in version(unittest), so until that changes these jobs are allowed to fail
-build_unittests_x86:
-    stage: build
-    allow_failure: true
-    script:
-        - dub build --build=unittest --arch=x86
-    variables:
-        BUILD_ARCH: "32"
-
-build_unittests_x64:
-    stage: build
-    allow_failure: true
-    script:
-        - dub build --build=unittest --arch=x86_64
-    variables:
-        BUILD_ARCH: "64"
