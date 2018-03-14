@@ -24,7 +24,7 @@ final class AnimationViewerScene : Scene
         StackContainer    _dataGui;
         StackContainer    _instructionGui;
         SimpleLabel       _labelAnimData;
-        SimpleLabel       _labelHasFinished;
+        SimpleLabel       _labelChangingData;
         SimpleLabel       _labelInstructions;
 
         void changeAnimation()
@@ -101,7 +101,7 @@ final class AnimationViewerScene : Scene
 
             auto font               = super.manager.cache.get!Font("Calibri");
             this._labelAnimData     = this.makeLabel(this._dataGui, font);
-            this._labelHasFinished  = this.makeLabel(this._dataGui, font);
+            this._labelChangingData  = this.makeLabel(this._dataGui, font);
             this._labelInstructions = this.makeLabel(this._instructionGui, font);
             this._labelInstructions.updateTextASCII(
                 "Left Arrow: Previous Animation | Right Arrow: Next Animation | R: Restart"
@@ -150,7 +150,16 @@ final class AnimationViewerScene : Scene
                 this._sprite.restart();
 
             if(this._sprite !is null)
-                this._labelHasFinished.updateTextASCII(format("Finished: %s", this._sprite.finished));
+            {
+                auto sheet = this._sprite.animation.spriteSheet;
+                auto currentFrameNumber = (this._sprite.currentFrame.y * sheet.columns) + this._sprite.currentFrame.x;
+
+                this._labelChangingData.updateTextASCII(format(
+                    "Finished: %s\n"~
+                    "Current Frame: %s (%s)", 
+                    this._sprite.finished,
+                    this._sprite.currentFrame, currentFrameNumber));
+            }
 
             super.updateScene(window, deltaTime);
             this._gui.onUpdate(super.manager.input, deltaTime);
