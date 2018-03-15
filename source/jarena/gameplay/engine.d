@@ -2,11 +2,12 @@ module jarena.gameplay.engine;
 
 private
 {
+    import std.experimental.logger;
     import jarena.core, jarena.graphics, jarena.gameplay, jarena.data;
 }
 
+const ENGINE_CONFIG_PATH = "data/engineConf.sdl";
 const WINDOW_NAME = "JArena";
-const WINDOW_SIZE = uvec2(860, 720);
 const DEBUG_FONT = "Data/Fonts/crackdown.ttf";
 const DEBUG_FONT_SIZE = 10;
 const DEBUG_TEXT_COLOUR = colour(255, 255, 255, 255);
@@ -29,6 +30,7 @@ final class Engine
         FPS          _fps;
         SceneManager _scenes;
         Timers       _timers;
+        Config       _config;
 
         // Debug stuff
         char[512]       _debugBuffer;
@@ -42,8 +44,20 @@ final class Engine
         ///
         void onInit()
         {
+            import sdlang;
+            import std.file : exists;
+            
+            // Read in the config
+            if(exists(ENGINE_CONFIG_PATH))
+            {
+                tracef("Loading config file from '%s'", ENGINE_CONFIG_PATH);
+                this._config.fromSdlTag(parseFile(ENGINE_CONFIG_PATH));
+            }
+            else
+                tracef("No config file exists. Please create one at '%s'", ENGINE_CONFIG_PATH);
+                
             // Setup variables
-            this._window        = new Window(WINDOW_NAME, WINDOW_SIZE);
+            this._window        = new Window(WINDOW_NAME, this._config.windowSize);
             this._eventOffice   = new PostOffice();
             this._input         = new InputManager(this._eventOffice);
             this._fps           = new FPS();
@@ -143,5 +157,14 @@ final class Engine
         {
             return this._timers;
         }
+    }
+
+    ///
+    @Serialisable
+    struct Config
+    {
+        mixin SerialisableInterface;
+
+        uvec2 windowSize;
     }
 }
