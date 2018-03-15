@@ -101,7 +101,7 @@ final class AnimationViewerScene : Scene
 
             auto font               = super.manager.cache.get!Font("Calibri");
             this._labelAnimData     = this.makeLabel(this._dataGui, font);
-            this._labelChangingData  = this.makeLabel(this._dataGui, font);
+            this._labelChangingData = this.makeLabel(this._dataGui, font);
             this._labelInstructions = this.makeLabel(this._instructionGui, font);
             this._labelInstructions.updateTextASCII(
                 "Left Arrow: Previous Animation | Right Arrow: Next Animation | R: Restart"

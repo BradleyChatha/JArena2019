@@ -131,7 +131,7 @@ class Window
                             );
 
             tracef("Setting FPS target to %s", _FPS);
-            sfRenderWindow_setFramerateLimit(this.handle, _FPS);
+            //sfRenderWindow_setFramerateLimit(this.handle, _FPS);
 
             trace("Creating Renderer");
             this._renderer = new Renderer(this);

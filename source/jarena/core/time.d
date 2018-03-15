@@ -29,6 +29,7 @@ struct GameTime
         }
 
         ///
+        @trusted
         static GameTime fromSeconds(float seconds)
         {
             GameTime time;
@@ -38,6 +39,7 @@ struct GameTime
         }
 
         ///
+        @trusted
         static GameTime fromMilliseconds(int ms)
         {
             GameTime time;
@@ -47,6 +49,7 @@ struct GameTime
         }
 
         ///
+        @trusted
         static GameTime fromMicroseconds(long micro)
         {
             GameTime time;

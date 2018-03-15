@@ -418,7 +418,7 @@ class AnimatedSprite : Sprite
         // Information about the current animation.
         AnimationInfo _currentAnimation;
         uvec2 _currentFrame;
-        uint _currentDelayMS;
+        GameTime _currentDelay;
         bool _finished;
     }
 
@@ -458,12 +458,12 @@ class AnimatedSprite : Sprite
             if(this._finished)
                 return;
 
-            this._currentDelayMS += delta.asMilliseconds;
-            if(this._currentDelayMS >= this.animation.delayPerFrameMS)
+            this._currentDelay.handle.microseconds += delta.handle.microseconds;
+            if(this._currentDelay.asMilliseconds >= this.animation.delayPerFrameMS)
             {
                 this.advance(1);
                 this.changeFrame();
-                this._currentDelayMS = 0;
+                this._currentDelay = GameTime.fromMicroseconds(0);
             }
         }
 
@@ -492,7 +492,7 @@ class AnimatedSprite : Sprite
         @safe
         void restart()
         {
-            this._currentDelayMS = 0;
+            this._currentDelay = GameTime.fromMicroseconds(0);
             this._finished = false;
             this._currentFrame = uvec2(0);
 

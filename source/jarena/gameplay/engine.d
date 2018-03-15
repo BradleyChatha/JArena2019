@@ -9,9 +9,10 @@ const WINDOW_NAME = "JArena";
 const WINDOW_SIZE = uvec2(860, 720);
 const DEBUG_FONT = "Data/Fonts/crackdown.ttf";
 const DEBUG_FONT_SIZE = 10;
-const DEBUG_TEXT_POSITION = vec2(0);
-const DEBUG_TEXT_COLOUR = colour(53, 188, 0, 255);
-const DEBUG_TEXT_THICC = 2;
+const DEBUG_TEXT_COLOUR = colour(255, 255, 255, 255);
+const DEBUG_TEXT_THICC = 0;
+const DEBUG_CONTAINER_COLOUR = colour(0, 0, 0, 128);
+const DEBUG_CONTAINER_POSITION = vec2(0);
 
 final class Engine
 {
@@ -29,10 +30,11 @@ final class Engine
         SceneManager _scenes;
         Timers       _timers;
 
-        // Debug text
-        char[512]  _debugBuffer;
-        Font       _debugFont;
-        Text       _debugText;
+        // Debug stuff
+        char[512]       _debugBuffer;
+        Font            _debugFont;
+        SimpleLabel     _debugText;
+        StackContainer  _debugGui;
     }
 
     public
@@ -48,8 +50,10 @@ final class Engine
             this._scenes        = new SceneManager(this._eventOffice, this._input);
             this._timers        = new Timers();
             this._debugFont     = new Font(DEBUG_FONT);
-            this._debugText     = new Text(this._debugFont, ""d, DEBUG_TEXT_POSITION, DEBUG_FONT_SIZE, DEBUG_TEXT_COLOUR);
-            this._debugText.outlineThickness(DEBUG_TEXT_THICC);
+            this._debugText     = new SimpleLabel(new Text(this._debugFont, ""d, vec2(0), DEBUG_FONT_SIZE, DEBUG_TEXT_COLOUR));
+            this._debugText.text.outlineThickness(DEBUG_TEXT_THICC);
+            this._debugGui      = new StackContainer(DEBUG_CONTAINER_POSITION, StackContainer.Direction.Horizontal, DEBUG_CONTAINER_COLOUR);
+            this._debugGui.addChild(this._debugText);
 
             // Setup init info
             InitInfo.windowSize = this._window.size;
@@ -62,8 +66,8 @@ final class Engine
             this.events.subscribe(Event.UpdateFPSDisplay, (_, __)
             {
                 import std.format : sformat;
-                this._debugText.asciiText = sformat(this._debugBuffer, "FPS: %s\nFrameTime: %sms", 
-                                                    this._fps.frameCount, this._fps.elapsedTime.asMilliseconds);
+                this._debugText.updateTextASCII(sformat(this._debugBuffer, "FPS: %s | Time: %sms", 
+                                                        this._fps.frameCount, this._fps.elapsedTime.asMilliseconds));
             });
             this.events.subscribe(Window.Event.Close, (_,__) => this._window.close());
 
@@ -91,7 +95,8 @@ final class Engine
             this._window.renderer.clear();
             this._timers.onUpdate(this._fps.elapsedTime);
             this._scenes.onUpdate(this._window, this._fps.elapsedTime);
-            this._window.renderer.drawText(this._debugText);
+            this._debugGui.onUpdate(this.input, this._fps.elapsedTime);
+            this._debugGui.onRender(this.window);
             this._window.renderer.displayChanges();
         }
 
