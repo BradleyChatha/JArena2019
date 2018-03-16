@@ -57,7 +57,7 @@ final class Engine
                 tracef("No config file exists. Please create one at '%s'", ENGINE_CONFIG_PATH);
                 
             // Setup variables
-            this._window        = new Window(WINDOW_NAME, this._config.windowSize);
+            this._window        = new Window(WINDOW_NAME, this._config.windowSize, this._config.targetFPS);
             this._eventOffice   = new PostOffice();
             this._input         = new InputManager(this._eventOffice);
             this._fps           = new FPS();
@@ -166,5 +166,6 @@ final class Engine
         mixin SerialisableInterface;
 
         uvec2 windowSize;
+        int targetFPS;
     }
 }

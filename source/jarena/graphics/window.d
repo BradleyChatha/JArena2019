@@ -9,7 +9,6 @@ private
     import jarena.graphics.sprite, jarena.graphics.text;
     
     enum BITS_PER_PIXEL = 32;
-    enum _FPS           = 60;
 }
 
 public
@@ -118,7 +117,7 @@ class Window
         /++
          + Creates the window.
          + ++/
-        this(string title, uvec2 size)
+        this(string title, uvec2 size, uint fps = 60)
         {
             import std.string : toStringz;
 
@@ -130,8 +129,8 @@ class Window
                                 null
                             );
 
-            tracef("Setting FPS target to %s", _FPS);
-            sfRenderWindow_setFramerateLimit(this.handle, _FPS);
+            tracef("Setting FPS target to %s", fps);
+            sfRenderWindow_setFramerateLimit(this.handle, fps);
 
             trace("Creating Renderer");
             this._renderer = new Renderer(this);
