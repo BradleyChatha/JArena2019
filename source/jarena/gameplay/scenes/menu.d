@@ -7,8 +7,8 @@ private
 }
 
 const TEXT_SIZE = 18;
-const TEXT_COLOUR = colour(255, 255, 255, 255);
-const MENU_COLOUR = colour(0, 255, 0, 128);
+const TEXT_COLOUR = Colour(255, 255, 255, 255);
+const MENU_COLOUR = Colour(0, 255, 0, 128);
 const MENU_POSITION = vec2(5, 20);
 
 @SceneName("Menu")

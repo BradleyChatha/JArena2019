@@ -25,8 +25,8 @@ unittest
     assert(ivec2(20, 40).toSF!sfVector2i == sfVector2i(20, 40));
 }
 
-/// Implementation of the `to` function for - uvec4b -> sfColor
-sfColor toSF(T : sfColor)(uvec4b vect)
+/// Implementation of the `to` function for - Colour -> sfColor
+sfColor toSF(T : sfColor)(Colour vect)
 {
     return sfColor(vect.r, vect.g, vect.b, vect.a);
 }
@@ -64,17 +64,8 @@ if(isSFMLRect!sfRect && isJArenaRect!jarenaRect)
     return jarenaRect(V(rect.left, rect.top), V(rect.width, rect.height));
 }
 
-/// Implementation of the `to` function for - sfColor -> uvec4b
-uvec4b to(T : uvec4b)(sfColor colour)
+/// Implementation of the `to` function for - sfColor -> Colour
+Colour to(T : Colour)(sfColor colour)
 {
-    return uvec4b(cast(ubyte)colour.r, cast(ubyte)colour.g, cast(ubyte)colour.b, cast(ubyte)colour.a);
-}
-
-/++
- + To get around limitations with how DLSL's `Vector` is implemented (or rather, how D works), this function is provided
- + to easily create a `uvec4b`, which is really only used for colours.
- + ++/
-uvec4b colour(ubyte r, ubyte g, ubyte b, ubyte a)
-{
-    return uvec4b(r, g, b, a);
+    return Colour(colour.r, colour.g, colour.b, colour.a);
 }

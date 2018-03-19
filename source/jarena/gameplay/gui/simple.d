@@ -15,9 +15,9 @@ class SimpleButton : Button
         const SFML_TEXT_OFFSET_X = 0;
         const SFML_TEXT_OFFSET_Y = -2;
 
-        uvec4b _idleColour;
-        uvec4b _mouseOverColour;
-        uvec4b _mouseClickColour;
+        Colour _idleColour;
+        Colour _mouseOverColour;
+        Colour _mouseClickColour;
         Text   _text;
         bool   _clickLock;
 
@@ -42,9 +42,9 @@ class SimpleButton : Button
              OnClickFunc func       = null, 
              vec2 position          = vec2(0),
              vec2 size              = vec2(80, 40),
-             uvec4b colour          = jarena.core.colour(128, 0, 128, 255),
-             uvec4b mouseOverColour = jarena.core.colour(64, 0, 64, 255),
-             uvec4b clickColour     = jarena.core.colour(32, 0, 32, 255))
+             Colour colour          = Colour(128, 0, 128, 255),
+             Colour mouseOverColour = Colour(64, 0, 64, 255),
+             Colour clickColour     = Colour(32, 0, 32, 255))
         {
             assert(text !is null);
 
@@ -86,7 +86,7 @@ class SimpleButton : Button
         protected void onChildStateChanged(UIElement child, StateChange change){}
         protected void onAddChild(UIElement child){}
         protected void onRemoveChild(UIElement child){}
-        protected void onColourChanged(uvec4b oldColour, uvec4b newColour){}
+        protected void onColourChanged(Colour oldColour, Colour newColour){}
 
         protected void onPositionChanged(vec2 oldPos, vec2 newPos)
         {
@@ -185,7 +185,7 @@ class SimpleLabel : Control
             this.updateLayout();
         }
 
-        protected void onColourChanged(uvec4b oldColour, uvec4b newColour)
+        protected void onColourChanged(Colour oldColour, Colour newColour)
         {
             this.updateLayout();
         }

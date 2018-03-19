@@ -61,7 +61,7 @@ class Text
         char[]  _asciiBuffer;
 
         @trusted
-        this(Font font, vec2 position, uint charSize, uvec4b colour)
+        this(Font font, vec2 position, uint charSize, Colour colour)
         {
             assert(font !is null);
             this._font = font;
@@ -79,7 +79,7 @@ class Text
     {
         ///
         @trusted
-        this(Font font, const(dchar[]) text, vec2 position = vec2(0), uint charSize = 14, uvec4b colour = jarena.core.colour(0, 0, 0, 255))
+        this(Font font, const(dchar[]) text, vec2 position = vec2(0), uint charSize = 14, Colour colour = Colour.black)
         {
             this(font, position, charSize, colour);
             this.unicodeText = text;
@@ -87,7 +87,7 @@ class Text
 
         ///
         @trusted
-        this(Font font, const(char[]) text, vec2 position = vec2(0), uint charSize = 14, uvec4b colour = jarena.core.colour(0, 0, 0, 255))
+        this(Font font, const(char[]) text, vec2 position = vec2(0), uint charSize = 14, Colour colour = Colour.black)
         {
             this(font, position, charSize, colour);
             this.asciiText = text;
@@ -154,28 +154,28 @@ class Text
 
         ///
         @property @trusted @nogc
-        const(uvec4b) colour() nothrow const
+        const(Colour) colour() nothrow const
         {
-            return sfText_getColor(this.handle).to!uvec4b;
+            return sfText_getColor(this.handle).to!Colour;
         }
 
         ///
         @property @trusted @nogc
-        void colour(uvec4b col) nothrow
+        void colour(Colour col) nothrow
         {
             sfText_setColor(this.handle, col.toSF!sfColor);
         }
 
         ///
         @property @trusted @nogc
-        const(uvec4b) outlineColour() nothrow const
+        const(Colour) outlineColour() nothrow const
         {
-            return sfText_getOutlineColor(this.handle).to!uvec4b;
+            return sfText_getOutlineColor(this.handle).to!Colour;
         }
 
         ///
         @property @trusted @nogc
-        void outlineColour(uvec4b col) nothrow
+        void outlineColour(Colour col) nothrow
         {
             sfText_setOutlineColor(this.handle, col.toSF!sfColor);
         }
@@ -268,7 +268,7 @@ class TextObject : DrawableObject
              dstring uniText, 
              vec2 position = vec2(0), 
              uint charSize = 14, 
-             uvec4b colour = jarena.core.colour(0, 0, 0, 255), 
+             Colour colour = Colour.black, 
              int yLevel = 0)
         {
             this(new Text(font, uniText, position, charSize, colour), yLevel);

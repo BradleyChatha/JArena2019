@@ -283,7 +283,7 @@ class Renderer
         }
 
         /// Clears the screen
-        void clear(uvec4b clearColour = colour(255, 255, 255, 255))
+        void clear(Colour clearColour = Colour.white)
         {
             sfRenderWindow_clear(this._window.handle, clearColour.toSF!sfColor);
         }
@@ -304,7 +304,7 @@ class Renderer
          +  borderColour    = The colour of the border.
          +  borderThickness = The thiccness of the border.
          + ++/
-        void drawRect(vec2 position, vec2 size, uvec4b fillColour = colour(255, 0, 0, 255), uvec4b borderColour = colour(0, 0, 0, 255), uint borderThickness = 1)
+        void drawRect(vec2 position, vec2 size, Colour fillColour = Colour(255, 0, 0, 255), Colour borderColour = Colour.black, uint borderThickness = 1)
         {
             sfRectangleShape_setPosition        (this._rect, position.toSF!sfVector2f);
             sfRectangleShape_setSize            (this._rect, size.toSF!sfVector2f);

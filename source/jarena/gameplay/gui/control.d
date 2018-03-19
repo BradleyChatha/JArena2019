@@ -19,7 +19,7 @@ abstract class UIElement
         UIElement _parent;
         vec2      _position;
         vec2      _size;
-        uvec4b    _colour;
+        Colour    _colour;
     }
 
     protected
@@ -122,7 +122,7 @@ abstract class UIElement
          +  * this.onColourChanged(oldSize, newSize);
          + ++/
         @property
-        final void colour(uvec4b newColour)
+        final void colour(Colour newColour)
         {
             auto old = this._colour;
             this._colour = newColour;
@@ -156,7 +156,7 @@ abstract class UIElement
 
         /// Returns: The colour for this UIElement.
         @property @safe @nogc
-        final const(uvec4b) colour() nothrow const
+        final const(Colour) colour() nothrow const
         {
             return this._colour;
         }
@@ -230,7 +230,7 @@ abstract class UIElement
          +  oldColour = The old colour for this UIElement.
          +  newColour = The new colour for this UIElement.
          + ++/
-        protected void onColourChanged(uvec4b oldColour, uvec4b newColour);
+        protected void onColourChanged(Colour oldColour, Colour newColour);
 
         ///
         public void onUpdate(InputManager input, GameTime deltaTime);
@@ -247,9 +247,9 @@ abstract class Control : UIElement
 
 final class TestControl : UIElement
 {
-    uvec4b colour;
+    Colour colour;
 
-    this(vec2 position, vec2 size, uvec4b colour)
+    this(vec2 position, vec2 size, Colour colour)
     {
         this.position = position;
         this.size     = size;
@@ -264,7 +264,7 @@ final class TestControl : UIElement
         protected void onAddChild(UIElement child){}
         protected void onRemoveChild(UIElement child){}
         protected void onPositionChanged(vec2 oldPos, vec2 newPos){}
-        protected void onColourChanged(uvec4b oldColour, uvec4b newColour){}
+        protected void onColourChanged(Colour oldColour, Colour newColour){}
         public void onUpdate(InputManager input, GameTime deltaTime){}
 
         public void onRender(Window window)

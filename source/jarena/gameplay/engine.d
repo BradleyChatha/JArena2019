@@ -10,9 +10,9 @@ const ENGINE_CONFIG_PATH = "data/engineConf.sdl";
 const WINDOW_NAME = "JArena";
 const DEBUG_FONT = "Data/Fonts/crackdown.ttf";
 const DEBUG_FONT_SIZE = 10;
-const DEBUG_TEXT_COLOUR = colour(255, 255, 255, 255);
+const DEBUG_TEXT_COLOUR = Colour.white;
 const DEBUG_TEXT_THICC = 0;
-const DEBUG_CONTAINER_COLOUR = colour(0, 0, 0, 128);
+const DEBUG_CONTAINER_COLOUR = Colour(0, 0, 0, 128);
 const DEBUG_CONTAINER_POSITION = vec2(0);
 
 final class Engine

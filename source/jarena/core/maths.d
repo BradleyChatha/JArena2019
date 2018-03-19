@@ -4,6 +4,7 @@ module jarena.core.maths;
 public
 {
     import dlsl.vector, dlsl.matrix;
+    import arsd.colour; // This is where the other modules got Colour from, which was previously used for colours.
 }
 
 /++

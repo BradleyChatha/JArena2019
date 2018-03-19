@@ -42,20 +42,20 @@ class Test : Scene, IPostBox
             auto info = super.manager.cache.get!AnimationInfo("Test Animation");
             super.register("AnimatedTahn", new AnimatedObject(new AnimatedSprite(info), vec2(500, 500)));
 
-            this.gui  = new StackContainer(vec2(10, 400), StackContainer.Direction.Vertical, colour(0,0,0,128));
-            this.gui2 = new StackContainer(vec2(80, 400), StackContainer.Direction.Horizontal, colour(64,64,64,128));
+            this.gui  = new StackContainer(vec2(10, 400), StackContainer.Direction.Vertical, Colour(0,0,0,128));
+            this.gui2 = new StackContainer(vec2(80, 400), StackContainer.Direction.Horizontal, Colour(64,64,64,128));
 
-            gui.addChild(new TestControl(vec2(0,0), vec2(50, 30), colour(128, 0, 128, 255)));
-            gui.addChild(new TestControl(vec2(0,0), vec2(25, 60), colour(0, 128, 128, 255)));
+            gui.addChild(new TestControl(vec2(0,0), vec2(50, 30), Colour(128, 0, 128, 255)));
+            gui.addChild(new TestControl(vec2(0,0), vec2(25, 60), Colour(0, 128, 128, 255)));
 
             gui2.autoSize = gui2.AutoSize.no;
-            gui2.addChild(new TestControl(vec2(0,0), vec2(50, 30), colour(128, 0, 128, 255)));
-            gui2.addChild(new TestControl(vec2(0,0), vec2(25, 60), colour(0, 128, 128, 255)));
+            gui2.addChild(new TestControl(vec2(0,0), vec2(50, 30), Colour(128, 0, 128, 255)));
+            gui2.addChild(new TestControl(vec2(0,0), vec2(25, 60), Colour(0, 128, 128, 255)));
 
             auto font = super.manager.cache.get!Font("Crackdown");
-            super.register("Some random text", new TextObject(font, "A B C D E F G 1 2 3"d, vec2(0,550), 14, colour(128, 0, 128, 255), 0));
+            super.register("Some random text", new TextObject(font, "A B C D E F G 1 2 3"d, vec2(0,550), 14, Colour(128, 0, 128, 255), 0));
             
-            auto btnText = new Text(font, "Click Me"d, vec2(0), 14, colour(255, 255, 255, 255));
+            auto btnText = new Text(font, "Click Me"d, vec2(0), 14, Colour(255, 255, 255, 255));
             gui.addChild(new SimpleButton(btnText, btn => writeln("Button position: ", btn.position)));
             gui.getChild!SimpleButton(gui.children.length - 1).fitToText();
         }

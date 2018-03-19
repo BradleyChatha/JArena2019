@@ -88,14 +88,14 @@ final class StackContainer : Container
     public
     {
         ///
-        this(Direction direction = Direction.Vertical, uvec4b colour = jarena.core.colour(0, 0, 0, 0))
+        this(Direction direction = Direction.Vertical, Colour colour = Colour.transparent)
         {
             this._direction = direction;
             super.colour = colour;
         }
 
         ///
-        this(vec2 position, Direction direction = Direction.Vertical, uvec4b colour = jarena.core.colour(0, 0, 0, 0))
+        this(vec2 position, Direction direction = Direction.Vertical, Colour colour = Colour.transparent)
         {
             this(direction, colour);
             super.position = position;
@@ -126,7 +126,7 @@ final class StackContainer : Container
     {
         protected void onNewParent(UIElement newParent, UIElement oldParent){}
         protected void onSizeChanged(vec2 oldSize, vec2 newSize){}
-        protected void onColourChanged(uvec4b oldColour, uvec4b newColour){}
+        protected void onColourChanged(Colour oldColour, Colour newColour){}
         protected void onChildStateChanged(UIElement child, StateChange change)
         {
             if(!this._ignoreStateChanges)
@@ -200,7 +200,7 @@ final class FreeFormContainer : Container
         }
         
         protected void onPositionChanged(vec2 oldPos, vec2 newPos){}
-        protected void onColourChanged(uvec4b oldColour, uvec4b newColour){}
+        protected void onColourChanged(Colour oldColour, Colour newColour){}
 
         public void onUpdate(InputManager input, GameTime deltaTime)
         {
