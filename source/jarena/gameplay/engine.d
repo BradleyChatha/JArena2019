@@ -91,7 +91,9 @@ final class Engine
                                            this._scenes.cache.getCache!Texture,
                                            this._scenes.cache.getCache!Font);
 
-            debug this.timers.every(GameTime.fromMilliseconds(1), (){this.events.mailCommand(Event.UpdateFPSDisplay);});
+            debug this._config.showDebugText = true;
+            if(this._config.showDebugText)
+                this.timers.every(GameTime.fromMilliseconds(1), (){this.events.mailCommand(Event.UpdateFPSDisplay);});
         }
 
         ///
@@ -167,5 +169,6 @@ final class Engine
 
         uvec2 windowSize;
         int targetFPS;
+        bool showDebugText;
     }
 }
