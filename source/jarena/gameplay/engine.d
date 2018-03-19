@@ -3,11 +3,14 @@ module jarena.gameplay.engine;
 private
 {
     import std.experimental.logger;
+    import std.typecons;
     import jarena.core, jarena.graphics, jarena.gameplay, jarena.data;
 }
 
 const ENGINE_CONFIG_PATH = "data/engineConf.sdl";
 const WINDOW_NAME = "JArena";
+const WINDOW_DEFAULT_SIZE = uvec2(860, 740);
+const WINDOW_DEFAULT_FPS = 60;
 const DEBUG_FONT = "Data/Fonts/crackdown.ttf";
 const DEBUG_FONT_SIZE = 10;
 const DEBUG_TEXT_COLOUR = Colour.white;
@@ -57,7 +60,8 @@ final class Engine
                 tracef("No config file exists. Please create one at '%s'", ENGINE_CONFIG_PATH);
                 
             // Setup variables
-            this._window        = new Window(WINDOW_NAME, this._config.windowSize, this._config.targetFPS);
+            this._window        = new Window(WINDOW_NAME, this._config.windowSize.get(WINDOW_DEFAULT_SIZE), 
+                                                          this._config.targetFPS.get(WINDOW_DEFAULT_FPS));
             this._eventOffice   = new PostOffice();
             this._input         = new InputManager(this._eventOffice);
             this._fps           = new FPS();
@@ -92,7 +96,7 @@ final class Engine
                                            this._scenes.cache.getCache!Font);
 
             debug this._config.showDebugText = true;
-            if(this._config.showDebugText)
+            if(this._config.showDebugText.get(false))
                 this.timers.every(GameTime.fromMilliseconds(1), (){this.events.mailCommand(Event.UpdateFPSDisplay);});
         }
 
@@ -167,8 +171,8 @@ final class Engine
     {
         mixin SerialisableInterface;
 
-        uvec2 windowSize;
-        int targetFPS;
-        bool showDebugText;
+        Nullable!uvec2 windowSize;
+        Nullable!int   targetFPS;
+        Nullable!bool  showDebugText;
     }
 }

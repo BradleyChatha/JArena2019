@@ -3,11 +3,12 @@ module jarena.data.serialise;
 private
 {
     import std.traits;
+    import std.format   : format;
+    import std.conv     : to;
+    import std.typecons : Nullable;
+    
     import sdlang;
     import jarena.data.loaders, jarena.core;
-
-    import std.format : format;
-    import std.conv   : to;
     import codebuilder;
 }
 
@@ -74,17 +75,19 @@ string fromSdlTagGenerator(ThisType)()
         mixin("alias FieldAlias = ThisType.%s;".format(fieldName));
         alias FieldType     = typeof(FieldAlias);
         enum  FieldTypeName = fullyQualifiedName!FieldType;
-        enum  FieldTagName  = getFieldName!FieldAlias.name;        
+        enum  FieldTagName  = getFieldName!FieldAlias.name;
 
         
-        static if(is(typeof({code.generateSDL!(FieldAlias, FieldType, FieldTypeName, FieldTagName, fieldName)(nameCounter);})))
-            code.generateSDL!(FieldAlias, FieldType, FieldTypeName, FieldTagName, fieldName)(nameCounter);
-        else
-            static assert(false, format("No Seraliser for field '%s' of type '%s'", fieldName, FieldType.stringof));
+        //static if(is(typeof({code.generateSDL!(FieldAlias, FieldType, FieldTypeName, FieldTagName, fieldName)(nameCounter);})))
+            code.generateSDL!(FieldAlias, FieldType, FieldTypeName, FieldTagName, "this." ~ fieldName)(nameCounter);
+        //else
+         //   static assert(false, format("No Seraliser for field '%s' of type '%s'", fieldName, FieldType.stringof));
     }        
     
     return code.data.idup.to!string;
 }
+
+private enum isNullable(T) = isInstanceOf!(Nullable, T);
 
 private static Name getFieldName(alias F)()
 {
@@ -108,43 +111,73 @@ private static
     // For builtin types, use expectTagValue, since it already supports them all.
     void generateSDL(alias FieldAlias, FieldType, string FieldTypeName, string FieldTagName, string FieldMemberName)
                     (CodeBuilder code, ref size_t nameCounter)
-    if(isBuiltinType!FieldType)
+    if(isBuiltinType!FieldType && !isNullable!FieldType)
     {
-        code.putf("this.%s = tag.expectTagValue!(%s)(\"%s\");",
+        code.put("// Builtin Type");
+        code.putf("%s = tag.expectTagValue!(%s)(\"%s\");",
                   FieldMemberName, FieldTypeName, FieldTagName);
     }
 
     // For @Serialisable structs, call their fromSdlTag function.
     void generateSDL(alias FieldAlias, FieldType, string FieldTypeName, string FieldTagName, string FieldMemberName)
                     (CodeBuilder code, ref size_t nameCounter)
-    if(is(FieldType == struct) && hasUDA!(FieldType, Serialisable))
+    if(is(FieldType == struct) && hasUDA!(FieldType, Serialisable) && !isNullableFieldType)
     {        
         static assert(hasMember!(FieldType, "fromSdlTag"),
                       format("The @Serialisable type '%s' doesn't have a function called 'fromSdlTag', please use `mixin SerialisableInterface;`",
                              FieldType.stringof)
                      );
-                         
-        code.putf("this.%s = (%s).init;", FieldMemberName, FieldTypeName);
-        code.putf("this.%s.fromSdlTag(tag.expectTag(\"%s\"));",TagName);
+
+        code.put("// @Serialisable struct");
+        code.putf("%s = (%s).init;", FieldMemberName, FieldTypeName);
+        code.putf("%s.fromSdlTag(tag.expectTag(\"%s\"));",TagName);
     }
 
     // For vectors, check that the tag has N amount of values, and then read them into the vector.
     void generateSDL(alias FieldAlias, FieldType, string FieldTypeName, string FieldTagName, string FieldMemberName)
                     (CodeBuilder code, ref size_t nameCounter)
-    if(isVector!FieldType)
+    if(isVector!FieldType && !isNullable!FieldType)
     {
         enum N = FieldType.dimension;
         alias VectT = Signed!(FieldType.valueType);
         auto varName = genTempName(nameCounter);
+
+        code.put("// Vector type");
         code.putf("Tag %s = tag.expectTag(\"%s\");", varName, FieldTagName);
-        code.putf("enforce(%s.values.length == %s, \"Expected %s values for tag %s for type '%s'\");",
+        code.putf("enforce(%s.values.length == %s, \"Expected %s values for tag '%s' for type '%s'\");",
                   varName, N, N, FieldTagName, FieldTypeName);
                       
         code.putf("foreach(i; 0..%s)", N);
         code.putScope((_)
         {
-            code.putf("this.%s.data[i] = %s.values[i].get!%s;",
+            code.putf("%s.data[i] = %s.values[i].get!%s;",
                       FieldMemberName, varName, VectT.stringof);
+        });
+    }
+
+    // For nullables, check to see whether the tag exists.
+    // If yes, load it in.
+    // If no, set it to `.init` which is by default null for a nullable.
+    void generateSDL(alias FieldAlias, FieldType, string FieldTypeName, string FieldTagName, string FieldMemberName)
+                    (CodeBuilder code, ref size_t nameCounter)
+    if(isNullable!FieldType)
+    {
+        alias NullableInnerType = TemplateArgsOf!(FieldType)[0];
+        auto tagName = genTempName(nameCounter);
+        
+        code.putf("// Nullable of %s", NullableInnerType.stringof);
+        code.putf("auto %s = tag.getTag(\"%s\");", tagName, FieldTagName);
+        code.putf("if(%s is null) %s.nullify;", tagName, FieldMemberName);
+        code.put("else");
+        code.putScope((_)
+        {
+            code.putf("%s = (%s).init;", FieldMemberName, fullyQualifiedName!NullableInnerType);
+            code.generateSDL!(FieldAlias, 
+                              NullableInnerType, 
+                              fullyQualifiedName!NullableInnerType,
+                              FieldTagName,
+                              FieldMemberName)
+                              (nameCounter);
         });
     }
 }
