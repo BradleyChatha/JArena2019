@@ -3,6 +3,7 @@ module jarena.core.util;
 
 private
 {
+    import std.experimental.logger;
     import jarena.core.maths;
     import derelict.sfml2.system, derelict.sfml2.graphics;
 }
@@ -68,4 +69,64 @@ if(isSFMLRect!sfRect && isJArenaRect!jarenaRect)
 Colour to(T : Colour)(sfColor colour)
 {
     return Colour(colour.r, colour.g, colour.b, colour.a);
+}
+
+// This exists since I don't like the output for the default logger.
+/// A custom logger that logs to the console.
+final class ConsoleLogger : Logger
+{
+    import std.datetime;
+    
+    private
+    {
+        @safe
+        string formatSysTime(SysTime time)
+        {
+            import std.conv   : to;
+            import std.string : rightJustify;
+            import std.format : format;
+
+            return format("%s-%s-%s %s:%s:%s:%sms",
+                          time.day.to!string.rightJustify(2, '0'),
+                          time.month,
+                          time.year,
+
+                          time.hour.to!string.rightJustify(2, '0'),
+                          time.minute.to!string.rightJustify(2, '0'),
+                          time.second.to!string.rightJustify(2, '0'),
+                          time.fracSecs.split!"msecs".msecs
+                         );
+        }
+    }
+    
+    public
+    {
+        @safe
+        this(LogLevel level)
+        {
+            super(level);
+        }
+
+        override void writeLogMsg(ref LogEntry entry)
+        {
+            import std.algorithm : substitute, map;
+            import std.range     : split;
+            import std.conv      : to;
+            import std.uni       : toUpper;
+            import std.stdio     : writefln;
+
+            writefln("[%s](%s$%s:%s)<%s> -> %s",
+                     this.formatSysTime(entry.timestamp),
+                     entry.file.substitute!("source/",  "", 
+                                            "source\\", "",
+                                            ".d",       "",
+                                            "/",        ".",
+                                            "\\",       "."),
+                     entry.funcName.split(".")[$-1],
+                     entry.line,
+                     entry.logLevel.to!string.map!toUpper,
+                     entry.msg
+                    );
+        }
+    }
 }
