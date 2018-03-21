@@ -9,7 +9,7 @@ private
 const TEXT_SIZE = 18;
 const TEXT_COLOUR = Colour(255, 255, 255, 255);
 const BUTTON_SIZE = vec2(80, 40);
-const BUTTON_COLOUR = Colour(49, 91, 161, 255);
+const BUTTON_COLOUR = Colours.amazon;
 const MENU_COLOUR = Colour(0, 255, 0, 128);
 const MENU_POSITION = vec2(5, 20);
 

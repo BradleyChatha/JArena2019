@@ -8,5 +8,17 @@ dependency "dlsl" version="~>0.1.2"
 dependency "fluent-asserts" version="~>0.9.0"
 dependency "sdlang-d" version="~>0.10.2"
 
-targetType "executable"
-targetPath "bin"
+configuration "default" {
+    targetType "executable"
+    targetPath "bin"
+}
+
+subPackage {
+	name "generator"
+	targetType "executable"
+    targetPath "bin"
+	sourcePaths "tools"
+	importPaths "tools"
+    sourceFiles "source/codebuilder/builder.d" "source/codebuilder/package.d"
+    versions "FileGenerator"
+}

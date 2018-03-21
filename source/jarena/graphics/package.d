@@ -1,4 +1,4 @@
 ///
 module jarena.graphics;
 
-public import jarena.graphics.sprite, jarena.graphics.window, jarena.graphics.text;
+public import jarena.graphics.sprite, jarena.graphics.window, jarena.graphics.text, jarena.graphics.colours;
