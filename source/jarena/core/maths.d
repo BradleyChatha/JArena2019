@@ -59,6 +59,34 @@ struct Rectangle(T)
             && point.x < this.position.x + this.size.x
             && point.y < this.position.y + this.size.y;
     }
+
+    ///
+    @safe @nogc
+    inout(VecType) topLeft() nothrow pure inout
+    {
+        return position;
+    }
+
+    ///
+    @safe @nogc
+    inout(VecType) topRight() nothrow pure inout
+    {
+        return position + VecType(this.size.x, 0);
+    }
+
+    ///
+    @safe @nogc
+    inout(VecType) botLeft() nothrow pure inout
+    {
+        return position + VecType(0, this.size.y);
+    }
+
+    ///
+    @safe @nogc
+    inout(VecType) botRight() nothrow pure inout
+    {
+        return position + this.size;
+    }
 }
 
 ///
