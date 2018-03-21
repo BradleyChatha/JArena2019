@@ -18,7 +18,7 @@ final class MenuScene : Scene
 {
     private
     {
-        alias SCENES = TypeTuple!(Test, AnimationViewerScene);
+        alias SCENES = TypeTuple!(Test, AnimationViewerScene, SpriteAtlasViewerScene);
 
         StackContainer  _list;
     }

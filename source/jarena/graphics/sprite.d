@@ -74,10 +74,9 @@ class Sprite
         this(Texture texture)
         {
             assert(texture !is null);
-            this._texture = texture;
 
             this._handle = sfSprite_create();
-            sfSprite_setTexture(this.handle, texture.handle, true);
+            this.texture = texture;
         }
 
         ~this()
@@ -126,6 +125,22 @@ class Sprite
         void textureRect(RectangleI rect) nothrow
         {
             sfSprite_setTextureRect(this.handle, rect.toSF!sfIntRect);
+        }
+
+        ///
+        @property @safe @nogc
+        inout(Texture) texture() nothrow inout
+        {
+            return this._texture;
+        }
+
+        ///
+        @property @trusted @nogc
+        void texture(Texture texture) nothrow
+        {
+            assert(texture !is null);
+            this._texture = texture;
+            sfSprite_setTexture(this.handle, texture.handle, false);
         }
 
         /++
@@ -373,6 +388,20 @@ class SpriteAtlas
         inout(Texture) texture() nothrow inout
         {
             return this._texture;
+        }
+
+        ///
+        @property @safe @nogc
+        auto bySpriteKeys() nothrow inout
+        {
+            return this._sprites.byKey;
+        }
+
+        ///
+        @property @safe @nogc
+        auto bySpriteSheetKeys() nothrow inout
+        {
+            return this._spriteSheets.byKey;
         }
     }
 }

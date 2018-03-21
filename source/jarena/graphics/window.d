@@ -351,6 +351,14 @@ class InputManager
 {
     private
     {
+        enum FuncKeyMask : ubyte
+        {
+            None, 
+            Shift   = 1 << 0,
+            Control = 1 << 1,
+            Alt     = 1 << 2
+        }
+        
         struct KeyState
         {
             bool isDown;      // True = down, false = up
@@ -367,6 +375,7 @@ class InputManager
         KeyState[sfKeyCount] _keyStates;
         sfKeyCode[]          _tapped;    // Any sfKey in this array was tapped down this frame.
         MouseState           _mouse;
+        FuncKeyMask          _funcKeyMask;
 
         void onKeyEvent(PostOffice office, Mail m)
         {
@@ -376,6 +385,11 @@ class InputManager
             auto keyCode = mail.value.code;
             //assert(keyCode < this._keyStates.length); //Caps lock is enough to crash it...
 
+            this._funcKeyMask  = FuncKeyMask.None;
+            this._funcKeyMask |= (mail.value.shift)   ? FuncKeyMask.Shift   : 0;
+            this._funcKeyMask |= (mail.value.control) ? FuncKeyMask.Control : 0;
+            this._funcKeyMask |= (mail.value.alt)     ? FuncKeyMask.Alt     : 0;
+            
             if(keyCode > this._keyStates.length)
                 return;
 
@@ -462,6 +476,27 @@ class InputManager
         {
             assert(key < this._keyStates.length);
             return this._keyStates[key].wasRepeated;
+        }
+
+        ///
+        @safe @nogc
+        bool isShiftDown() nothrow const
+        {
+            return (this._funcKeyMask & FuncKeyMask.Shift) > 0;
+        }
+
+        ///
+        @safe @nogc
+        bool isControlDown() nothrow const
+        {
+            return (this._funcKeyMask & FuncKeyMask.Control) > 0;
+        }
+
+        ///
+        @safe @nogc
+        bool isAltDown() nothrow const
+        {
+            return (this._funcKeyMask & FuncKeyMask.Alt) > 0;
         }
 
         ///

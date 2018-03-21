@@ -18,7 +18,7 @@ sprite "Tahn" {
 }
 
 sprite "Sword" {
-	position 512 32
+	position 513 32
 	size 21 74
 }
 
