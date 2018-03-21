@@ -11,9 +11,9 @@ final class AnimationViewerScene : Scene
 {
     private
     {
-        const GUI_BACKGROUND_COLOUR = Colour(128, 64, 128, 255);
+        const GUI_BACKGROUND_COLOUR = Colours.azure;
         const TEXT_CHAR_SIZE        = 18;
-        const TEXT_COLOUR           = Colour(255, 255, 255, 255);
+        const TEXT_COLOUR           = Colours.bianca;
 
         AnimatedObject  _sprite;
         AnimationInfo[] _animations;

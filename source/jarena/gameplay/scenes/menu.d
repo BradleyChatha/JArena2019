@@ -7,11 +7,11 @@ private
 }
 
 const TEXT_SIZE = 18;
-const TEXT_COLOUR = Colour(255, 255, 255, 255);
+const TEXT_COLOUR = Colours.rockSalt;
 const BUTTON_SIZE = vec2(80, 40);
-const BUTTON_COLOUR = Colours.amazon;
-const MENU_COLOUR = Colour(0, 255, 0, 128);
+const BUTTON_COLOUR = Colours.azure;
 const MENU_POSITION = vec2(5, 20);
+const MENU_COLOUR = Colours.amazon;
 
 @SceneName("Menu")
 final class MenuScene : Scene

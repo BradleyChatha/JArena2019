@@ -16,7 +16,7 @@ version(FileGenerator)
     public string genColourModule()
     {
         auto code = new CodeBuilder();
-        code.putf("// Generated on %s with jarena:generator", __TIME__);
+        code.putf("// Generated on %s at %s with jarena:generator", __DATE__, __TIME__);
         code.put("module jarena.graphics.colours;");
         code.put("public import arsd.colour;");
 
@@ -51,7 +51,7 @@ version(FileGenerator)
             // "Renese Aero Blue" -> "aeroBlue"
 
             auto lineData   = line.splitter("\t");
-            string fakeName = lineData.popReturn().substitute("\"", "", "Resene ", "").array.to!string;
+            string fakeName = lineData.popReturn().substitute("\"", "", "Resene ", "", "JArena ", "").array.to!string;
             ubyte r         = lineData.popReturn().to!ubyte;
             ubyte g         = lineData.popReturn().to!ubyte;
             ubyte b         = lineData.popReturn().to!ubyte;
