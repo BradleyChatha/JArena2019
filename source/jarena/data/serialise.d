@@ -78,10 +78,10 @@ string fromSdlTagGenerator(ThisType)()
         enum  FieldTagName  = getFieldName!FieldAlias.name;
 
         
-        //static if(is(typeof({code.generateSDL!(FieldAlias, FieldType, FieldTypeName, FieldTagName, fieldName)(nameCounter);})))
+        static if(is(typeof({code.generateSDL!(FieldAlias, FieldType, FieldTypeName, FieldTagName, fieldName)(nameCounter);})))
             code.generateSDL!(FieldAlias, FieldType, FieldTypeName, FieldTagName, "this." ~ fieldName)(nameCounter);
-        //else
-         //   static assert(false, format("No Seraliser for field '%s' of type '%s'", fieldName, FieldType.stringof));
+        else
+            static assert(false, format("No Seraliser for field '%s' of type '%s'", fieldName, FieldType.stringof));
     }        
     
     return code.data.idup.to!string;
