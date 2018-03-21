@@ -24,6 +24,23 @@ abstract class UIElement
 
     protected
     {
+        /++
+         + If `true`, then changes to this element's state (position, size, colour)
+         + $(B not) trigger the `onPositionChanged`, `onSizeChanged`, etc. events.
+         +
+         + If `false`, then changes to this element's state will cause the events to be
+         + triggered.
+         +
+         + For ignoring the state changes of a child (useful for containers), please see
+         + `ignoreChildStateChanges`.
+         + ++/
+        bool ignoreStateChanges = false;
+
+        /++ 
+         + Similar to `ignoreStateChanges`, except it is used for the 
+         + `onChildStateChanged` event.
+         + ++/
+        bool ignoreChildStateChanges = false;
     }
 
     public
@@ -77,10 +94,11 @@ abstract class UIElement
             auto old = this._position;
             this._position = newPosition;
 
-            if(this.parent !is null)
+            if(this.parent !is null && !this.parent.ignoreChildStateChanges)
                 this.parent.onChildStateChanged(this, StateChange.PositionChanged);
 
-            this.onPositionChanged(old, newPosition);
+            if(!this.ignoreStateChanges)
+                this.onPositionChanged(old, newPosition);
         }
 
         /++
@@ -102,10 +120,11 @@ abstract class UIElement
             auto old = this._size;
             this._size = newSize;
 
-            if(this.parent !is null)
+            if(this.parent !is null && !this.parent.ignoreChildStateChanges)
                 this.parent.onChildStateChanged(this, StateChange.SizeChanged);
 
-            this.onSizeChanged(old, newSize);
+            if(!this.ignoreStateChanges)
+                this.onSizeChanged(old, newSize);
         }
 
         /++
@@ -127,10 +146,11 @@ abstract class UIElement
             auto old = this._colour;
             this._colour = newColour;
 
-            if(this.parent !is null)
+            if(this.parent !is null && !this.parent.ignoreChildStateChanges)
                 this.parent.onChildStateChanged(this, StateChange.ColourChanged);
 
-            this.onColourChanged(old, newColour);
+            if(!this.ignoreStateChanges)
+                this.onColourChanged(old, newColour);
         }
 
         /// Returns: The parent for this UIElement.

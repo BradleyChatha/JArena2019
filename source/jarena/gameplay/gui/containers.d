@@ -30,20 +30,19 @@ final class StackContainer : Container
     {
         const float _padding = 4; // TODO: Make this changeable.
         UIElement[] _children;
-        bool        _ignoreStateChanges;
         Direction   _direction;
         AutoSize    _shouldResize = AutoSize.yes;
 
         void sortPositions()
         {
-            this._ignoreStateChanges = true;
+            super.ignoreChildStateChanges = true;
 
             if(this._direction == Direction.Vertical)
                 this.sortVertical();
             else
                 this.sortHorizontal();
 
-            this._ignoreStateChanges = false;
+            super.ignoreChildStateChanges = false;
         }
 
         void sortHorizontal()
@@ -129,8 +128,7 @@ final class StackContainer : Container
         protected void onColourChanged(Colour oldColour, Colour newColour){}
         protected void onChildStateChanged(UIElement child, StateChange change)
         {
-            if(!this._ignoreStateChanges)
-                this.sortPositions();
+            this.sortPositions();
         }
 
         protected void onAddChild(UIElement child)

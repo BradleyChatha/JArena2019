@@ -7,16 +7,16 @@ private
     import jarena.core, jarena.graphics, jarena.gameplay, jarena.data;
 }
 
-const ENGINE_CONFIG_PATH = "data/engineConf.sdl";
-const WINDOW_NAME = "JArena";
-const WINDOW_DEFAULT_SIZE = uvec2(860, 740);
-const WINDOW_DEFAULT_FPS = 60;
-const DEBUG_FONT = "Data/Fonts/crackdown.ttf";
-const DEBUG_FONT_SIZE = 10;
-const DEBUG_TEXT_COLOUR = Colour.white;
-const DEBUG_TEXT_THICC = 0;
-const DEBUG_CONTAINER_COLOUR = Colour(0, 0, 0, 128);
-const DEBUG_CONTAINER_POSITION = vec2(0);
+const ENGINE_CONFIG_PATH        = "data/engineConf.sdl";
+const WINDOW_NAME               = "JArena";
+const WINDOW_DEFAULT_SIZE       = uvec2(860, 740);
+const WINDOW_DEFAULT_FPS        = 60;
+const DEBUG_FONT                = "Data/Fonts/crackdown.ttf";
+const DEBUG_FONT_SIZE           = 10;
+const DEBUG_TEXT_COLOUR         = Colours.rockSalt;
+const DEBUG_TEXT_THICC          = 0;
+const DEBUG_CONTAINER_COLOUR    = Colour(0, 0, 0, 128);
+const DEBUG_CONTAINER_POSITION  = vec2(0);
 
 final class Engine
 {
