@@ -71,21 +71,26 @@ struct Rectangle(T)
     @safe @nogc
     inout(VecType) topRight() nothrow pure inout
     {
-        return position + VecType(this.size.x, 0);
+        // To explain the ' - 1' stuff:
+        //  Imagine a rect (0, 0, 32, 32)
+        //  The top right corner should be (31, 0)
+        //  But (0, 0) + (32, 0) = (32, 0)
+        //  So we take away 1 to get the correct pixel.
+        return position + VecType(this.size.x - 1, 0);
     }
 
     ///
     @safe @nogc
     inout(VecType) botLeft() nothrow pure inout
     {
-        return position + VecType(0, this.size.y);
+        return position + VecType(0, this.size.y - 1);
     }
 
     ///
     @safe @nogc
     inout(VecType) botRight() nothrow pure inout
     {
-        return position + this.size;
+        return position + this.size - VecType(1, 1);
     }
 }
 
