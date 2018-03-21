@@ -102,11 +102,11 @@ final class StackContainer : Container
 
         /// Returns: Whether the container will automatically change it's size or not.
         @property @safe @nogc
-        bool autoSize() nothrow const
+        AutoSize autoSize() nothrow const
         {
             return this._shouldResize;
         }
-
+        
         /++
          + Determines whether the container will automatically change it's
          + size to tightly fit around it's children.
@@ -118,6 +118,13 @@ final class StackContainer : Container
         void autoSize(AutoSize flag) nothrow
         {
             this._shouldResize = flag;
+        }
+
+        /// ditto
+        @property @safe @nogc
+        void autoSize(bool flag) nothrow
+        {
+            this._shouldResize = cast(AutoSize)flag;
         }
     }
 
