@@ -8,6 +8,8 @@ private
 
 const TEXT_SIZE = 18;
 const TEXT_COLOUR = Colour(255, 255, 255, 255);
+const BUTTON_SIZE = vec2(80, 40);
+const BUTTON_COLOUR = Colour(49, 91, 161, 255);
 const MENU_COLOUR = Colour(0, 255, 0, 128);
 const MENU_POSITION = vec2(5, 20);
 
@@ -31,9 +33,12 @@ final class MenuScene : Scene
             auto font = super.manager.cache.get!Font("Calibri");
             foreach(item; SCENES)
             {
-                this._list.addChild(new SimpleButton(
+                this._list.addChild(new SimpleTextButton(
                     new Text(font, SceneName.getFrom!item, vec2(), TEXT_SIZE, TEXT_COLOUR),
-                    btn => super.manager.swap!item
+                    btn => super.manager.swap!item,
+                    vec2(0),
+                    BUTTON_SIZE,
+                    BUTTON_COLOUR
                 )).fitToText();
             }
         }

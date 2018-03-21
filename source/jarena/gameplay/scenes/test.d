@@ -56,8 +56,8 @@ class Test : Scene, IPostBox
             super.register("Some random text", new TextObject(font, "A B C D E F G 1 2 3"d, vec2(0,550), 14, Colour(128, 0, 128, 255), 0));
             
             auto btnText = new Text(font, "Click Me"d, vec2(0), 14, Colour(255, 255, 255, 255));
-            gui.addChild(new SimpleButton(btnText, btn => writeln("Button position: ", btn.position)));
-            gui.getChild!SimpleButton(gui.children.length - 1).fitToText();
+            gui.addChild(new SimpleTextButton(btnText, btn => writeln("Button position: ", btn.position)));
+            gui.getChild!SimpleTextButton(gui.children.length - 1).fitToText();
         }
 
         void onSwap(PostOffice office)

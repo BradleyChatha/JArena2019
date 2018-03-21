@@ -6,7 +6,77 @@ private
     import jarena.core, jarena.gameplay, jarena.graphics;
 }
 
-class SimpleButton : Button
+abstract class SimpleButton : Button
+{
+    private
+    {
+        Colour _idleColour;
+        Colour _mouseOverColour;
+        Colour _mouseClickColour;
+        bool   _clickLock;
+    }
+
+    public
+    {
+        ///
+        this(OnClickFunc func, 
+             vec2 position,
+             vec2 size,
+             Colour colour,
+             Colour mouseOverColour,
+             Colour clickColour)
+        {
+            this._idleColour        = colour;
+            this._mouseClickColour  = clickColour;
+            this._mouseOverColour   = mouseOverColour;
+
+            super.onClick   = func;
+            super.position  = position;
+            super.size      = size;
+            super.colour    = colour;
+        }
+    }
+
+    override
+    {
+        protected void onNewParent(UIElement newParent, UIElement oldParent){}
+        protected void onChildStateChanged(UIElement child, StateChange change){}
+        protected void onAddChild(UIElement child){}
+        protected void onRemoveChild(UIElement child){}
+        protected void onColourChanged(Colour oldColour, Colour newColour){}
+        protected void onPositionChanged(vec2 oldPos, vec2 newPos){}
+        protected void onSizeChanged(vec2 oldSize, vec2 newSize){}
+        
+        public void onUpdate(InputManager input, GameTime deltaTime)
+        {
+            auto thisRect = RectangleF(super.position, super.size);
+            if(thisRect.contains(input.mousePostion)) // If the mouse is hovered over
+            {
+                if(input.isMouseButtonDown(MouseButton.Left) && !this._clickLock)
+                {
+                    this._clickLock = true;
+                    super.colour = this._mouseClickColour;
+
+                    auto func = super.onClick;
+                    if(func !is null)
+                        func(this);
+                }
+                else
+                    super.colour = this._mouseOverColour;
+
+                if(!input.isMouseButtonDown(MouseButton.Left))
+                    this._clickLock = false;
+            }
+            else
+            { // Not hovered, nor clicked, so set the colour to the default.
+                super.colour = this._idleColour;
+                this._clickLock = true; 
+            }
+        }
+    }
+}
+
+class SimpleTextButton : SimpleButton
 {
     private
     {
@@ -14,12 +84,7 @@ class SimpleButton : Button
         // a better result.
         const SFML_TEXT_OFFSET_X = 0;
         const SFML_TEXT_OFFSET_Y = -2;
-
-        Colour _idleColour;
-        Colour _mouseOverColour;
-        Colour _mouseClickColour;
-        Text   _text;
-        bool   _clickLock;
+        Text _text;
 
         void centerText()
         {
@@ -47,16 +112,22 @@ class SimpleButton : Button
              Colour clickColour     = Colour(32, 0, 32, 255))
         {
             assert(text !is null);
+            this._text = text;
 
-            this._text              = text;
-            this._idleColour        = colour;
-            this._mouseClickColour  = clickColour;
-            this._mouseOverColour   = mouseOverColour;
+            super(func, position, size, colour, mouseOverColour, clickColour);
+        }
 
-            super.onClick   = func;
-            super.position  = position;
-            super.size      = size;
-            super.colour    = colour;
+        ///
+        this(Text           text,
+             OnClickFunc    func,
+             vec2           position,
+             vec2           size,
+             Colour         colour)
+        {
+            auto overColour  = colour.setLightness(0.5);
+            auto clickColour = colour.setLightness(0.25);
+
+            this(text, func, position, size, colour, overColour, clickColour);
         }
 
         /// Changes the size of the button to fit the size of the text
@@ -82,12 +153,6 @@ class SimpleButton : Button
 
     override
     {
-        protected void onNewParent(UIElement newParent, UIElement oldParent){}
-        protected void onChildStateChanged(UIElement child, StateChange change){}
-        protected void onAddChild(UIElement child){}
-        protected void onRemoveChild(UIElement child){}
-        protected void onColourChanged(Colour oldColour, Colour newColour){}
-
         protected void onPositionChanged(vec2 oldPos, vec2 newPos)
         {
             this.updateLayout();
@@ -100,29 +165,7 @@ class SimpleButton : Button
         
         public void onUpdate(InputManager input, GameTime deltaTime)
         {
-            auto thisRect = RectangleF(super.position, super.size);
-            if(thisRect.contains(input.mousePostion)) // If the mouse is hovered over
-            {
-                if(input.isMouseButtonDown(MouseButton.Left) && !this._clickLock)
-                {
-                    this._clickLock = true;
-                    super.colour = this._mouseClickColour;
-
-                    auto func = super.onClick;
-                    if(func !is null)
-                        func(this);
-                }
-                else
-                    super.colour = this._mouseOverColour;
-
-                if(!input.isMouseButtonDown(MouseButton.Left))
-                    this._clickLock = false;
-            }
-            else
-            { // Not hovered, nor clicked, so set the colour to the default.
-                super.colour = this._idleColour;
-                this._clickLock = true; 
-            }
+            super.onUpdate(input, deltaTime);
         }
 
         public void onRender(Window window)
