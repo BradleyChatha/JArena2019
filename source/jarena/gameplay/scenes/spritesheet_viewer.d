@@ -223,6 +223,8 @@ final class SpriteAtlasViewerScene : Scene
                                     this.currentAtlas.spriteIndex = this.currentAtlas.spriteNames.length - 1;
                                     this.currentAtlas.sheetIndex  = 0; // Going backwards causes strange things to happen to this number
                                 }
+                                else
+                                    this.currentAtlas.spriteIndex = 0;
                             }
                             else
                             {

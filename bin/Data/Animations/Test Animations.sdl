@@ -21,3 +21,14 @@ animation {
     frameDelayMS 1500
     repeat false
 }
+
+animation {
+	type "Animation:spriteSheet"
+	name "Explosion Animation"
+	
+	atlasRef "../Atlases/explosion.sdl"
+	spriteSheetRef "ExplosionFrames"
+	
+	frameDelayMS 25
+	repeat false
+}

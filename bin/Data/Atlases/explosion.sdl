@@ -1,0 +1,9 @@
+type "SpriteAtlas"
+texture "../Textures/EXPLOSION.png"
+name "Explosion Atlas"
+
+spriteSheet "ExplosionFrames" {
+    position 0 0
+    size 256 256
+    frameSize 64 64
+}

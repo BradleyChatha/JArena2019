@@ -6,6 +6,7 @@ animations {
 
 atlases {
     file "Atlases/test atlas.sdl"
+	file "Atlases/explosion.sdl"
 }
 
 fonts {
