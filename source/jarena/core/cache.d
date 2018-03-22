@@ -122,16 +122,18 @@ enum canCache(C, T) = isMultiCache!C && is(typeof(C.init.getCache!T));
  + Notes:
  +  For each type given, a new `Cache` is instantiated and stored in this cache.
  +
- +  For each type given, three functions are generated.
+ +  For each type given, four functions are generated.
  +
- +  The first is a 'get' function which is identicle to the `Cache.get` function.
+ +  The first is a 'get' function which is identical to the `Cache.get` function.
  +  However, you must specify which type you want to get using a template parameter.
  +  For example, `multiCache.get!int("Blah", int.max)` to use the cache for `int`s.
  +
  +  The second is a 'getCache' function which returns the `Cache` for a certain type.
  +  e.g `multCache.getCache!int` returns the `Cache!int` that's being used internally.
  +
- +  The third is an `add` function, which is identicle to the `Cache.add` function.
+ +  The third is an `add` function, which is identical to the `Cache.add` function.
+ +
+ +  The fourth is a `remove` function, which is identical to the `Cache.remove` function.
  +
  + Params:
  +  Types = The types to store in this cache.
