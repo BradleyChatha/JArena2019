@@ -95,7 +95,7 @@ final class AnimationViewerScene : Scene
             this._instructionGui            = new StackContainer(StackContainer.Direction.Horizontal);
             this._instructionGui.colour     = GUI_BACKGROUND_COLOUR;
             this._instructionGui.autoSize   = StackContainer.AutoSize.no;
-            this._instructionGui.size       = vec2(InitInfo.windowSize.x, TEXT_CHAR_SIZE * 1.5);
+            this._instructionGui.size       = vec2(InitInfo.windowSize.x, (TEXT_CHAR_SIZE * 1.3) * 2);
             this._instructionGui.position   = vec2(0, InitInfo.windowSize.y - this._instructionGui.size.y);
             this._gui.addChild(this._instructionGui);
 
@@ -104,7 +104,8 @@ final class AnimationViewerScene : Scene
             this._labelChangingData = this.makeLabel(this._dataGui, font);
             this._labelInstructions = this.makeLabel(this._instructionGui, font);
             this._labelInstructions.updateTextASCII(
-                "Left Arrow: Previous Animation | Right Arrow: Next Animation | R: Restart"
+                "Left/Right Arrow: Change Animation | R: Restart [shift = Toggle repeating] | Backspace: Back to menu\n"~
+                "+/- = Increase/Decrease Frame delay by 1 [ctrl = +/- 5] [shift = +/- 10] [alt = +/- 50]"
             );
         }
 
@@ -147,7 +148,30 @@ final class AnimationViewerScene : Scene
             }
 
             if(super.manager.input.isKeyDown(sfKeyR) && this._sprite !is null)
-                this._sprite.restart();
+            {
+                if(super.manager.input.isShiftDown && super.manager.input.wasKeyTapped(sfKeyR)) // wasKeyTapped is used give it a better behavoiouroiuouoru
+                {
+                    auto animPtr = &this._animations[this._animIndex];
+                    animPtr.repeat = !animPtr.repeat;
+                    this.changeAnimation(); // This is to update the animation data in the sprite.
+                }
+                else
+                    this._sprite.restart();
+            }
+
+            if(super.manager.input.wasKeyTapped(sfKeyAdd)
+            || super.manager.input.wasKeyTapped(sfKeySubtract))
+            {
+                auto multiplier = (super.manager.input.wasKeyTapped(sfKeyAdd)) ? 1 : -1;
+                auto amount = 1;
+
+                     if(super.manager.input.isControlDown) amount = 5;
+                else if(super.manager.input.isShiftDown)   amount = 10;
+                else if(super.manager.input.isAltDown)     amount = 50;
+
+                this._animations[this._animIndex].delayPerFrameMS += (amount * multiplier);
+                this.changeAnimation(); // This is to update the animation data in the sprite.
+            }
 
             if(this._sprite !is null)
             {
