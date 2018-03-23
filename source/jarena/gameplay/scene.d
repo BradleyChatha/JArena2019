@@ -114,6 +114,12 @@ abstract class Scene
             office.removeProxy(this.eventOffice);
         }
 
+        // Needed for any setup that needs to access the scene manager.
+        void _onInit()
+        {
+            this._gui = new EditorContainer(this._proxyEventOffice, this.manager.cache);
+        }
+
         void _onUpdate(GameTime deltaTime)
         {
             import std.stdio : writeln;
@@ -122,10 +128,7 @@ abstract class Scene
             {
                 this._gui.canEdit = !this._gui.canEdit;
                 if(this._gui.canEdit)
-                {
                     writeln("!!!<SCENE GUI EDITOR ENABLED>!!!");
-                    this._gui.showHelpText();
-                }
                 else
                     writeln("!!!<SCENE GUI EDITOR DISABLED>!!!");
             }
@@ -333,11 +336,10 @@ abstract class Scene
     {
         /++
          + ++/
-        @safe
-        this() nothrow
+        @trusted
+        this()
         {
             this._proxyEventOffice = new PostOffice();
-            this._gui              = new EditorContainer();
         }
 
         /// The `SceneManager` this scene has been registered with.
@@ -480,6 +482,7 @@ class SceneManager
             this._scenes.add(scene.name, scene);
 
             trace("Initialising Scene");
+            deprecationWorkaround._onInit();
             scene.onInit();
         }
 

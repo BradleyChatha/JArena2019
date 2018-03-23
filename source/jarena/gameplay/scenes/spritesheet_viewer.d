@@ -38,11 +38,10 @@ final class SpriteAtlasViewerScene : Scene
         size_t          _currentAtlasIndex;
         
         // GUI stuff
-        FreeFormContainer _gui;
-        StackContainer    _dataGui;
-        StackContainer    _instructionGui;
-        SimpleLabel       _labelAtlasData;
-        SimpleLabel       _labelInstructions;
+        StackContainer _dataGui;
+        StackContainer _instructionGui;
+        SimpleLabel    _labelAtlasData;
+        SimpleLabel    _labelInstructions;
 
         /++
          + Changes the current sprite and atlas, based off of _currentAtlasIndex, and
@@ -52,13 +51,16 @@ final class SpriteAtlasViewerScene : Scene
          + ++/
         void changeSprite(ShowAll showAll = ShowAll.no)
         {
+            auto sheetCount = this.currentAtlas.sheetNames.length;
+            auto spriteCount = this.currentAtlas.spriteNames.length;
+            
             // Bug checking
             if(this._currentAtlasIndex >= this._atlases.length)
-                assert(false, "Out of bounds");
-            if(this.currentAtlas.sheetIndex >= this.currentAtlas.sheetNames.length)
-                assert(false, "Bug");
-            if(this.currentAtlas.spriteIndex >= this.currentAtlas.spriteNames.length)
-                assert(false, "Bug");
+                assert(false, format("Out of Bounds. Max: %s", this._atlases.length));
+            if(this.currentAtlas.sheetIndex >= sheetCount && sheetCount != 0)
+                assert(false, format("Bug. SheetNameCount: %s", sheetCount));
+            if(this.currentAtlas.spriteIndex >= spriteCount && spriteCount != 0)
+                assert(false, format("Bug. SpriteNameCount: %s", spriteCount));
 
             // Make the sprite if it doesn't exist
             if(this._sprite is null)
@@ -175,10 +177,33 @@ final class SpriteAtlasViewerScene : Scene
          + ++/
         void moveIndex(Increment increment)(sfKeyCode key)
         {
-            static if(increment)
-                alias Func = this.increment;
-            else
-                alias Func = this.decrement;
+            static if(increment) alias Func = this.increment;
+            else                 alias Func = this.decrement;
+
+            // Wrap around to the start/end (increment/!increment) of the avaliable sheets
+            void wrapAroundSheets()
+            {
+                static if(!increment)
+                {
+                    this.currentAtlas.sheetIndex = this.currentAtlas.sheetNames.length - 1;
+                    auto sheet = this.currentAtlas.atlas.getSpriteSheet(this.currentAtlas.sheetNames[this.currentAtlas.sheetIndex]);
+                    this.currentAtlas.frameIndex = sheet.frames.length - 1;
+                }
+                else
+                    this.currentAtlas.frameIndex = 0;
+            }
+
+            // Wrap around to the start/end (increment/!increment) of the avaliable sprites
+            void wrapAroundSprites()
+            {
+                static if(!increment)
+                {
+                    this.currentAtlas.spriteIndex = this.currentAtlas.spriteNames.length - 1;
+                    this.currentAtlas.sheetIndex  = 0; // Going backwards causes strange things to happen to this number
+                }
+                else
+                    this.currentAtlas.spriteIndex = 0;
+            }
                 
             if(super.manager.input.wasKeyTapped(key))
             {
@@ -191,43 +216,41 @@ final class SpriteAtlasViewerScene : Scene
                         auto endOfSprites = Func(this.currentAtlas.spriteIndex, this.currentAtlas.spriteNames);
                         if(endOfSprites)
                         {
+                            // Special case
+                            if(this.currentAtlas.sheetNames.length == 0)
+                            {
+                                wrapAroundSprites();
+                                this.changeSprite();
+                                return;
+                            }
+                            
                             this.currentAtlas.usingSheets = true;
-
-                            static if(!increment)
-                            {
-                                this.currentAtlas.sheetIndex = this.currentAtlas.sheetNames.length - 1;
-                                auto sheet = this.currentAtlas.atlas.getSpriteSheet(this.currentAtlas.sheetNames[this.currentAtlas.sheetIndex]);
-                                this.currentAtlas.frameIndex = sheet.frames.length - 1;
-                            }
-                            else
-                            {
-                                this.currentAtlas.frameIndex = 0;
-                            }
+                            wrapAroundSheets();
                         }
                     }
                     else
                     {
                         auto sheet = this.currentAtlas.atlas.getSpriteSheet(this.currentAtlas.sheetNames[this.currentAtlas.sheetIndex]);
                         auto endOfFrames = Func(this.currentAtlas.frameIndex, sheet.frames);
-
                         if(endOfFrames)
                         {
                             auto endOfSheets = Func(this.currentAtlas.sheetIndex, this.currentAtlas.sheetNames);
-                            auto nextSheet = this.currentAtlas.atlas.getSpriteSheet(this.currentAtlas.sheetNames[this.currentAtlas.sheetIndex]);
                             if(endOfSheets)
                             {
-                                this.currentAtlas.usingSheets = false;
-
-                                static if(!increment)
+                                // Special case
+                                if(this.currentAtlas.spriteNames.length == 0)
                                 {
-                                    this.currentAtlas.spriteIndex = this.currentAtlas.spriteNames.length - 1;
-                                    this.currentAtlas.sheetIndex  = 0; // Going backwards causes strange things to happen to this number
+                                    wrapAroundSheets();
+                                    this.changeSprite();
+                                    return;
                                 }
-                                else
-                                    this.currentAtlas.spriteIndex = 0;
+                            
+                                this.currentAtlas.usingSheets = false;
+                                wrapAroundSprites();
                             }
                             else
                             {
+                                auto nextSheet = this.currentAtlas.atlas.getSpriteSheet(this.currentAtlas.sheetNames[this.currentAtlas.sheetIndex]);
                                 static if(increment)
                                     this.currentAtlas.frameIndex = 0;
                                 else
@@ -266,11 +289,9 @@ final class SpriteAtlasViewerScene : Scene
     {
         void onInit()
         {
-            this._gui = new FreeFormContainer();
-
             this._dataGui           = new StackContainer(vec2(5, 20));
             this._dataGui.colour    = GUI_BACKGROUND_COLOUR;
-            this._gui.addChild(this._dataGui);
+            super.gui.addChild(this._dataGui);
 
             // Setup instruction gui
             this._instructionGui            = new StackContainer(StackContainer.Direction.Horizontal);
@@ -278,7 +299,7 @@ final class SpriteAtlasViewerScene : Scene
             this._instructionGui.autoSize   = StackContainer.AutoSize.no;
             this._instructionGui.size       = vec2(InitInfo.windowSize.x, TEXT_CHAR_SIZE * 1.5);
             this._instructionGui.position   = vec2(0, InitInfo.windowSize.y - this._instructionGui.size.y);
-            this._gui.addChild(this._instructionGui);
+            super.gui.addChild(this._instructionGui);
 
             auto font               = super.manager.cache.get!Font("Calibri");
             this._labelAtlasData    = this.makeLabel(this._dataGui, font);
@@ -311,13 +332,13 @@ final class SpriteAtlasViewerScene : Scene
                 this.changeSprite(ShowAll.yes);
 
             super.updateScene(deltaTime);
-            this._gui.onUpdate(super.manager.input, deltaTime);
+            super.updateUI(deltaTime);
         }
 
         void onRender(Window window)
         {
             super.renderScene(window);
-            this._gui.onRender(window);
+            super.renderUI(window);
         }
     }
 }

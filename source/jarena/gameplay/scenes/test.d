@@ -44,7 +44,7 @@ class Test : Scene, IPostBox
             super.register("AnimatedTahn", new AnimatedObject(new AnimatedSprite(info), vec2(500, 500)));
 
             this.gui  = new StackContainer(vec2(10, 400), StackContainer.Direction.Vertical, Colour(0,0,0,128));
-            this.gui2 = new StackContainer(vec2(80, 400), StackContainer.Direction.Horizontal, Colour(64,64,64,128));
+            this.gui2 = new StackContainer(vec2(80, 400), StackContainer.Direction.Horizontal, Colour.transparent);
             this.grid = new GridContainer(vec2(1, 570), vec2(200, 100));
             this.grid.addRow(GridContainer.SizeType.Pixels, 50);
             this.grid.addRow(GridContainer.SizeType.Pixels, 50);
@@ -52,10 +52,13 @@ class Test : Scene, IPostBox
             this.grid.addColumn(GridContainer.SizeType.Pixels, 75);
             this.grid.drawGrid = true;
 
+            super.gui.addChild(gui);
+            super.gui.addChild(gui2);
+            super.gui.addChild(grid);
+
             gui.addChild(new TestControl(vec2(0,0), vec2(50, 30), Colour(128, 0, 128, 255)));
             gui.addChild(new TestControl(vec2(0,0), vec2(25, 60), Colour(0, 128, 128, 255)));
 
-            gui2.autoSize = false;
             gui2.addChild(new TestControl(vec2(0,0), vec2(50, 30), Colour(128, 0, 128, 255)));
             gui2.addChild(new TestControl(vec2(0,0), vec2(25, 60), Colour(0, 128, 128, 255)));
 
@@ -116,15 +119,13 @@ class Test : Scene, IPostBox
             }
 
             super.updateScene(deltaTime);
-            this.gui.onUpdate(super.manager.input, deltaTime);
+            super.updateUI(deltaTime);
         }
 
         void onRender(Window window)
         {
             super.renderScene(window);
-            this.gui2.onRender(window);
-            this.gui.onRender(window);
-            this.grid.onRender(window);
+            super.renderUI(window);
         }
     }
 }

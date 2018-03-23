@@ -327,24 +327,24 @@ abstract class Container : UIElement
         }
 
         ///
-        inout(UI) getChild(UI : UIElement)(size_t index) inout
+        final UI getChild(UI : UIElement)(size_t index) 
         {
-            return cast(inout(UI))this.children[index];
+            return cast(UI)this.children[index];
         }
 
         ///
-        inout(UI) getChild(UI : UIElement)(UI element) inout
+        final UI getChild(UI : UIElement)(UI element)
         {
             import std.algorithm : filter;
             if(element is null)
                 return null;
 
             auto results = this.children.filter!(c => c == element);
-            return (results.empty) ? null : cast(inout(UI))results.front;
+            return (results.empty) ? null : cast(UI)results.front;
         }
 
         ///
-        inout(UI) getChild(UI : UIElement, Str)(Str name) inout
+        final UI getChild(UI : UIElement, Str)(Str name)
         if(isSomeString!Str)
         {
             import std.algorithm : filter;
@@ -352,7 +352,7 @@ abstract class Container : UIElement
                 return null;
 
             auto results = this.children.filter!(c => c.name.equal(name));
-            return (results.empty) ? null : cast(inout(UI))results.front;
+            return (results.empty) ? null : cast(UI)results.front;
         }
     }
 

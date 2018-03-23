@@ -102,6 +102,13 @@ final class StackContainer : Container
             super.position = position;
         }
 
+        ///
+        void clear()
+        {
+            while(this.children.length > 0)
+                this.children[0].parent = null;
+        }
+        
         /// Returns: Whether the container will automatically change it's size or not.
         @property @safe @nogc
         AutoSize autoSize() nothrow const
@@ -166,7 +173,8 @@ final class StackContainer : Container
 
         public void onRender(Window window)
         {
-            window.renderer.drawRect(super.position, super.size, super.colour);
+            if(super.colour != Colour.transparent)
+                window.renderer.drawRect(super.position, super.size, super.colour);
 
             foreach(child; this.children)
                 child.onRender(window);
@@ -225,102 +233,6 @@ class FreeFormContainer : Container
         inout(UIElement[]) children() inout
         {
             return this._children;
-        }
-    }
-}
-
-/++
- + A container that can be used to edit any UIElement that it is a parent of.
- +
- + This also includes UIElements that are stored within other containers, that are stored in this container.
- + ++/
-final class EditorContainer : FreeFormContainer
-{
-    import std.stdio : writefln, writeln;
-    
-    private
-    {
-        size_t _selectedIndex = 0;
-    }
-
-    public
-    {
-        bool canEdit = false;
-        
-        @safe
-        void showHelpText()
-        {
-            writeln("#========================#");
-            writeln("Controls for the UI Editor Container:");
-            writeln("  - Right and Left arrow to cycle through children of this container.");
-            writeln("  - E = Move Selected Element To Mouse");
-        }
-
-        void showSelectedElementInfo()
-        {
-            auto selected = this.selectedElement;
-            writefln("Selected UIElement '%s' of type '%s'", selected.name, selected.classinfo);
-        }
-
-        UI selectedElement(UI : UIElement = UIElement)()
-        {
-            return super.getChild!UI(this._selectedIndex);
-        }
-    }
-
-    override
-    {
-        protected void onRemoveChild(UIElement child)
-        {
-            super.onRemoveChild(child);
-            if(this._selectedIndex >= this.children.length)
-                this._selectedIndex = (this.children.length == 0) ? 0 : this.children.length - 1;
-        }
-        
-        public void onUpdate(InputManager input, GameTime deltaTime)
-        {
-            import derelict.sfml2.window : sfKeyRight, sfKeyLeft, sfKeyE;
-
-            if(!this.canEdit)
-                super.onUpdate(input, deltaTime);
-            
-            if(this.children.length == 0 || !this.canEdit)
-                return;
-
-            if(input.wasKeyTapped(sfKeyRight))
-            {
-                this._selectedIndex += 1;
-                if(this._selectedIndex >= this.children.length)
-                    this._selectedIndex = 0;
-
-                this.showSelectedElementInfo();
-            }
-
-            if(input.wasKeyTapped(sfKeyLeft))
-            {
-                this._selectedIndex += 1;
-                if(this._selectedIndex >= this.children.length)
-                    this._selectedIndex = (this.children.length == 0) ? 0 : this.children.length - 1;
-
-                this.showSelectedElementInfo();
-            }
-
-            if(input.isKeyDown(sfKeyE) && this.selectedElement !is null)
-            {
-                this.selectedElement.position = input.mousePosition;
-                writefln("Moved to %s", input.mousePosition);
-            }
-        }
-
-        public void onRender(Window window)
-        {
-            super.onRender(window);
-            
-            if(this.children.length > 0 && this.canEdit)
-            {
-                auto selected = super.getChild!UIElement(this._selectedIndex);
-                window.renderer.drawRect(selected.position, selected.size, Colour(240, 230, 140, 128));
-            }
         }
     }
 }
@@ -404,31 +316,6 @@ final class GridContainer : Container
                                            currentColumn.offset,
                                            currentRow.offset
                                           );
-
-                    /*
-                    debug
-                    {
-                        import std.exception : assumeWontThrow;
-                        import std.stdio;
-                        assumeWontThrow(
-                            writefln(
-                                "============================\n"~
-                                "ColumnIndex: %s | RowIndex: %s\n"~
-                                "SlotIndex: %s\n"~
-                                "Column: %s | Row: %s\n"~
-                                "PrevX: %s | PrevY: %s\n"~
-                                "xDiff: %s | yDiff: %s\n"~
-                                "SlotRect: %s\n"~
-                                "============================",
-                                columnIndex, rowIndex,
-                                slotIndex,
-                                currentColumn, currentRow,
-                                previousX, previousY,
-                                xDiff, yDiff,
-                                slot.rect
-                            )
-                        );
-                    }Quite useful, keep it here*/
 
                     this._slots[slotIndex] = slot;
                     
