@@ -2,6 +2,8 @@ module jarena.gameplay.gui.control;
 
 private
 {
+    import std.traits    : isSomeString;
+    import std.algorithm : equal;
     import jarena.core, jarena.graphics;
 }
 
@@ -17,6 +19,7 @@ abstract class UIElement
     private
     {
         UIElement _parent;
+        string    _name;
         vec2      _position;
         vec2      _size;
         Colour    _colour;
@@ -106,7 +109,8 @@ abstract class UIElement
          +
          + Notes:
          +  All inheriting classes should assure that their actual size on screen is kept in sync,
-         +  and also respects the size set by this function.
+         +  and also respects the size set by this function. Containers are an exception,
+         +  as some containers may not support resizing.
          +
          +  [The following functions are called in order]
          +
@@ -153,6 +157,13 @@ abstract class UIElement
                 this.onColourChanged(old, newColour);
         }
 
+        /// Sets the name of this UIElement.
+        @property @safe @nogc
+        final void name(string name) nothrow pure
+        {
+            this._name = name;
+        }
+
         /// Returns: The parent for this UIElement.
         @property @safe @nogc
         final inout(UIElement) parent() nothrow inout
@@ -179,6 +190,13 @@ abstract class UIElement
         final const(Colour) colour() nothrow const
         {
             return this._colour;
+        }
+
+        /// Returns: The name for this UIElement.
+        @property @safe @nogc
+        final string name() nothrow const
+        {
+            return this._name;
         }
     }
 
@@ -312,6 +330,29 @@ abstract class Container : UIElement
         inout(UI) getChild(UI : UIElement)(size_t index) inout
         {
             return cast(inout(UI))this.children[index];
+        }
+
+        ///
+        inout(UI) getChild(UI : UIElement)(UI element) inout
+        {
+            import std.algorithm : filter;
+            if(element is null)
+                return null;
+
+            auto results = this.children.filter!(c => c == element);
+            return (results.empty) ? null : cast(inout(UI))results.front;
+        }
+
+        ///
+        inout(UI) getChild(UI : UIElement, Str)(Str name) inout
+        if(isSomeString!Str)
+        {
+            import std.algorithm : filter;
+            if(name is null)
+                return null;
+
+            auto results = this.children.filter!(c => c.name.equal(name));
+            return (results.empty) ? null : cast(inout(UI))results.front;
         }
     }
 
