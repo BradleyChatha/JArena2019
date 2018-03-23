@@ -359,8 +359,15 @@ final class GridContainer : Container
         protected void onNewParent(UIElement newParent, UIElement oldParent){}
         protected void onSizeChanged(vec2 oldSize, vec2 newSize){}
         protected void onChildStateChanged(UIElement child, StateChange change){}
-        protected void onPositionChanged(vec2 oldPos, vec2 newPos){}
         protected void onColourChanged(Colour oldColour, Colour newColour){}
+
+        protected void onPositionChanged(vec2 oldPos, vec2 newPos)
+        {
+            auto diff = newPos - oldPos;
+
+            foreach(ref slot; this._slots)
+                slot.rect.position += diff;
+        }
         
         protected void onAddChild(UIElement child)
         {
