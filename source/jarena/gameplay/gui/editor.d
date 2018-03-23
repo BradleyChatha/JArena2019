@@ -164,9 +164,10 @@ final class EditorContainer : FreeFormContainer
 
             if(input.wasKeyTapped(sfKeyLeft))
             {
-                this._selectedIndex += 1;
-                if(this._selectedIndex >= this.children.length)
-                    this._selectedIndex = (this.children.length == 0) ? 0 : this.children.length - 1;
+                if(this._selectedIndex == 0)
+                    this._selectedIndex = this.children.length - 1;
+                else
+                    this._selectedIndex -= 1;
 
                 this.updateUsedExtensions();
             }
