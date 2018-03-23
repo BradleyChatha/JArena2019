@@ -20,12 +20,11 @@ final class AnimationViewerScene : Scene
         size_t          _animIndex;
 
         // GUI stuff
-        FreeFormContainer _gui;
-        StackContainer    _dataGui;
-        StackContainer    _instructionGui;
-        SimpleLabel       _labelAnimData;
-        SimpleLabel       _labelChangingData;
-        SimpleLabel       _labelInstructions;
+        StackContainer _dataGui;
+        StackContainer _instructionGui;
+        SimpleLabel    _labelAnimData;
+        SimpleLabel    _labelChangingData;
+        SimpleLabel    _labelInstructions;
 
         void changeAnimation()
         {
@@ -85,11 +84,9 @@ final class AnimationViewerScene : Scene
     {
         void onInit()
         {
-            this._gui = new FreeFormContainer();
-
             this._dataGui           = new StackContainer(vec2(5, 20));
             this._dataGui.colour    = GUI_BACKGROUND_COLOUR;
-            this._gui.addChild(this._dataGui);
+            super.gui.addChild(this._dataGui);
 
             // Setup instruction gui
             this._instructionGui            = new StackContainer(StackContainer.Direction.Horizontal);
@@ -97,7 +94,7 @@ final class AnimationViewerScene : Scene
             this._instructionGui.autoSize   = StackContainer.AutoSize.no;
             this._instructionGui.size       = vec2(InitInfo.windowSize.x, (TEXT_CHAR_SIZE * 1.3) * 2);
             this._instructionGui.position   = vec2(0, InitInfo.windowSize.y - this._instructionGui.size.y);
-            this._gui.addChild(this._instructionGui);
+            super.gui.addChild(this._instructionGui);
 
             auto font               = super.manager.cache.get!Font("Calibri");
             this._labelAnimData     = this.makeLabel(this._dataGui, font);
@@ -186,13 +183,13 @@ final class AnimationViewerScene : Scene
             }
 
             super.updateScene(deltaTime);
-            this._gui.onUpdate(super.manager.input, deltaTime);
+            super.updateUI(deltaTime);
         }
 
         void onRender(Window window)
         {
             super.renderScene(window);
-            this._gui.onRender(window);
+            super.renderUI(window);
         }
     }
 }
