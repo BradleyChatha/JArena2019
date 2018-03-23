@@ -6,9 +6,11 @@ private
     import std.experimental.logger;
     import std.typecons : Flag;
 
-    import jarena.core, jarena.graphics;
+    import derelict.sfml2.window;
+    import jarena.core, jarena.graphics, jarena.gameplay.gui;
 }
 
+const TOGGLE_EDITOR_KEY = sfKeyF12;
 alias AutoRender = Flag!"render";
 
 /// A UDA to attach onto a `Scene` to provide it's name
@@ -49,7 +51,8 @@ abstract class Scene
         GameObject[string]  _objects;
         DrawableObject[]    _drawOrder;
         PostOffice          _proxyEventOffice; // GameObjects will subscribe to this proxy, so GameObjects don't need any knowledge of when a scene is swapped in and out.
-
+        EditorContainer     _gui;
+        
         @safe
         void registerDrawable(DrawableObject object)
         {
@@ -109,6 +112,28 @@ abstract class Scene
         void _onUnswap(PostOffice office)
         {
             office.removeProxy(this.eventOffice);
+        }
+
+        void _onUpdate(GameTime deltaTime)
+        {
+            import std.stdio : writeln;
+            
+            if(this.manager.input.wasKeyTapped(TOGGLE_EDITOR_KEY))
+            {
+                this._gui.canEdit = !this._gui.canEdit;
+                if(this._gui.canEdit)
+                {
+                    writeln("!!!<SCENE GUI EDITOR ENABLED>!!!");
+                    this._gui.showHelpText();
+                }
+                else
+                    writeln("!!!<SCENE GUI EDITOR DISABLED>!!!");
+            }
+
+            if(this._gui.canEdit)
+                this.updateUI(deltaTime);
+            else
+                this.onUpdate(deltaTime);
         }
     }
 
@@ -241,13 +266,54 @@ abstract class Scene
          + Updates all `GameObjects` that have been registered.
          +
          + Params:
-         +  window = The game's window.
          +  deltaTime = The amount of time the last frame took to process.
          + ++/
-        void updateScene(Window window, GameTime deltaTime)
+        void updateScene(GameTime deltaTime)
         {
             foreach(object; this._objects.byValue)
-                object.onUpdate(window, deltaTime);
+                object.onUpdate(deltaTime);
+        }
+
+        /++
+         + Renders the Scene's UI.
+         +
+         + This means it also renders any `UIElement`s added to the scene's `Scene.gui` container.
+         +
+         + Params:
+         +  window = The game's window.
+         + ++/
+        void renderUI(Window window)
+        {
+            this._gui.onRender(window);
+        }
+
+        /++
+         + Updates the Scene's UI.
+         +
+         + This means it also updates any `UIElement`s added to the scene's `Scene.gui` container.
+         +
+         + Params:
+         +  deltaTime = The amount of time the previous frame took.
+         + ++/
+        void updateUI(GameTime deltaTime)
+        {
+            this._gui.onUpdate(this.manager.input, deltaTime);
+        }
+
+        /++
+         + The main container for the scene's UI.
+         +
+         + Notes:
+         +  This container is actually an `EditorContainer`, meaning any supported UIElement that is a child to
+         +  this container can be edited on-screen.
+         +
+         +  It is suggested to always have your containers/individual elements be children of this gui,
+         +  so you can use the editing features to help with your development of a scene's gui.
+         + ++/
+        @property
+        Container gui()
+        {
+            return this._gui;
         }
 
         /++
@@ -271,6 +337,7 @@ abstract class Scene
         this() nothrow
         {
             this._proxyEventOffice = new PostOffice();
+            this._gui              = new EditorContainer();
         }
 
         /// The `SceneManager` this scene has been registered with.
@@ -335,10 +402,17 @@ abstract class Scene
          + Called everytime the scene should process a frame.
          +
          + Params:
-         +  window = The game's window.
          +  deltaTime = The amount of time the last frame took to process (used for making speed frame-independent).
          + ++/
-        void onUpdate(Window window, GameTime deltaTime);
+        void onUpdate(GameTime deltaTime);
+
+        /++
+         + Called everytime the scene should render it's current state to the screen.
+         +
+         + Params:
+         +  window = The game's window.
+         + ++/
+        void onRender(Window window);
     }
 }
 
@@ -410,7 +484,7 @@ class SceneManager
         }
 
         /++
-         + Updates the current `Scene` (if there is one.)
+         + Updates and renders the current `Scene` (if there is one.)
          +
          + Params:
          +  window = The game's `Window`.
@@ -421,7 +495,10 @@ class SceneManager
             assert(window !is null);
 
             if(this._currentScene !is null)
-                this._currentScene.onUpdate(window, deltaTime);
+            {
+                this._currentScene._onUpdate(deltaTime);
+                this._currentScene.onRender(window);
+            }
         }
 
         /++
@@ -561,10 +638,9 @@ abstract class GameObject
          + Called whenever the game object should update (usually every frame).
          +
          + Params:
-         +  window = The game's window.
          +  deltaTime = The amount of time the last frame took to process.
          + ++/
-        void onUpdate(Window window, GameTime deltaTime);
+        void onUpdate(GameTime deltaTime);
     }
 }
 

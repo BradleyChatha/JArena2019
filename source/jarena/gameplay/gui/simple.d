@@ -50,7 +50,7 @@ abstract class SimpleButton : Button
         public void onUpdate(InputManager input, GameTime deltaTime)
         {
             auto thisRect = RectangleF(super.position, super.size);
-            if(thisRect.contains(input.mousePostion)) // If the mouse is hovered over
+            if(thisRect.contains(input.mousePosition)) // If the mouse is hovered over
             {
                 if(input.isMouseButtonDown(MouseButton.Left) && !this._clickLock)
                 {

@@ -29,6 +29,7 @@ final class MenuScene : Scene
         {
             this._list = new StackContainer(MENU_POSITION);
             this._list.colour = MENU_COLOUR;
+            super.gui.addChild(this._list);
 
             auto font = super.manager.cache.get!Font("Calibri");
             foreach(item; SCENES)
@@ -51,13 +52,16 @@ final class MenuScene : Scene
         {
         }
 
-        void onUpdate(Window window, GameTime deltaTime)
+        void onUpdate(GameTime deltaTime)
         {
-            super.updateScene(window, deltaTime);
-            this._list.onUpdate(super.manager.input, deltaTime);
+            super.updateScene(deltaTime);
+            super.updateUI(deltaTime);
+        }
 
+        void onRender(Window window)
+        {
             super.renderScene(window);
-            this._list.onRender(window);
+            super.renderUI(window);
         }
     }
 }

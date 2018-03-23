@@ -75,7 +75,7 @@ class Test : Scene, IPostBox
         {
         }
 
-        void onUpdate(Window window, GameTime deltaTime)
+        void onUpdate(GameTime deltaTime)
         {
             auto speedHorizontal = vec2(160 * deltaTime.asSeconds, 0);
             auto speedVertical   = vec2(0, 160 * deltaTime.asSeconds);
@@ -115,8 +115,12 @@ class Test : Scene, IPostBox
                     gui.children[0].parent = gui2;
             }
 
-            super.updateScene(window, deltaTime);
+            super.updateScene(deltaTime);
             this.gui.onUpdate(super.manager.input, deltaTime);
+        }
+
+        void onRender(Window window)
+        {
             super.renderScene(window);
             this.gui2.onRender(window);
             this.gui.onRender(window);

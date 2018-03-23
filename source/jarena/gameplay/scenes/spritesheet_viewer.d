@@ -296,7 +296,7 @@ final class SpriteAtlasViewerScene : Scene
         {
         }
 
-        void onUpdate(Window window, GameTime deltaTime)
+        void onUpdate(GameTime deltaTime)
         {
             if(super.manager.input.wasKeyTapped(sfKeyBack))
                 super.manager.swap!MenuScene;
@@ -310,9 +310,12 @@ final class SpriteAtlasViewerScene : Scene
             if(super.manager.input.wasKeyTapped(sfKeyR))
                 this.changeSprite(ShowAll.yes);
 
-            super.updateScene(window, deltaTime);
+            super.updateScene(deltaTime);
             this._gui.onUpdate(super.manager.input, deltaTime);
+        }
 
+        void onRender(Window window)
+        {
             super.renderScene(window);
             this._gui.onRender(window);
         }

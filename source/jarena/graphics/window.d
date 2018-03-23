@@ -508,7 +508,7 @@ class InputManager
 
         /// Returns: The last known position of the mouse.
         @property @safe @nogc
-        vec2 mousePostion() nothrow const
+        vec2 mousePosition() nothrow const
         {
             return this._mouse.position;
         }
