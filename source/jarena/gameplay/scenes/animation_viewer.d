@@ -7,24 +7,17 @@ private
 }
 
 @SceneName("Animation Viewer")
-final class AnimationViewerScene : Scene
+final class AnimationViewerScene : ViewerScene
 {
     private
     {
-        const GUI_BACKGROUND_COLOUR = Colours.azure;
-        const TEXT_CHAR_SIZE        = 18;
-        const TEXT_COLOUR           = Colours.bianca;
-
         AnimatedObject  _sprite;
         AnimationInfo[] _animations;
         size_t          _animIndex;
 
         // GUI stuff
-        StackContainer _dataGui;
-        StackContainer _instructionGui;
-        SimpleLabel    _labelAnimData;
-        SimpleLabel    _labelChangingData;
-        SimpleLabel    _labelInstructions;
+        SimpleLabel _labelAnimData;
+        SimpleLabel _labelChangingData;
 
         void changeAnimation()
         {
@@ -60,11 +53,6 @@ final class AnimationViewerScene : Scene
                       )
             );
         }
-
-        SimpleLabel makeLabel(Container gui, Font font)
-        {
-            return gui.addChild(new SimpleLabel(new Text(font, ""d, vec2(0), TEXT_CHAR_SIZE, TEXT_COLOUR)));
-        }
     }
 
     public
@@ -84,34 +72,9 @@ final class AnimationViewerScene : Scene
     {
         void onInit()
         {
-            this._dataGui           = new StackContainer(vec2(5, 20));
-            this._dataGui.colour    = GUI_BACKGROUND_COLOUR;
-            super.gui.addChild(this._dataGui);
-
-            // Setup instruction gui
-            this._instructionGui            = new StackContainer(StackContainer.Direction.Horizontal);
-            this._instructionGui.colour     = GUI_BACKGROUND_COLOUR;
-            this._instructionGui.autoSize   = StackContainer.AutoSize.no;
-            this._instructionGui.size       = vec2(InitInfo.windowSize.x, (TEXT_CHAR_SIZE * 1.3) * 2);
-            this._instructionGui.position   = vec2(0, InitInfo.windowSize.y - this._instructionGui.size.y);
-            super.gui.addChild(this._instructionGui);
-
-            auto font               = super.manager.cache.get!Font("Calibri");
-            this._labelAnimData     = this.makeLabel(this._dataGui, font);
-            this._labelChangingData = this.makeLabel(this._dataGui, font);
-            this._labelInstructions = this.makeLabel(this._instructionGui, font);
-            this._labelInstructions.updateTextASCII(
-                "Left/Right Arrow: Change Animation | R: Restart [shift = Toggle repeating] | Backspace: Back to menu\n"~
-                "+/- = Increase/Decrease Frame delay by 1 [ctrl = +/- 5] [shift = +/- 10] [alt = +/- 50]"
-            );
-        }
-
-        void onSwap(PostOffice office)
-        {
-        }
-
-        void onUnswap(PostOffice office)
-        {
+            super.onInit();
+            this._labelAnimData     = super.makeDataLabel();
+            this._labelChangingData = super.makeDataLabel();
         }
 
         void onUpdate(GameTime deltaTime)
@@ -183,13 +146,19 @@ final class AnimationViewerScene : Scene
             }
 
             super.updateScene(deltaTime);
-            super.updateUI(deltaTime);
+            super.onUpdate(deltaTime);
         }
 
         void onRender(Window window)
         {
             super.renderScene(window);
-            super.renderUI(window);
+            super.onRender(window);
+        }
+
+        string instructions()
+        {
+            return "Left/Right Arrow: Change Animation | R: Restart [shift = Toggle repeating] | Backspace: Back to menu\n"~
+                   "+/- = Increase/Decrease Frame delay by 1 [ctrl = +/- 5] [shift = +/- 10] [alt = +/- 50]";
         }
     }
 }

@@ -7,7 +7,7 @@ private
 }
 
 @SceneName("Sprite Atlas Viewer")
-final class SpriteAtlasViewerScene : Scene
+final class SpriteAtlasViewerScene : ViewerScene
 {
     import std.format   : format;
     import std.typecons : Tuple, Flag;
@@ -38,10 +38,7 @@ final class SpriteAtlasViewerScene : Scene
         size_t          _currentAtlasIndex;
         
         // GUI stuff
-        StackContainer _dataGui;
-        StackContainer _instructionGui;
         SimpleLabel    _labelAtlasData;
-        SimpleLabel    _labelInstructions;
 
         /++
          + Changes the current sprite and atlas, based off of _currentAtlasIndex, and
@@ -289,32 +286,8 @@ final class SpriteAtlasViewerScene : Scene
     {
         void onInit()
         {
-            this._dataGui           = new StackContainer(vec2(5, 20));
-            this._dataGui.colour    = GUI_BACKGROUND_COLOUR;
-            super.gui.addChild(this._dataGui);
-
-            // Setup instruction gui
-            this._instructionGui            = new StackContainer(StackContainer.Direction.Horizontal);
-            this._instructionGui.colour     = GUI_BACKGROUND_COLOUR;
-            this._instructionGui.autoSize   = StackContainer.AutoSize.no;
-            this._instructionGui.size       = vec2(InitInfo.windowSize.x, TEXT_CHAR_SIZE * 1.5);
-            this._instructionGui.position   = vec2(0, InitInfo.windowSize.y - this._instructionGui.size.y);
-            super.gui.addChild(this._instructionGui);
-
-            auto font               = super.manager.cache.get!Font("Calibri");
-            this._labelAtlasData    = this.makeLabel(this._dataGui, font);
-            this._labelInstructions = this.makeLabel(this._instructionGui, font);
-            this._labelInstructions.updateTextASCII(
-                "Left/Right Arrow = Change sprite/frame | Shift+Left/Right Arrow = Change atlas | Backspace = Back to menu"
-            );
-        }
-
-        void onSwap(PostOffice office)
-        {
-        }
-
-        void onUnswap(PostOffice office)
-        {
+            super.onInit();
+            this._labelAtlasData = super.makeDataLabel();
         }
 
         void onUpdate(GameTime deltaTime)
@@ -332,13 +305,18 @@ final class SpriteAtlasViewerScene : Scene
                 this.changeSprite(ShowAll.yes);
 
             super.updateScene(deltaTime);
-            super.updateUI(deltaTime);
+            super.onUpdate(deltaTime);
         }
 
         void onRender(Window window)
         {
             super.renderScene(window);
-            super.renderUI(window);
+            super.onRender(window);
+        }
+
+        string instructions()
+        {
+            return "Left/Right Arrow = Change sprite/frame | Shift+Left/Right Arrow = Change atlas | Backspace = Back to menu";
         }
     }
 }
