@@ -32,12 +32,18 @@ final class EditorContainer : FreeFormContainer
             EditorPanelExtension panelExt;
         }
 
+        struct ContainerInfo
+        {
+            size_t selectedIndex;
+            Container object;
+        }
+
         ExtensionInfo[] _extensions;
         ExtensionInfo[] _usedExtensions; // Which ones are currently in use.
+        ContainerInfo[] _containerStack; // A stack used to keep track of which containers we're inside of
         StackContainer  _extensionPanel;
         StackContainer  _instructionPanel;
         InputManager    _input;
-        size_t          _selectedIndex = 0;
         bool            _showPanel = true;
 
         // Updates the list of extensions being used.
@@ -48,7 +54,9 @@ final class EditorContainer : FreeFormContainer
             char[] instructions = cast(char[])(
                 "Controls:\n"~
                 "Left/Right Arrow = Select element\n"~
-                "Tab = Toggle Editor Panels\n"
+                "Tab = Toggle Editor Panels\n"~
+                "Up Arrow = Inspect children\n"~
+                "Down Arrow = Stop Inspecting children"
             );
             this._usedExtensions.length = 0;
             foreach(e; this._extensions.filter!(e => e.info.isExtensionObject(this.selectedElement)))
@@ -65,7 +73,28 @@ final class EditorContainer : FreeFormContainer
         @property
         UI selectedElement(UI : UIElement = UIElement)()
         {
-            return super.getChild!UI(this._selectedIndex);
+            return this.selectedContainer.getChild!UI(this.selectedIndex);
+        }
+
+        @property
+        Container selectedContainer()
+        {
+            return this._containerStack[$-1].object;
+        }
+
+        @property
+        ref size_t selectedIndex()
+        {
+            return this._containerStack[$-1].selectedIndex;
+        }
+
+        void popContainers()
+        {
+            // [0] is the default contaienr, so we don't want to pop it.
+            if(this._containerStack.length > 1)
+                this._containerStack.length -= 1;
+
+            this.updateUsedExtensions();
         }
     }
 
@@ -110,6 +139,10 @@ final class EditorContainer : FreeFormContainer
 
             // Register pre-defined extensions
             this.registerExtension(new GenericElementExtension(cache.getCache!Font));
+            this.registerExtension(new GenericContainerExtension(cache.getCache!Font));
+
+            // Other
+            this._containerStack ~= ContainerInfo(0, this);
         }
 
         /++
@@ -137,38 +170,60 @@ final class EditorContainer : FreeFormContainer
 
     override
     {
-        protected void onRemoveChild(UIElement child)
-        {
-            super.onRemoveChild(child);
-            if(this._selectedIndex >= this.children.length)
-                this._selectedIndex = (this.children.length == 0) ? 0 : this.children.length - 1;
-        }
-        
         public void onUpdate(InputManager input, GameTime deltaTime)
         {
             this._input = input;
             
             if(!this.canEdit)
                 super.onUpdate(input, deltaTime);
+
+            // In case the container has lost children since we last indexed into it.
+            while(this.selectedIndex >= this.selectedContainer.children.length)
+            {
+                if(this.selectedContainer.children.length == 0)
+                {
+                    if(this.selectedContainer == this)
+                        break;
+                    else
+                        this.popContainers();
+                }
+                else
+                    this.selectedIndex = (this.selectedContainer.children.length == 0) ? 0 : this.selectedContainer.children.length - 1;
+            }
+
+            auto childCount = this.selectedContainer.children.length;
             
-            if(this.children.length == 0 || !this.canEdit)
+            if(childCount == 0 || !this.canEdit)
                 return;
+
+            if(input.wasKeyTapped(sfKeyUp))
+            {
+                auto container = cast(Container)this.selectedElement;
+                if(container !is null)
+                {
+                    this._containerStack ~= ContainerInfo(0, container);
+                    this.updateUsedExtensions();
+                }
+            }
+
+            if(input.wasKeyTapped(sfKeyDown))
+                this.popContainers();
 
             if(input.wasKeyTapped(sfKeyRight))
             {
-                this._selectedIndex += 1;
-                if(this._selectedIndex >= this.children.length)
-                    this._selectedIndex = 0;
+                this.selectedIndex += 1;
+                if(this.selectedIndex >= childCount)
+                    this.selectedIndex = 0;
 
                 this.updateUsedExtensions();
             }
 
             if(input.wasKeyTapped(sfKeyLeft))
             {
-                if(this._selectedIndex == 0)
-                    this._selectedIndex = this.children.length - 1;
+                if(this.selectedIndex == 0)
+                    this.selectedIndex = childCount - 1;
                 else
-                    this._selectedIndex -= 1;
+                    this.selectedIndex -= 1;
 
                 this.updateUsedExtensions();
             }
@@ -185,9 +240,9 @@ final class EditorContainer : FreeFormContainer
         {
             super.onRender(window);
             
-            if(this.children.length > 0 && this.canEdit)
+            if(this.selectedContainer.children.length > 0 && this.canEdit)
             {
-                auto selected = super.getChild!UIElement(this._selectedIndex);
+                auto selected = this.selectedElement;
                 window.renderer.drawRect(selected.position, selected.size, Colour(240, 230, 140, 128));
             }
 
@@ -348,7 +403,7 @@ private final class GenericElementExtension : EditorPanelExtension
             this._element = selected;
 
             this._labelPosition.updateTextASCII(format("Position: %s", this._element.position));
-            this._labelName.updateTextASCII(format("Name: '%s'", this._element.name ? this._element.name : "null"));
+            this._labelName.updateTextASCII(format("Name: '%s'", this._element.name ? this._element.name : "[NO NAME]"));
             this._labelSize.updateTextASCII(format("Size: %s", this._element.size));
             this._labelColour.updateTextASCII(format("Colour: %s", this._element.colour.toCssString));
 
@@ -356,6 +411,43 @@ private final class GenericElementExtension : EditorPanelExtension
             panel.addChild(this._labelPosition);
             panel.addChild(this._labelSize);
             panel.addChild(this._labelColour);
+        }
+    }
+}
+
+@ExtensionFor!Container
+private final class GenericContainerExtension : EditorPanelExtension
+{
+    import std.format;
+    private
+    {
+        Container   _element;
+        SimpleLabel _labelChildCount;
+    }
+
+    public
+    {
+        this(Cache!Font fonts)
+        {
+            void makeLabel(ref SimpleLabel label)
+            {
+                label = new SimpleLabel(new Text(fonts.get(GENERIC_FONT_KEY), ""d, vec2(0), GENERIC_CHAR_SIZE, Colour.white));
+            }
+
+            makeLabel(this._labelChildCount);
+        }
+    }
+    
+    protected override
+    {
+        void onUpdate(StackContainer panel, UIElement selected)
+        {
+            this._element = cast(Container)selected;
+            assert(this._element !is null);
+            
+            this._labelChildCount.updateTextASCII(format("ChildCount: %s", this._element.children.length));
+
+            panel.addChild(this._labelChildCount);
         }
     }
 }
