@@ -201,7 +201,7 @@ final class EditorContainer : FreeFormContainer
             if(input.wasKeyTapped(sfKeyUp))
             {
                 auto container = cast(Container)this.selectedElement;
-                if(container !is null)
+                if(container !is null && container.children.length > 0)
                 {
                     this._containerStack ~= ContainerInfo(0, container);
                     this.updateUsedExtensions();
