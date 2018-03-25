@@ -38,7 +38,8 @@ final class SpriteAtlasViewerScene : ViewerScene
         size_t          _currentAtlasIndex;
         
         // GUI stuff
-        SimpleLabel    _labelAtlasData;
+        SimpleLabel _labelAtlasData;
+        SimpleLabel _labelAtlasIndex;
 
         /++
          + Changes the current sprite and atlas, based off of _currentAtlasIndex, and
@@ -287,13 +288,18 @@ final class SpriteAtlasViewerScene : ViewerScene
         void onInit()
         {
             super.onInit();
-            this._labelAtlasData = super.makeDataLabel();
+            this._labelAtlasData  = super.makeDataLabel();
+            this._labelAtlasIndex = super.makeDataLabel();
         }
 
         void onUpdate(GameTime deltaTime)
         {
             if(super.manager.input.wasKeyTapped(sfKeyBack))
                 super.manager.swap!MenuScene;
+
+            this._labelAtlasIndex.updateTextASCII(format(
+                "Atlas %s out of %s", this._currentAtlasIndex + 1, this._atlases.length
+            ));
 
             if(this._atlases.length == 0)
                 return;
