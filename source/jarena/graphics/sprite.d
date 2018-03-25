@@ -415,8 +415,8 @@ struct AnimationInfo
     /// The sprite sheet that contains the animation's frames.
     SpriteAtlas.Sheet spriteSheet;
 
-    /// How many milliseconds to wait between each frame.
-    uint delayPerFrameMS;
+    /// How much time to wait between each frame.
+    GameTime delayPerFrame;
 
     /// Whether the animation should repeat or not.
     bool repeat;
@@ -446,9 +446,9 @@ class AnimatedSprite : Sprite
 
         // Information about the current animation.
         AnimationInfo _currentAnimation;
-        uvec2 _currentFrame;
-        GameTime _currentDelay;
-        bool _finished;
+        uvec2         _currentFrame;
+        GameTime      _currentDelay;
+        bool          _finished;
     }
 
     public
@@ -488,11 +488,11 @@ class AnimatedSprite : Sprite
                 return;
 
             this._currentDelay.handle.microseconds += delta.handle.microseconds;
-            if(this._currentDelay.asMilliseconds >= this.animation.delayPerFrameMS)
+            if(this._currentDelay.asMicroseconds >= this.animation.delayPerFrame.asMicroseconds)
             {
                 this.advance(1);
                 this.changeFrame();
-                this._currentDelay = GameTime.fromMicroseconds(0);
+                this._currentDelay.handle.microseconds -= this.animation.delayPerFrame.asMicroseconds;
             }
         }
 

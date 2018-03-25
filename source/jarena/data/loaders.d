@@ -454,7 +454,7 @@ class SdlangLoader
 
             tracef("The animation %s and has a frame delay of %sms", repeat ? "is repeating" : "does not repeat", frameDelayMS);
 
-            auto animation = AnimationInfo(animationName, sheet, frameDelayMS, repeat);
+            auto animation = AnimationInfo(animationName, sheet, GameTime.fromMilliseconds(frameDelayMS), repeat);
             if(animations !is null)
                 animations.add(animationName, animation);
 

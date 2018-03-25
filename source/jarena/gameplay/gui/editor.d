@@ -55,9 +55,11 @@ final class EditorContainer : FreeFormContainer
                 "Controls:\n"~
                 "Left/Right Arrow = Select element\n"~
                 "Tab = Toggle Editor Panels\n"~
-                "Up Arrow = Inspect children\n"~
-                "Down Arrow = Stop Inspecting children"
+                "Down Arrow = Stop Inspecting children\n"
             );
+            if(cast(Container)this.selectedElement !is null)
+                instructions ~= "Up Arrow = Inspect children\n";
+            
             this._usedExtensions.length = 0;
             foreach(e; this._extensions.filter!(e => e.info.isExtensionObject(this.selectedElement)))
             {

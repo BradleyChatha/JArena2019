@@ -53,7 +53,7 @@ struct GameTime
         static GameTime fromMicroseconds(long micro)
         {
             GameTime time;
-            time.handle = sfMicroseconds(micro);
+            time.handle.microseconds = micro;
 
             return time;
         }
@@ -73,10 +73,10 @@ struct GameTime
         }
 
         ///
-        @trusted @nogc
+        @safe @nogc
         long asMicroseconds() nothrow const
         {
-            return sfTime_asMicroseconds(this.handle);
+            return this.handle.microseconds;
         }
     }
 }

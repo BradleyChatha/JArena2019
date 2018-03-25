@@ -45,7 +45,7 @@ final class AnimationViewerScene : ViewerScene
                        "Columns: %s\n"~
                        "Frame Count: %s",
                        next.name, 
-                       next.delayPerFrameMS, 
+                       next.delayPerFrame.asMilliseconds, 
                        next.repeat,
                        next.spriteSheet.rows,
                        next.spriteSheet.columns,
@@ -129,7 +129,8 @@ final class AnimationViewerScene : ViewerScene
                 else if(super.manager.input.isShiftDown)   amount = 10;
                 else if(super.manager.input.isAltDown)     amount = 50;
 
-                this._animations[this._animIndex].delayPerFrameMS += (amount * multiplier);
+                auto microseconds = &this._animations[this._animIndex].delayPerFrame.handle.microseconds;
+                *microseconds += GameTime.fromMilliseconds(amount * multiplier).asMicroseconds;
                 this.changeAnimation(); // This is to update the animation data in the sprite.
             }
 
