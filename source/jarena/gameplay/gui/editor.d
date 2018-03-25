@@ -95,6 +95,7 @@ final class EditorContainer : FreeFormContainer
                 new Text(cache.get!Font(GENERIC_FONT_KEY), ""d, vec2(0), GENERIC_CHAR_SIZE, Colour.white)
             ));
             label.name = "labelText";
+            label.updateTextASCII("Press left or right arrow keys");
 
             // Setup events
             office.subscribe(Window.Event.KeyDown, (_, mail)
@@ -349,7 +350,7 @@ private final class GenericElementExtension : EditorPanelExtension
             this._labelPosition.updateTextASCII(format("Position: %s", this._element.position));
             this._labelName.updateTextASCII(format("Name: '%s'", this._element.name ? this._element.name : "null"));
             this._labelSize.updateTextASCII(format("Size: %s", this._element.size));
-            this._labelColour.updateTextASCII(format("Colour: %s", this._element.colour));
+            this._labelColour.updateTextASCII(format("Colour: %s", this._element.colour.toCssString));
 
             panel.addChild(this._labelName);
             panel.addChild(this._labelPosition);
