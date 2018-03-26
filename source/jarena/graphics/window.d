@@ -5,8 +5,7 @@ private
 {
     import std.experimental.logger;
     import derelict.sfml2.system, derelict.sfml2.window, derelict.sfml2.graphics;
-    import jarena.core.maths, jarena.core.post, jarena.core.util;
-    import jarena.graphics.sprite, jarena.graphics.text;
+    import jarena.core, jarena.graphics;
     
     enum BITS_PER_PIXEL = 32;
 }
@@ -19,7 +18,7 @@ public
 /++
  + Represents a window.
  + ++/
-class Window
+final class Window
 {
     /++
      + Enum of events that the `Window` will mail to the `PostOffice`.
@@ -134,6 +133,7 @@ class Window
 
             trace("Creating Renderer");
             this._renderer = new Renderer(this);
+            this._renderer.camera = new Camera(RectangleF(0, 0, vec2(size)));
 
             trace("Setting up reusuable mail");
             this._commandMail  = new CommandMail(0);
@@ -260,12 +260,13 @@ class Window
 }
 
 ///
-class Renderer
+final class Renderer
 {
     private
     {
         Window _window;
         sfRectangleShape* _rect;
+        Camera _camera;
     }
 
     public
@@ -328,6 +329,156 @@ class Renderer
             assert(text !is null);
             sfRenderWindow_drawText(this._window.handle, text.handle, null);
         }
+
+        /// Returns: The current `Camera` being used.
+        @property
+        Camera camera()
+        {
+            return this._camera;
+        }
+
+        /// Sets the current `Camera` to use.
+        @property
+        void camera(Camera cam)
+        {
+            assert(cam !is null);
+            
+            this._camera = cam;
+            sfRenderWindow_setView(this._window.handle, this._camera.handle);
+        }
+    }
+}
+
+/++
+ + Contains information about a Camera, which can be used to control what is shown on screen.
+ +
+ + Helpful_Read:
+ +  https://www.sfml-dev.org/tutorials/2.4/graphics-view.php
+ +
+ + Notes:
+ +  
+ + ++/
+final class Camera
+{
+    const DEFAULT_CAMERA_RECT = RectangleF(float.nan, float.nan, float.nan, float.nan);
+    
+    private
+    {
+        sfView* _handle;
+        
+        @property @safe @nogc
+        inout(sfView*) handle() nothrow inout
+        {
+            assert(this._handle !is null);
+            return this._handle;
+        }
+    }
+
+    public
+    {
+        /++
+         + 
+         + ++/
+        this(RectangleF rect = DEFAULT_CAMERA_RECT)
+        {
+            if(rect == DEFAULT_CAMERA_RECT)
+                rect = RectangleF(0, 0, vec2(InitInfo.windowSize));
+
+            this._handle = sfView_createFromRect(rect.toSF!sfFloatRect);
+        }
+        
+        ~this()
+        {
+            if(this._handle !is null)
+                sfView_destroy(this.handle);
+        }
+
+        ///
+        @trusted @nogc
+        void move(vec2 offset) nothrow
+        {
+            sfView_move(this.handle, offset.toSF!sfVector2f);
+        }
+
+        /++
+         + Resets the camera to a certain portion of the world.
+         +
+         + Notes:
+         +  This will also reset the camera's rotation.
+         +
+         +  The camera will of course, be centered within `rect`.
+         +
+         + Params:
+         +  rect = The portion of the world to reset to viewing.
+         + ++/
+        @trusted @nogc
+        void reset(RectangleF rect) nothrow
+        {
+            sfView_reset(this.handle, rect.toSF!sfFloatRect);
+        }
+
+        ///
+        @property @trusted @nogc
+        vec2 center() nothrow const
+        {
+            return sfView_getCenter(this.handle).to!vec2;
+        }
+
+        ///
+        @property @trusted @nogc
+        void center(vec2 centerPos) nothrow
+        {
+            sfView_setCenter(this.handle, centerPos.toSF!sfVector2f);
+        }
+
+        ///
+        @property @trusted @nogc
+        const(AngleDegrees) rotation() nothrow const
+        {
+            return typeof(return)(sfView_getRotation(this.handle));
+        }
+
+        ///
+        @property @trusted @nogc
+        void rotation(float degrees) nothrow
+        {
+            sfView_setRotation(this.handle, degrees);
+        }
+
+        ///
+        @property @trusted @nogc
+        void rotation(AngleDegrees degrees) nothrow
+        {
+            this.rotation = degrees.angle;
+        }
+
+        ///
+        @property @trusted @nogc
+        const(vec2) size() nothrow const
+        {
+            return sfView_getSize(this.handle).to!vec2;
+        }
+
+        ///
+        @property @trusted @nogc
+        void size(vec2 siz) nothrow
+        {
+            sfView_setSize(this.handle, siz.toSF!sfVector2f);
+        }
+
+        ///
+        @property @trusted @nogc
+        const(RectangleF) viewport() nothrow const
+        {
+            return sfView_getViewport(this.handle).to!RectangleF;
+        }
+        
+        ///
+        @property @trusted @nogc
+        void viewport(RectangleF port) nothrow
+        {
+            sfView_setViewport(this.handle, port.toSF!sfFloatRect);
+        }
     }
 }
 
@@ -347,7 +498,7 @@ enum MouseButton : ubyte
 }
 
 ///
-class InputManager
+final class InputManager
 {
     private
     {

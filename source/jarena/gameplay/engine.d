@@ -40,6 +40,7 @@ final class Engine
         Font            _debugFont;
         SimpleLabel     _debugText;
         StackContainer  _debugGui;
+        Camera          _debugCamera;
     }
 
     public
@@ -72,6 +73,7 @@ final class Engine
             this._debugText.text.outlineThickness(DEBUG_TEXT_THICC);
             this._debugGui      = new StackContainer(DEBUG_CONTAINER_POSITION, StackContainer.Direction.Horizontal, DEBUG_CONTAINER_COLOUR);
             this._debugGui.addChild(this._debugText);
+            this._debugCamera   = new Camera(RectangleF(0, 0, vec2(this._window.size)));
 
             // Setup init info
             InitInfo.windowSize = this._window.size;
@@ -115,8 +117,13 @@ final class Engine
             this._window.renderer.clear();
             this._timers.onUpdate(this._fps.elapsedTime);
             this._scenes.onUpdate(this._window, this._fps.elapsedTime);
+
+            auto old = this.window.renderer.camera;
+            this.window.renderer.camera = this._debugCamera; // So the debug UI doesn't fly off the screen.
             this._debugGui.onUpdate(this.input, this._fps.elapsedTime);
             this._debugGui.onRender(this.window);
+            this.window.renderer.camera = old;
+            
             this._window.renderer.displayChanges();
         }
 

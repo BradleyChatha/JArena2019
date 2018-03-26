@@ -52,6 +52,8 @@ abstract class Scene
         DrawableObject[]    _drawOrder;
         PostOffice          _proxyEventOffice; // GameObjects will subscribe to this proxy, so GameObjects don't need any knowledge of when a scene is swapped in and out.
         EditorContainer     _gui;
+        Camera              _guiCamera;
+        Camera              _sceneCamera;
         
         @safe
         void registerDrawable(DrawableObject object)
@@ -117,7 +119,11 @@ abstract class Scene
         // Needed for any setup that needs to access the scene manager.
         void _onInit()
         {
-            this._gui = new EditorContainer(this._proxyEventOffice, this.manager.cache);
+            auto cameraRect         = RectangleF(0, 0, vec2(InitInfo.windowSize));
+            this._proxyEventOffice  = new PostOffice();
+            this._gui               = new EditorContainer(this._proxyEventOffice, this.manager.cache);
+            this._guiCamera         = new Camera(cameraRect);
+            this._sceneCamera       = new Camera(cameraRect);
         }
 
         void _onUpdate(GameTime deltaTime)
@@ -255,12 +261,16 @@ abstract class Scene
          +
          + Any drawable object that is hidden won't be rendered to the screen.
          +
+         + The `Camera` for the window's `Renderer` will be set to this Scene's `Scene.camera`
+         + before rendering, and $(B won't) be reset back to it's original.
+         +
          + Params:
          +  window = The game's window.
          + ++/
         void renderScene(Window window)
         {
             import std.algorithm : filter;
+            window.renderer.camera = this.camera;
             foreach(object; this._drawOrder.filter!(o => !o.isHidden))
                 object.onRender(window);
         }
@@ -282,12 +292,23 @@ abstract class Scene
          +
          + This means it also renders any `UIElement`s added to the scene's `Scene.gui` container.
          +
+         + Unlike `renderScene`, this function does not get affected by a `Camera`.
+         + When this function is called, it will store the current camera temporarily, set
+         + the camera to (0, 0, windowSize), render the gui, then set the old camera back.
+         +
+         + This is to ensure no funky logic is needed to make sure the UI is kept in the same place
+         + on screen.
+         +
          + Params:
          +  window = The game's window.
          + ++/
         void renderUI(Window window)
         {
+            auto old = window.renderer.camera;
+
+            window.renderer.camera = this._guiCamera;
             this._gui.onRender(window);
+            window.renderer.camera = old;
         }
 
         /++
@@ -320,6 +341,32 @@ abstract class Scene
         }
 
         /++
+         + Sets the `Camera` used by `renderScene` to render the scene.
+         +
+         + Any scene that renders outside of `renderScene` should aim to use this
+         + camera for any rendering, unless there is a good reason not to.
+         +
+         + Params:
+         +  cam = The camera to use.
+         + ++/
+        @property @safe @nogc
+        void camera(Camera cam) nothrow
+        {
+            assert(cam !is null, "The camera is null");
+            this._sceneCamera = cam;
+        }
+        
+        /++
+         + Returns:
+         +  The `Camera` used by `renderScene` to render the scene.
+         + ++/
+        @property @safe @nogc
+        Camera camera() nothrow
+        {
+            return this._sceneCamera;
+        }
+
+        /++
          + The main event office.
          +
          + Notes:
@@ -334,14 +381,6 @@ abstract class Scene
 
     public
     {
-        /++
-         + ++/
-        @trusted
-        this()
-        {
-            this._proxyEventOffice = new PostOffice();
-        }
-
         /// The `SceneManager` this scene has been registered with.
         @property @safe @nogc
         inout(SceneManager) manager() nothrow inout

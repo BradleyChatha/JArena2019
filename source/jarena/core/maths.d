@@ -99,3 +99,72 @@ alias RectangleF = Rectangle!float;
 
 ///
 alias RectangleI = Rectangle!int;
+
+///
+enum AngleType
+{
+    ///
+    Degrees,
+
+    ///
+    Radians
+}
+
+/++
+ + A struct to easily convert an angle between Radians and Degrees.
+ +
+ + If a conversion does not need to take place (e.g Radians -> Radians) then this struct is zero-cost.
+ + ++/
+struct Angle(AngleType type)
+{
+    import std.math : PI;
+    
+    /// The angle (This struct is `alias this`ed to this variable).
+    float angle;
+    alias angle this;
+
+    ///
+    @property @safe @nogc
+    AngleDegrees degrees() nothrow pure const
+    {
+        static if(type == AngleType.Degrees)
+            return this;
+        else
+            return AngleDegrees(this * (180 / PI));
+    }
+
+    ///
+    @property @safe @nogc
+    AngleRadians radians() nothrow pure const
+    {
+        static if(type == AngleType.Radians)
+            return this;
+        else
+            return AngleRadians(this * (PI / 180));
+    }
+
+    ///
+    @safe @nogc
+    void opAssign(AngleDegrees rhs) nothrow pure
+    {
+        static if(type == AngleType.Degrees)
+            this.angle = rhs.degrees;
+        else
+            this.angle = rhs.radians;
+    }
+
+    ///
+    @safe @nogc
+    void opAssign(AngleRadians rhs) nothrow pure
+    {
+        static if(type == AngleType.Radians)
+            this.angle = rhs.radians;
+        else
+            this.angle = rhs.degrees;
+    }
+}
+
+///
+alias AngleDegrees = Angle!(AngleType.Degrees);
+///
+alias AngleRadians = Angle!(AngleType.Radians);

@@ -2,12 +2,14 @@ module jarena.gameplay.scenes.viewer_scene;
 
 private
 {
+    import derelict.sfml2.window;
     import jarena.core, jarena.gameplay, jarena.graphics;
 
     const DEFAULT_FONT_KEY      = "Calibri";
     const GUI_BACKGROUND_COLOUR = Colours.azure;
     const TEXT_CHAR_SIZE        = 18;
     const TEXT_COLOUR           = Colours.bianca;
+    const CAMERA_SPEED          = 200.0f; // Pixels/s
 }
 
 /++
@@ -55,8 +57,9 @@ abstract class ViewerScene : Scene
             this._instructionPanel.colour = GUI_BACKGROUND_COLOUR;
             super.gui.addChild(this._instructionPanel);
 
+            auto extraInstructions = "\nWASD = Move Camera | R = Reset Camera";
             auto instLabel = this.makeLabel(this._instructionPanel, super.manager.cache.get!Font(DEFAULT_FONT_KEY));
-            instLabel.updateTextASCII(this.instructions);
+            instLabel.updateTextASCII(this.instructions ~ extraInstructions);
             
             this._instructionPanel.autoSize = StackContainer.AutoSize.no;
             this._instructionPanel.size     = vec2(InitInfo.windowSize.x, this._instructionPanel.size.y);
@@ -66,6 +69,22 @@ abstract class ViewerScene : Scene
         override void onUpdate(GameTime deltaTime)
         {
             super.updateUI(deltaTime);
+            auto dtSecs = deltaTime.asSeconds;
+
+            if(super.manager.input.isKeyDown(sfKeyD))
+                super.camera.move(vec2(CAMERA_SPEED, 0) * dtSecs);
+
+            if(super.manager.input.isKeyDown(sfKeyA))
+                super.camera.move(vec2(-CAMERA_SPEED, 0) * dtSecs);
+
+            if(super.manager.input.isKeyDown(sfKeyW))
+                super.camera.move(vec2(0, -CAMERA_SPEED) * dtSecs);
+
+            if(super.manager.input.isKeyDown(sfKeyS))
+                super.camera.move(vec2(0, CAMERA_SPEED) * dtSecs);
+
+            if(super.manager.input.wasKeyTapped(sfKeyR))
+                super.camera.reset(RectangleF(0, 0, vec2(InitInfo.windowSize)));
         }
 
         override void onRender(Window window)

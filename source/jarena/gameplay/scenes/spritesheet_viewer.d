@@ -279,7 +279,6 @@ final class SpriteAtlasViewerScene : ViewerScene
                 0,
                 0
             )).array;
-            super();
         }
     }
 

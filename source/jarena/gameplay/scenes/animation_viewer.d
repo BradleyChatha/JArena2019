@@ -64,7 +64,6 @@ final class AnimationViewerScene : ViewerScene
             assert(animations !is null);
 
             this._animations = animations.byValue.map!(v => cast(AnimationInfo)v).array;
-            super();
         }
     }
 

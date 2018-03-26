@@ -14,14 +14,6 @@ class Test : Scene, IPostBox
     StackContainer gui2;
     GridContainer  grid;
 
-    public
-    {
-        this()
-        {
-            super();
-        }
-    }
-
     public override
     {
         void onInit()
