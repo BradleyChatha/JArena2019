@@ -387,7 +387,7 @@ private final class GenericElementExtension : EditorPanelExtension
             }
             
             super.registerKeybind!sfKeyE("Moves the selected item to the mouse",(input){
-                this._element.position = input.mousePosition;
+                this._element.position = input.mousePosition - (this._element.size / 2);
                 this._labelPosition.updateTextASCII(format("Position: %s", this._element.position));
             });
 
