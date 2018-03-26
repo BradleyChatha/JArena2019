@@ -126,7 +126,7 @@ abstract class Scene
             this._sceneCamera       = new Camera(cameraRect);
         }
 
-        void _onUpdate(GameTime deltaTime)
+        void _onUpdate(GameTime deltaTime, InputManager input)
         {
             import std.stdio : writeln;
             
@@ -142,7 +142,7 @@ abstract class Scene
             if(this._gui.canEdit)
                 this.updateUI(deltaTime);
             else
-                this.onUpdate(deltaTime);
+                this.onUpdate(deltaTime, input);
         }
     }
 
@@ -284,7 +284,7 @@ abstract class Scene
         void updateScene(GameTime deltaTime)
         {
             foreach(object; this._objects.byValue)
-                object.onUpdate(deltaTime);
+                object.onUpdate(deltaTime, this.manager.input);
         }
 
         /++
@@ -444,8 +444,9 @@ abstract class Scene
          +
          + Params:
          +  deltaTime = The amount of time the last frame took to process (used for making speed frame-independent).
+         +  input     = A shortcut to the `SceneManager`'s `InputManager`. (so you don't have to do `super.manager.input` everywhere)
          + ++/
-        void onUpdate(GameTime deltaTime);
+        void onUpdate(GameTime deltaTime, InputManager input);
 
         /++
          + Called everytime the scene should render it's current state to the screen.
@@ -538,7 +539,7 @@ class SceneManager
 
             if(this._currentScene !is null)
             {
-                this._currentScene._onUpdate(deltaTime);
+                this._currentScene._onUpdate(deltaTime, this.input);
                 this._currentScene.onRender(window);
             }
         }
@@ -681,8 +682,9 @@ abstract class GameObject
          +
          + Params:
          +  deltaTime = The amount of time the last frame took to process.
+         +  input     = A shortcut to the `SceneManager`'s `InputManager`. (so you don't have `super.scene.manager.input` everywhere.)
          + ++/
-        void onUpdate(GameTime deltaTime);
+        void onUpdate(GameTime deltaTime, InputManager input);
     }
 }
 

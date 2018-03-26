@@ -66,24 +66,24 @@ abstract class ViewerScene : Scene
             this._instructionPanel.position = vec2(0, InitInfo.windowSize.y - this._instructionPanel.size.y);
         }
 
-        override void onUpdate(GameTime deltaTime)
+        override void onUpdate(GameTime deltaTime, InputManager input)
         {
             super.updateUI(deltaTime);
             auto dtSecs = deltaTime.asSeconds;
 
-            if(super.manager.input.isKeyDown(sfKeyD))
+            if(input.isKeyDown(sfKeyD))
                 super.camera.move(vec2(CAMERA_SPEED, 0) * dtSecs);
 
-            if(super.manager.input.isKeyDown(sfKeyA))
+            if(input.isKeyDown(sfKeyA))
                 super.camera.move(vec2(-CAMERA_SPEED, 0) * dtSecs);
 
-            if(super.manager.input.isKeyDown(sfKeyW))
+            if(input.isKeyDown(sfKeyW))
                 super.camera.move(vec2(0, -CAMERA_SPEED) * dtSecs);
 
-            if(super.manager.input.isKeyDown(sfKeyS))
+            if(input.isKeyDown(sfKeyS))
                 super.camera.move(vec2(0, CAMERA_SPEED) * dtSecs);
 
-            if(super.manager.input.wasKeyTapped(sfKeyR))
+            if(input.wasKeyTapped(sfKeyR))
                 super.camera.reset(RectangleF(0, 0, vec2(InitInfo.windowSize)));
         }
 

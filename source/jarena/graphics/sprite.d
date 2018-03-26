@@ -691,7 +691,7 @@ class AnimatedObject : DrawableObject
         void onUnregister(PostOffice office){}
         
         ///
-        void onUpdate(GameTime deltaTime)
+        void onUpdate(GameTime deltaTime, InputManager input)
         {
             this._sprite.onUpdate(deltaTime);
         }
@@ -791,7 +791,7 @@ class StaticObject : DrawableObject
         void onUnregister(PostOffice office){}
         
         ///
-        void onUpdate(GameTime deltaTime){}
+        void onUpdate(GameTime deltaTime, InputManager input){}
 
         ///
         void onRegister(PostOffice office)

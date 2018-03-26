@@ -291,9 +291,9 @@ final class SpriteAtlasViewerScene : ViewerScene
             this._labelAtlasIndex = super.makeDataLabel();
         }
 
-        void onUpdate(GameTime deltaTime)
+        void onUpdate(GameTime deltaTime, InputManager input)
         {
-            if(super.manager.input.wasKeyTapped(sfKeyBack))
+            if(input.wasKeyTapped(sfKeyBack))
                 super.manager.swap!MenuScene;
 
             this._labelAtlasIndex.updateTextASCII(format(
@@ -306,11 +306,11 @@ final class SpriteAtlasViewerScene : ViewerScene
             this.moveIndex!(Increment.yes)(sfKeyRight);
             this.moveIndex!(Increment.no)(sfKeyLeft);
 
-            if(super.manager.input.wasKeyTapped(sfKeyR))
+            if(input.wasKeyTapped(sfKeyR))
                 this.changeSprite(ShowAll.yes);
 
             super.updateScene(deltaTime);
-            super.onUpdate(deltaTime);
+            super.onUpdate(deltaTime, input);
         }
 
         void onRender(Window window)

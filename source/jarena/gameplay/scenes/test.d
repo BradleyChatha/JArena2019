@@ -70,39 +70,39 @@ class Test : Scene, IPostBox
         {
         }
 
-        void onUpdate(GameTime deltaTime)
+        void onUpdate(GameTime deltaTime, InputManager input)
         {
             auto speedHorizontal = vec2(160 * deltaTime.asSeconds, 0);
             auto speedVertical   = vec2(0, 160 * deltaTime.asSeconds);
 
-            if(super.manager.input.isKeyDown(sfKeyD))
+            if(input.isKeyDown(sfKeyD))
                 this.tahn.move(speedHorizontal);
-            if(super.manager.input.isKeyDown(sfKeyA))
+            if(input.isKeyDown(sfKeyA))
                 this.tahn.move(-speedHorizontal);
-            if(super.manager.input.isKeyDown(sfKeyW))
+            if(input.isKeyDown(sfKeyW))
                 this.tahn.move(-speedVertical);
-            if(super.manager.input.isKeyDown(sfKeyS))
+            if(input.isKeyDown(sfKeyS))
                 this.tahn.move(speedVertical);
 
-            if(super.manager.input.wasKeyTapped(sfKeyBack))
+            if(input.wasKeyTapped(sfKeyBack))
                 super.manager.swap!MenuScene;
 
-            if(super.manager.input.isKeyDown(sfKeyE))
+            if(input.isKeyDown(sfKeyE))
                 this.tahn.isHidden = true;
-            if(super.manager.input.isKeyDown(sfKeyF))
+            if(input.isKeyDown(sfKeyF))
                 this.tahn.isHidden = false;
 
-            if(super.manager.input.wasKeyTapped(sfKeyJ))
+            if(input.wasKeyTapped(sfKeyJ))
                 this.atlas.changeSprite(this.tahn, "TahnBig");
-            if(super.manager.input.wasKeyTapped(sfKeyK))
+            if(input.wasKeyTapped(sfKeyK))
                 this.atlas.changeSprite(this.tahn, "Tahn");
 
-            if(super.manager.input.wasKeyTapped(sfKeyUp) && !super.manager.input.wasKeyRepeated(sfKeyUp))
+            if(input.wasKeyTapped(sfKeyUp) && !input.wasKeyRepeated(sfKeyUp))
                 this.tahn.yLevel = this.tahn.yLevel + 1; // += doesn't work for some reason.
-            if(super.manager.input.wasKeyTapped(sfKeyDown) && !super.manager.input.wasKeyRepeated(sfKeyDown))
+            if(input.wasKeyTapped(sfKeyDown) && !input.wasKeyRepeated(sfKeyDown))
                 this.tahn.yLevel = this.tahn.yLevel - 1;
 
-            if(super.manager.input.wasKeyTapped(sfKeyG) && !super.manager.input.wasKeyRepeated(sfKeyG))
+            if(input.wasKeyTapped(sfKeyG) && !input.wasKeyRepeated(sfKeyG))
             {
                 if(gui.children.length == 1)
                     gui2.children[0].parent = gui;

@@ -76,17 +76,17 @@ final class AnimationViewerScene : ViewerScene
             this._labelChangingData = super.makeDataLabel();
         }
 
-        void onUpdate(GameTime deltaTime)
+        void onUpdate(GameTime deltaTime, InputManager input)
         {
             import std.format : format;
 
-            if(super.manager.input.wasKeyTapped(sfKeyBack))
+            if(input.wasKeyTapped(sfKeyBack))
                 super.manager.swap!MenuScene;
 
             if(this._animations.length == 0)
                 return;
 
-            if(super.manager.input.wasKeyTapped(sfKeyRight))
+            if(input.wasKeyTapped(sfKeyRight))
             {
                 this._animIndex += 1;
 
@@ -96,7 +96,7 @@ final class AnimationViewerScene : ViewerScene
                 this.changeAnimation();
             }
 
-            if(super.manager.input.wasKeyTapped(sfKeyLeft))
+            if(input.wasKeyTapped(sfKeyLeft))
             {
                 if(this._animIndex == 0)
                     this._animIndex = this._animations.length - 1;
@@ -106,9 +106,9 @@ final class AnimationViewerScene : ViewerScene
                 this.changeAnimation();
             }
 
-            if(super.manager.input.isKeyDown(sfKeyR) && this._sprite !is null)
+            if(input.isKeyDown(sfKeyR) && this._sprite !is null)
             {
-                if(super.manager.input.isShiftDown && super.manager.input.wasKeyTapped(sfKeyR)) // wasKeyTapped is used give it a better behavoiouroiuouoru
+                if(input.isShiftDown && input.wasKeyTapped(sfKeyR)) // wasKeyTapped is used give it a better behavoiouroiuouoru
                 {
                     auto animPtr = &this._animations[this._animIndex];
                     animPtr.repeat = !animPtr.repeat;
@@ -118,15 +118,15 @@ final class AnimationViewerScene : ViewerScene
                     this._sprite.restart();
             }
 
-            if(super.manager.input.wasKeyTapped(sfKeyAdd)
-            || super.manager.input.wasKeyTapped(sfKeySubtract))
+            if(input.wasKeyTapped(sfKeyAdd)
+            || input.wasKeyTapped(sfKeySubtract))
             {
                 auto multiplier = (super.manager.input.wasKeyTapped(sfKeyAdd)) ? 1 : -1;
                 auto amount = 1;
 
-                     if(super.manager.input.isControlDown) amount = 5;
-                else if(super.manager.input.isShiftDown)   amount = 10;
-                else if(super.manager.input.isAltDown)     amount = 50;
+                     if(input.isControlDown) amount = 5;
+                else if(input.isShiftDown)   amount = 10;
+                else if(input.isAltDown)     amount = 50;
 
                 auto microseconds = &this._animations[this._animIndex].delayPerFrame.handle.microseconds;
                 *microseconds += GameTime.fromMilliseconds(amount * multiplier).asMicroseconds;
@@ -146,7 +146,7 @@ final class AnimationViewerScene : ViewerScene
             }
 
             super.updateScene(deltaTime);
-            super.onUpdate(deltaTime);
+            super.onUpdate(deltaTime, input);
         }
 
         void onRender(Window window)
