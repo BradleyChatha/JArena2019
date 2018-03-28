@@ -555,9 +555,8 @@ class SceneManager
          + Params:
          +  S = The `Scene` to swap to.
          + ++/
-        void swap(S : Scene)()
+        void swap(string sceneName)
         {
-            auto sceneName = SceneName.getFrom!S;
             tracef("Swapping to scene called '%s'", sceneName);
 
             auto scene = this._scenes.get(sceneName);
@@ -587,6 +586,12 @@ class SceneManager
 
             import core.memory : GC;
             GC.collect(); // Forcing a collection here should hopefully make the GC feel less inclined to collect during a Scene's update function.
+        }
+
+        /// ditto
+        void swap(S : Scene)()
+        {
+            this.swap(SceneName.getFrom!S);
         }
 
         /++
