@@ -11,12 +11,13 @@ const ENGINE_CONFIG_PATH        = "data/engineConf.sdl";
 const WINDOW_NAME               = "JArena";
 const WINDOW_DEFAULT_SIZE       = uvec2(860, 740);
 const WINDOW_DEFAULT_FPS        = 60;
-const DEBUG_FONT                = "Data/Fonts/crackdown.ttf";
+const DEBUG_FONT                = "Data/Fonts/Spaceport_2006.otf";
 const DEBUG_FONT_SIZE           = 10;
 const DEBUG_TEXT_COLOUR         = Colours.rockSalt;
 const DEBUG_TEXT_THICC          = 0;
 const DEBUG_CONTAINER_COLOUR    = Colour(0, 0, 0, 128);
 const DEBUG_CONTAINER_POSITION  = vec2(1);
+const DEBUG_CONTAINER_Y_PADDING = 0; // Used to try and combat SFML's inaccurate Y-axis readings for fonts.
 
 final class Engine
 {
@@ -90,6 +91,7 @@ final class Engine
                                                         this._fps.frameCount, 
                                                         this._fps.elapsedTime.asMilliseconds,
                                                         getMemInfo().usedRAM / (1024 * 1024)));
+                this._debugGui.size = this._debugGui.size + vec2(0, DEBUG_CONTAINER_Y_PADDING);
             });
             this.events.subscribe(Window.Event.Close, (_,__) => this._window.close());
 
