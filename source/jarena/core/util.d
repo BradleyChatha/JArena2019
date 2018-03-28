@@ -72,6 +72,13 @@ Colour to(T : Colour)(sfColor colour)
     return Colour(colour.r, colour.g, colour.b, colour.a);
 }
 
+/++
+ + Notes:
+ +  If the current platform is not supported, then a `ProcessMemInfo.init` is returned.
+ +
+ + Returns:
+ +  A `ProcessMemInfo` containing the memory usage for this process.
+ + ++/
 ProcessMemInfo getMemInfo()
 {
     version(Windows)
