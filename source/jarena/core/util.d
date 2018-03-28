@@ -4,6 +4,7 @@ module jarena.core.util;
 private
 {
     import std.experimental.logger;
+    import resusage;
     import jarena.core.maths;
     import derelict.sfml2.system, derelict.sfml2.graphics;
 }
@@ -69,6 +70,21 @@ if(isSFMLRect!sfRect && isJArenaRect!jarenaRect)
 Colour to(T : Colour)(sfColor colour)
 {
     return Colour(colour.r, colour.g, colour.b, colour.a);
+}
+
+ProcessMemInfo getMemInfo()
+{
+    version(Windows)
+    {
+        import core.sys.windows.winbase;
+        auto pid = GetCurrentProcessId();
+
+        return processMemInfo(pid);
+    }
+    else
+    {
+        return ProcessMemInfo.init;
+    }
 }
 
 // This exists since I don't like the output for the default logger.

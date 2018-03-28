@@ -16,7 +16,7 @@ const DEBUG_FONT_SIZE           = 10;
 const DEBUG_TEXT_COLOUR         = Colours.rockSalt;
 const DEBUG_TEXT_THICC          = 0;
 const DEBUG_CONTAINER_COLOUR    = Colour(0, 0, 0, 128);
-const DEBUG_CONTAINER_POSITION  = vec2(0);
+const DEBUG_CONTAINER_POSITION  = vec2(1);
 
 final class Engine
 {
@@ -86,8 +86,10 @@ final class Engine
             this.events.subscribe(Event.UpdateFPSDisplay, (_, __)
             {
                 import std.format : sformat;
-                this._debugText.updateTextASCII(sformat(this._debugBuffer, "FPS: %s | Time: %sms", 
-                                                        this._fps.frameCount, this._fps.elapsedTime.asMilliseconds));
+                this._debugText.updateTextASCII(sformat(this._debugBuffer, "FPS: %s | Time: %sms | RAM: %sMB", 
+                                                        this._fps.frameCount, 
+                                                        this._fps.elapsedTime.asMilliseconds,
+                                                        getMemInfo().usedRAM / (1024 * 1024)));
             });
             this.events.subscribe(Window.Event.Close, (_,__) => this._window.close());
 
