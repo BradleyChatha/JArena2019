@@ -35,6 +35,7 @@ final class Engine
         SceneManager _scenes;
         Timers       _timers;
         Config       _config;
+        uvec2*       _windowSizePtr;
 
         // Debug stuff
         char[512]       _debugBuffer;
@@ -78,8 +79,12 @@ final class Engine
 
             // Setup init info
             InitInfo.windowSize = this._window.size;
+            this._windowSizePtr = InitInfo.windowSize_ptr; // Reminder: Only one pointer is given out before an assert fails, so this is safe.
 
             // Make sure the post office types are valid
+            // (_ALL_ events that are to be used with this office should be reserved here
+            //  even if they're in completely unrelated modules. This makes it easy to see
+            //  which events work with this office, and helps stay organised.)
             this._eventOffice.reserveTypes!(Window.Event);
             this._eventOffice.reserveTypes!(Engine.Event);
 
@@ -94,6 +99,13 @@ final class Engine
                 this._debugGui.size = this._debugGui.size + vec2(0, DEBUG_CONTAINER_Y_PADDING);
             });
             this.events.subscribe(Window.Event.Close, (_,__) => this._window.close());
+            this.events.subscribe(Window.Event.Resized, (_, m)
+            {
+                auto mail = cast(ValueMail!uvec2)m;
+                assert(mail !is null);
+
+                *this._windowSizePtr = mail.value;
+            });
 
             // Load in assets
             SdlangLoader.parseDataListFile(this._scenes.cache.getCache!AnimationInfo,
