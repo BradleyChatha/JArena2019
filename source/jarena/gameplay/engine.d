@@ -115,7 +115,7 @@ final class Engine
 
             debug this._config.showDebugText = true;
             if(this._config.showDebugText.get(false))
-                this.timers.every(GameTime.fromMilliseconds(1), (){this.events.mailCommand(Event.UpdateFPSDisplay);});
+                this._timers.every(GameTime.fromMilliseconds(1), (){this.events.mailCommand(Event.UpdateFPSDisplay);});
         }
 
         ///
@@ -178,13 +178,6 @@ final class Engine
         inout(SceneManager) scenes() nothrow inout
         {
             return this._scenes;
-        }
-
-        ///
-        @property @safe @nogc
-        inout(Timers) timers() nothrow inout
-        {
-            return this._timers;
         }
     }
 

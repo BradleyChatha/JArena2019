@@ -452,6 +452,7 @@ class SdlangLoader
             auto frameDelayMS = tag.expectTagValue!int("frameDelayMS");
             auto repeat = tag.expectTagValue!bool("repeat");
 
+            enforce(frameDelayMS > -1, format("The animation '%s' has a frame delay under 0, this is not allowed.", animationName));
             tracef("The animation %s and has a frame delay of %sms", repeat ? "is repeating" : "does not repeat", frameDelayMS);
 
             auto animation = AnimationInfo(animationName, sheet, GameTime.fromMilliseconds(frameDelayMS), repeat);
