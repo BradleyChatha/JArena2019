@@ -316,7 +316,7 @@ class FPS
             {
                 this._frameCountPrevious = this._frameCount;
                 this._frameCount = 0;
-                this._elapsedSeconds = 0;
+                this._elapsedSeconds -= 1; // So we don't knock off any of the decimal time, making it more accurate.
             }
         }
 
