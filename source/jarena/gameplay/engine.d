@@ -8,6 +8,7 @@ private
 }
 
 const ENGINE_CONFIG_PATH        = "data/engineConf.sdl";
+const ENGINE_DATA_PATH          = "data/data.sdl";
 const WINDOW_NAME               = "JArena";
 const WINDOW_DEFAULT_SIZE       = uvec2(860, 740);
 const WINDOW_DEFAULT_FPS        = 60;
@@ -108,10 +109,7 @@ final class Engine
             });
 
             // Load in assets
-            SdlangLoader.parseDataListFile(this._scenes.cache.getCache!AnimationInfo,
-                                           this._scenes.cache.getCache!SpriteAtlas,
-                                           this._scenes.cache.getCache!Texture,
-                                           this._scenes.cache.getCache!Font);
+            SdlangLoader.parseFile(ENGINE_DATA_PATH, this.scenes.cache);
 
             debug this._config.showDebugText = true;
             if(this._config.showDebugText.get(false))

@@ -202,11 +202,11 @@ if(allSatisfy!(isType, Types))
                 auto cacheName = makeCacheName!type;
                 auto typeName  = fullyQualifiedName!type;
 
-                builder.putf("%s add(T = %s)(string key)", typeName, typeName);
+                builder.putf("%s add(T = %s)(string key, T value)", typeName, typeName);
                 builder.putf("if(is(T == %s))", typeName);
                 builder.putScope((_)
                 {
-                    builder.putf("return %s.add(key);", cacheName);
+                    builder.putf("return %s.add(key, value);", cacheName);
                 });
             }
 

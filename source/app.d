@@ -10,6 +10,8 @@ void main()
     DerelictSFML2System.load();
     DerelictSFML2Window.load();
 
+    SdlangLoader.setup();
+    
     auto engine = new Engine();
     engine.onInit();
 

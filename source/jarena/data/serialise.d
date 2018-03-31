@@ -56,10 +56,10 @@ mixin template SerialisableInterface()
     {
         import std.exception : enforce;
         
-        pragma(msg, "For Type: " ~ ThisType.stringof);
-        pragma(msg, fromSdlTagGenerator!ThisType);
+        //pragma(msg, "For Type: " ~ ThisType.stringof);
+        //pragma(msg, fromSdlTagGenerator!ThisType);
         mixin(fromSdlTagGenerator!ThisType);
-    }    
+    }
 }
 
 // Needs to be public so the mixin template can work.

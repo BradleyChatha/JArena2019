@@ -1,4 +1,4 @@
-type "DataFile"
+type "Data:file"
 
 animations {
     file "Animations/Test Animations.sdl"
