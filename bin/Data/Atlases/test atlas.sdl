@@ -1,5 +1,5 @@
-type "SpriteAtlas"
-texture "../Textures/Atlas.png"
+type "SpriteAtlas:atlas"
+textureRef "../Textures/Atlas.png"
 name "Test Atlas"
 
 sprite "Jash" {

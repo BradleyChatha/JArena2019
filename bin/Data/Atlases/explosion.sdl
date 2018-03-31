@@ -1,5 +1,5 @@
-type "SpriteAtlas"
-texture "../Textures/EXPLOSION.png"
+type "SpriteAtlas:atlas"
+textureRef "../Textures/EXPLOSION.png"
 name "Explosion Atlas"
 
 spriteSheet "ExplosionFrames" {

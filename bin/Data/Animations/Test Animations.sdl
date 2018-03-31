@@ -1,6 +1,6 @@
-type "Animation:list"
+type "Data:list"
 
-animation {
+value {
     type "Animation:spriteSheet"
     name "Test Animation"
 
@@ -11,7 +11,7 @@ animation {
     repeat true
 }
 
-animation {
+value {
     type "Animation:spriteSheet"
     name "Tile Animation"
 
@@ -22,7 +22,7 @@ animation {
     repeat false
 }
 
-animation {
+value {
 	type "Animation:spriteSheet"
 	name "Explosion Animation"
 	
