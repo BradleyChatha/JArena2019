@@ -78,6 +78,16 @@ struct GameTime
         {
             return this.handle.microseconds;
         }
+
+        GameTime opBinary(string op)(GameTime rhs)
+        {
+            return mixin("GameTime(sfTime(this.handle.microseconds "~op~" rhs.handle.microseconds))");
+        }
+
+        void opOpAssign(string op)(GameTime rhs)
+        {
+            mixin("this = this "~op~" rhs;");
+        }
     }
 }
 
@@ -171,8 +181,8 @@ class MailTimer
             if(this._isStopped)
                 return;
 
-            this._current.handle.microseconds += deltaTime.handle.microseconds;
-            if(this._current.handle.microseconds >= this._delay.handle.microseconds)
+            this._current += deltaTime;
+            if(this._current.asMicroseconds >= this._delay.asMicroseconds)
             {
                 this._office.mail(this._mail);
                 this._current = GameTime();
@@ -251,7 +261,7 @@ class Timers
         ///
         void onUpdate(GameTime deltaTime)
         {
-            this._currentTime.handle.microseconds += deltaTime.asMicroseconds;
+            this._currentTime += deltaTime;
 
             bool processEvent(ref After event)
             {

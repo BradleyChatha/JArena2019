@@ -433,7 +433,7 @@ struct AnimationInfo
  +
  + The second is manual animation, which is where `AnimatedSprite.onUpdate` is $(B not) called, and the programmer
  + instead uses `AnimatedSprite.currentFrame`, `AnimatedSprite.changeFrame`, and `AnimatedSprite.advance` to
- + finely-control the frame that sprite is displaying.
+ + finely-control the frame that the sprite is displaying.
  +
  + Of course, this class can be inherited from, and other systems can be built to provide different automatic
  + animation options.
@@ -487,7 +487,7 @@ class AnimatedSprite : Sprite
             if(this._finished)
                 return;
 
-            this._currentDelay.handle.microseconds += delta.handle.microseconds;
+            this._currentDelay += delta;
             if(this._currentDelay.asMicroseconds >= this.animation.delayPerFrame.asMicroseconds)
             {
                 this.advance(1);
@@ -762,6 +762,8 @@ class StaticObject : DrawableObject
          + Notes:
          +  The texture, and therefor the StaticObject's sprite, won't be loaded until
          +  the StaticObject is registered with a scene when this constructor is used.
+         +
+         +  The texture is loaded using the cache of the current `Scene`'s `SceneManager`.
          +
          + Params:
          +  texturePath = The path to the texture to use.
