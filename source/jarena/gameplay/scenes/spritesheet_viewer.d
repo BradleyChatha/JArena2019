@@ -159,7 +159,7 @@ final class SpriteAtlasViewerScene : ViewerScene
         bool decrement(T, A)(ref T value, const A array)
         {
             if(array.length == 0)
-                return false;
+                return true;
             
             if(value == 0)
                 value = array.length - 1;
@@ -206,7 +206,10 @@ final class SpriteAtlasViewerScene : ViewerScene
             if(super.manager.input.wasKeyTapped(key))
             {
                 if(super.manager.input.isShiftDown)
+                {
                     Func(this._currentAtlasIndex, this._atlases);
+                    this.currentAtlas.usingSheets = (this.currentAtlas.spriteNames.length == 0);
+                }
                 else
                 {
                     if(!this.currentAtlas.usingSheets)
