@@ -240,6 +240,7 @@ class FreeFormContainer : Container
 /++
  + 
  + ++/
+deprecated("This is still heavily WIP and probably won't be worked on for quite a while. Don't use it.")
 final class GridContainer : Container
 {
     // TODO: Add some common functionality so other containers can make use of anchoring.
