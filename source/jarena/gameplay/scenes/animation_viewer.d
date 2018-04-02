@@ -2,7 +2,6 @@ module jarena.gameplay.scenes.animation_viewer;
 
 private
 {
-    import derelict.sfml2.window, derelict.sfml2.graphics;
     import jarena.core, jarena.gameplay, jarena.graphics;
 }
 
@@ -128,8 +127,7 @@ final class AnimationViewerScene : ViewerScene
                 else if(input.isShiftDown)   amount = 10;
                 else if(input.isAltDown)     amount = 50;
 
-                auto microseconds = &this._animations[this._animIndex].delayPerFrame.handle.microseconds;
-                *microseconds += GameTime.fromMilliseconds(amount * multiplier).asMicroseconds;
+                this._animations[this._animIndex].delayPerFrame += GameTime.fromMilliseconds(amount * multiplier);
                 this.changeAnimation(); // This is to update the animation data in the sprite.
             }
 

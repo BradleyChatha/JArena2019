@@ -2,7 +2,6 @@ module jarena.gameplay.scenes.spriteatlas_viewer;
 
 private
 {
-    import derelict.sfml2.window, derelict.sfml2.graphics;
     import jarena.core, jarena.gameplay, jarena.graphics;
 }
 

@@ -4,7 +4,7 @@ module jarena.graphics.window;
 private
 {
     import std.experimental.logger;
-    import derelict.sfml2.system, derelict.sfml2.window, derelict.sfml2.graphics, derelict.sdl2.sdl;
+    import derelict.sdl2.sdl;
     import opengl;
     import jarena.core, jarena.graphics;
 }
@@ -156,6 +156,7 @@ final class Window
             SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_CONTEXT_MAJOR_VERSION, OPENGL_VERSION.x);
             SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_CONTEXT_MINOR_VERSION, OPENGL_VERSION.y);
             SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_DOUBLEBUFFER,          1);
+            SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_DEPTH_SIZE,            24);
             checkSDLError();
 
             trace("Creating OpenGL context");
@@ -166,6 +167,7 @@ final class Window
             DerelictGL3.reload();
 
             SDL_GL_SetSwapInterval(1);
+            glViewport(0, 0, size.x, size.y);
 
             trace("Creating Renderer");
             this._renderer = new Renderer(this);
@@ -331,14 +333,7 @@ final class Camera
     
     private
     {
-        sfView* _handle;
-        
-        @property @safe @nogc
-        inout(sfView*) handle() nothrow inout
-        {
-            assert(this._handle !is null);
-            return this._handle;
-        }
+        //sfView* _handle;
     }
 
     public
@@ -351,20 +346,14 @@ final class Camera
             if(rect == DEFAULT_CAMERA_RECT)
                 rect = RectangleF(0, 0, vec2(InitInfo.windowSize));
 
-            this._handle = sfView_createFromRect(rect.toSF!sfFloatRect);
-        }
-        
-        ~this()
-        {
-            if(this._handle !is null)
-                sfView_destroy(this.handle);
+            //this._handle = sfView_createFromRect(rect.toSF!sfFloatRect);
         }
 
         ///
         @trusted @nogc
         void move(vec2 offset) nothrow
         {
-            sfView_move(this.handle, offset.toSF!sfVector2f);
+            //sfView_move(this.handle, offset.toSF!sfVector2f);
         }
 
         /++
@@ -381,35 +370,37 @@ final class Camera
         @trusted @nogc
         void reset(RectangleF rect) nothrow
         {
-            sfView_reset(this.handle, rect.toSF!sfFloatRect);
+            //sfView_reset(this.handle, rect.toSF!sfFloatRect);
         }
 
         ///
         @property @trusted @nogc
         vec2 center() nothrow const
         {
-            return sfView_getCenter(this.handle).to!vec2;
+            return vec2();
+            //return sfView_getCenter(this.handle).to!vec2;
         }
 
         ///
         @property @trusted @nogc
         void center(vec2 centerPos) nothrow
         {
-            sfView_setCenter(this.handle, centerPos.toSF!sfVector2f);
+            //sfView_setCenter(this.handle, centerPos.toSF!sfVector2f);
         }
 
         ///
         @property @trusted @nogc
         const(AngleDegrees) rotation() nothrow const
         {
-            return typeof(return)(sfView_getRotation(this.handle));
+            return AngleDegrees(0);
+            //return typeof(return)(sfView_getRotation(this.handle));
         }
 
         ///
         @property @trusted @nogc
         void rotation(float degrees) nothrow
         {
-            sfView_setRotation(this.handle, degrees);
+            //sfView_setRotation(this.handle, degrees);
         }
 
         ///
@@ -423,28 +414,30 @@ final class Camera
         @property @trusted @nogc
         const(vec2) size() nothrow const
         {
-            return sfView_getSize(this.handle).to!vec2;
+            return vec2();
+            //return sfView_getSize(this.handle).to!vec2;
         }
 
         ///
         @property @trusted @nogc
         void size(vec2 siz) nothrow
         {
-            sfView_setSize(this.handle, siz.toSF!sfVector2f);
+            //sfView_setSize(this.handle, siz.toSF!sfVector2f);
         }
 
         ///
         @property @trusted @nogc
         const(RectangleF) viewport() nothrow const
         {
-            return sfView_getViewport(this.handle).to!RectangleF;
+            return RectangleF(0, 0, 0, 0);
+            //return sfView_getViewport(this.handle).to!RectangleF;
         }
         
         ///
         @property @trusted @nogc
         void viewport(RectangleF port) nothrow
         {
-            sfView_setViewport(this.handle, port.toSF!sfFloatRect);
+            //sfView_setViewport(this.handle, port.toSF!sfFloatRect);
         }
     }
 }
@@ -681,7 +674,7 @@ final class Renderer
         void clear(Colour clearColour = Colour.white)
         {
             float[4] clear = clearColour.asGLColour;
-            glClearColor(1, 1, 1, 1);
+            glClearColor(clear[0], clear[1], clear[2], clear[3]);
             glClear(GL_COLOR_BUFFER_BIT);
         }
 

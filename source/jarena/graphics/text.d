@@ -3,7 +3,6 @@ module jarena.graphics.text;
 private
 {
     import std.experimental.logger;
-    import derelict.sfml2.graphics, derelict.sfml2.system;
     import jarena.core, jarena.graphics, jarena.gameplay;
 }
 
@@ -12,7 +11,7 @@ class Font
 {
     private
     {
-        sfFont* _handle;
+        //sfFont* _handle;
     }
 
     public
@@ -26,25 +25,8 @@ class Font
             
             tracef("Loading font from path: '%s'", fontPath);
             
-            this._handle = sfFont_createFromFile(fontPath.toStringz);
-            enforce(this._handle !is null, new Exception("Unable to load font"));
-        }
-
-        ~this()
-        {
-            if(this._handle !is null)
-            {
-                sfFont_destroy(this.handle);
-                this._handle = null;
-            }
-        }
-
-        ///
-        @property @safe @nogc
-        inout(sfFont*) handle() nothrow inout
-        {
-            assert(this._handle !is null);
-            return this._handle;
+            //this._handle = sfFont_createFromFile(fontPath.toStringz);
+            //enforce(this._handle !is null, new Exception("Unable to load font"));
         }
     }
 }
@@ -55,7 +37,7 @@ class Text
     private
     {
         Font _font;
-        sfText* _handle;
+        //sfText* _handle;
 
         dchar[] _unicodeBuffer;
         char[]  _asciiBuffer;
@@ -63,12 +45,12 @@ class Text
         @trusted
         this(Font font, vec2 position, uint charSize, Colour colour)
         {
-            assert(font !is null);
+            // UNCOMMENT: assert(font !is null);
             this._font = font;
-            this._handle = sfText_create();
-            assert(this._handle !is null);
+            //this._handle = sfText_create();
+            //assert(this._handle !is null);
 
-            sfText_setFont(this.handle, font.handle);
+            //sfText_setFont(this.handle, font.handle);
             this.charSize = charSize;
             this.colour = colour;
             this.position = position;
@@ -93,98 +75,96 @@ class Text
             this.asciiText = text;
         }
 
-        ~this()
-        {
-            if(this._handle !is null)
-            {
-                sfText_destroy(this.handle);
-                this._handle = null;
-            }
-        }
-
         ///
         @property @trusted @nogc
         const(vec2) position() nothrow const
         {
-            return sfText_getPosition(this.handle).to!vec2;
+            return vec2();
+            //return sfText_getPosition(this.handle).to!vec2;
         }
 
         ///
         @property @trusted @nogc
         void position(vec2 pos) nothrow
         {
-            sfText_setPosition(this.handle, pos.toSF!sfVector2f);
+            //sfText_setPosition(this.handle, pos.toSF!sfVector2f);
         }
         
         ///
         @property @trusted @nogc
         uint charSize() nothrow const
         {
-            return sfText_getCharacterSize(this.handle);
+            return 0;
+            //return sfText_getCharacterSize(this.handle);
         }
 
         ///
         @property @trusted @nogc
         void charSize(uint size) nothrow
         {
-            sfText_setCharacterSize(this.handle, size);
+            //sfText_setCharacterSize(this.handle, size);
         }
 
         ///
         @property @trusted @nogc
         float outlineThickness() nothrow const
         {
-            return sfText_getOutlineThickness(this.handle);
+            return 0;
+            //return sfText_getOutlineThickness(this.handle);
         }
 
         ///
         @property @trusted @nogc
         void outlineThickness(float thicc) nothrow
         {
-            sfText_setOutlineThickness(this.handle, thicc);
+            //sfText_setOutlineThickness(this.handle, thicc);
         }
 
         /// Returns: The size of the text on screen.
         @property @trusted @nogc
         const(vec2) screenSize() nothrow const
         {
-            auto rect = sfText_getLocalBounds(this.handle);
-            return vec2(rect.width, rect.height);
+            return vec2();
+            //auto rect = sfText_getLocalBounds(this.handle);
+            //return vec2(rect.width, rect.height);
         }
 
         ///
         @property @trusted @nogc
         const(Colour) colour() nothrow const
         {
-            return sfText_getColor(this.handle).to!Colour;
+            return Colour();
+            //return sfText_getColor(this.handle).to!Colour;
         }
 
         ///
         @property @trusted @nogc
         void colour(Colour col) nothrow
         {
-            sfText_setColor(this.handle, col.toSF!sfColor);
+            //sfText_setColor(this.handle, col.toSF!sfColor);
         }
 
         ///
         @property @trusted @nogc
         const(Colour) outlineColour() nothrow const
         {
-            return sfText_getOutlineColor(this.handle).to!Colour;
+            return Colour();
+            //return sfText_getOutlineColor(this.handle).to!Colour;
         }
 
         ///
         @property @trusted @nogc
         void outlineColour(Colour col) nothrow
         {
-            sfText_setOutlineColor(this.handle, col.toSF!sfColor);
+            //sfText_setOutlineColor(this.handle, col.toSF!sfColor);
         }
 
         ///
         @property @safe @nogc
         const(dchar[]) unicodeText() nothrow const
         {
-            return this._unicodeBuffer;
+            //return this._unicodeBuffer;
+            return ""d;
         }
 
         ///
@@ -196,14 +176,15 @@ class Text
             this._unicodeBuffer.length = text.length + 1;
             this._unicodeBuffer[0..$-1] = text[];
             this._unicodeBuffer[$-1] = '\0';
-            sfText_setUnicodeString(this.handle, this._unicodeBuffer.ptr); // This *does* copy the data... right?
+            //sfText_setUnicodeString(this.handle, this._unicodeBuffer.ptr); // This *does* copy the data... right?
         }        
 
         ///
         @property @safe @nogc
         const(char[]) asciiText() nothrow const
         {
-            return this._asciiBuffer;
+            return "";
+            //return this._asciiBuffer;
         }
 
         ///
@@ -215,15 +196,7 @@ class Text
             this._asciiBuffer.length = text.length + 1;
             this._asciiBuffer[0..$-1] = text[];
             this._asciiBuffer[$-1] = '\0';
-            sfText_setString(this.handle, this._asciiBuffer.ptr); // This *does* copy the data... right?
-        }        
-
-        ///
-        @property @safe @nogc
-        inout(sfText*) handle() nothrow inout
-        {
-            assert(this._handle !is null);
-            return this._handle;
+            //sfText_setString(this.handle, this._asciiBuffer.ptr); // This *does* copy the data... right?
         }
     }
 }

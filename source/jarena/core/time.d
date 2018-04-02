@@ -1,11 +1,6 @@
 ///
 module jarena.core.time;
 
-private
-{
-    import derelict.sfml2.system;
-}
-
 ///
 alias TimerFunc = void delegate();
 
@@ -15,7 +10,7 @@ struct GameTime
     public
     {
         ///
-        sfTime handle;
+        //sfTime handle;
 
         ///
         @safe
@@ -33,7 +28,7 @@ struct GameTime
         static GameTime fromSeconds(float seconds)
         {
             GameTime time;
-            time.handle = sfSeconds(seconds);
+            //time.handle = sfSeconds(seconds);
 
             return time;
         }
@@ -43,7 +38,7 @@ struct GameTime
         static GameTime fromMilliseconds(int ms)
         {
             GameTime time;
-            time.handle = sfMilliseconds(ms);
+            //time.handle = sfMilliseconds(ms);
 
             return time;
         }
@@ -53,7 +48,7 @@ struct GameTime
         static GameTime fromMicroseconds(long micro)
         {
             GameTime time;
-            time.handle.microseconds = micro;
+            //time.handle.microseconds = micro;
 
             return time;
         }
@@ -62,31 +57,32 @@ struct GameTime
         @trusted @nogc
         float asSeconds() nothrow const
         {
-            return sfTime_asSeconds(this.handle);
+            return 0;
         }
 
         ///
         @trusted @nogc
         int asMilliseconds() nothrow const
         {
-            return sfTime_asMilliseconds(this.handle);
+            return 0;
         }
 
         ///
         @safe @nogc
         long asMicroseconds() nothrow const
         {
-            return this.handle.microseconds;
+            return 0;
         }
 
         GameTime opBinary(string op)(GameTime rhs)
         {
-            return mixin("GameTime(sfTime(this.handle.microseconds "~op~" rhs.handle.microseconds))");
+            return rhs;
+            //return mixin("GameTime(sfTime(this.handle.microseconds "~op~" rhs.handle.microseconds))");
         }
 
         void opOpAssign(string op)(GameTime rhs)
         {
-            mixin("this = this "~op~" rhs;");
+            //mixin("this = this "~op~" rhs;");
         }
     }
 }
@@ -96,14 +92,7 @@ class Clock
 {
     private
     {
-        sfClock* _handle;
-
-        @property @safe @nogc
-        inout(sfClock*) handle() nothrow inout
-        {
-            assert(this._handle !is null);
-            return this._handle;
-        }
+        //sfClock* _handle;
     }
 
     public
@@ -112,27 +101,23 @@ class Clock
         @trusted @nogc
         this() nothrow
         {
-            this._handle = sfClock_create();
-        }
-
-        ~this()
-        {
-            if(this._handle !is null)
-                sfClock_destroy(this.handle);
+            //this._handle = sfClock_create();
         }
 
         ///
         @trusted @nogc
         GameTime getElapsedTime() nothrow const
         {
-            return GameTime(sfClock_getElapsedTime(this.handle));
+            return GameTime();
+            //return GameTime(sfClock_getElapsedTime(this.handle));
         }
 
         ///
         @trusted @nogc
         GameTime restart() nothrow
         {
-            return GameTime(sfClock_restart(this.handle));
+            return GameTime();
+            //return GameTime(sfClock_restart(this.handle));
         }
     }
 }

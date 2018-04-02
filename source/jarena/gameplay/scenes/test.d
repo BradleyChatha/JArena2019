@@ -1,6 +1,5 @@
 module jarena.gameplay.scenes.test;
 import std.stdio;
-import derelict.sfml2.graphics, derelict.sfml2.system, derelict.sfml2.window;
 import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jarena.gameplay.gui, jarena.gameplay.scenes;
 
 @SceneName("Test")
@@ -118,6 +117,55 @@ class Test : Scene, IPostBox
         {
             super.renderScene(window);
             super.renderUI(window);
+        }
+    }
+}
+
+@SceneName("GLTest")
+class GLTest : Scene
+{
+    private
+    {
+        FixedVertexBuffer!(4, 6) buffer;
+        Shader shader;
+    }
+    
+    public override
+    {
+        void onInit()
+        {
+            this.shader = new Shader(defaultVertexShader, defaultFragmentShader);
+            this.buffer.setup([
+                Vertex(vec2(-0.5, -0.5), vec2(), Colour(255, 0, 0, 255)),
+                Vertex(vec2(-0.5,  0.5), vec2(), Colour(0, 255, 0, 255)),
+                Vertex(vec2( 0.5, -0.5), vec2(), Colour(0, 0, 255, 255)),
+                Vertex(vec2( 0.5,  0.5), vec2(), Colour.white)
+            ],
+            [
+                0, 1, 2,
+                1, 2, 3
+            ]);
+        }
+
+        void onSwap(PostOffice office)
+        {
+        }
+
+        void onUnswap(PostOffice office)
+        {
+        }
+
+        void onUpdate(GameTime deltaTime, InputManager input)
+        {
+        }
+
+        void onRender(Window window)
+        {
+            // Testing code only
+            import opengl, std.stdio;
+            this.shader.use();
+            glBindVertexArray(this.buffer.vao);
+            glDrawElements(this.buffer.dataType, 6, GL_UNSIGNED_INT, null);
         }
     }
 }

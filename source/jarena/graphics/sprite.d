@@ -4,7 +4,6 @@ module jarena.graphics.sprite;
 private
 {
     import std.experimental.logger;
-    import derelict.sfml2.system, derelict.sfml2.graphics;
     import sdlang;
     import jarena.core, jarena.gameplay, jarena.graphics;
 }
@@ -14,7 +13,7 @@ class Texture
 {
     private
     {
-        sfTexture* _handle;
+        //sfTexture* _handle;
     }
 
     public
@@ -31,29 +30,16 @@ class Texture
             tracef("Loading texture at path '%s'", filePath);
             enforce(filePath.exists, format("File does not exist: '%s'", filePath));
 
-            this._handle = sfTexture_createFromFile(filePath.toStringz, null);
-            enforce(this._handle !is null, "Unable to load texture at: '%s'", filePath);
-        }
-
-        ~this()
-        {
-            if(this._handle !is null)
-                sfTexture_destroy(this.handle);
-        }
-
-        ///
-        @property @safe @nogc
-        inout(sfTexture*) handle() nothrow inout
-        {
-            assert(this._handle !is null);
-            return this._handle;
+            //this._handle = sfTexture_createFromFile(filePath.toStringz, null);
+            //enforce(this._handle !is null, "Unable to load texture at: '%s'", filePath);
         }
 
         ///
         @property @trusted @nogc
         inout(uvec2) size() nothrow inout
         {
-            return sfTexture_getSize(this.handle).to!uvec2;
+            return uvec2();
+            //return sfTexture_getSize(this.handle).to!uvec2;
         }
     }
 }
@@ -63,7 +49,7 @@ class Sprite
 {
     private
     {
-        sfSprite* _handle;
+        //sfSprite* _handle;
         Texture   _texture;
     }
 
@@ -75,56 +61,45 @@ class Sprite
         {
             assert(texture !is null);
 
-            this._handle = sfSprite_create();
+            //this._handle = sfSprite_create();
             this.texture = texture;
-        }
-
-        ~this()
-        {
-            if(this._handle !is null)
-                sfSprite_destroy(this.handle);
         }
 
         ///
         @trusted @nogc
         void move(vec2 offset) nothrow
         {
-            sfSprite_move(this.handle, offset.toSF!sfVector2f);
-        }
-
-        @property @safe @nogc
-        inout(sfSprite*) handle() nothrow inout
-        {
-            assert(this._handle !is null);
-            return this._handle;
+            //sfSprite_move(this.handle, offset.toSF!sfVector2f);
         }
 
         ///
         @property @trusted @nogc
         const(vec2) position() nothrow const
         {
-            return sfSprite_getPosition(this.handle).to!vec2;
+            return vec2();
+            //return sfSprite_getPosition(this.handle).to!vec2;
         }
 
         ///
         @property @trusted @nogc
         void position(vec2 pos) nothrow
         {
-            sfSprite_setPosition(this.handle, pos.toSF!sfVector2f);
+            //sfSprite_setPosition(this.handle, pos.toSF!sfVector2f);
         }
 
         ///
         @property @trusted @nogc
         const(RectangleI) textureRect() nothrow const
         {
-            return sfSprite_getTextureRect(this.handle).to!RectangleI;
+            return RectangleI(0, 0, 0, 0);
+            //return sfSprite_getTextureRect(this.handle).to!RectangleI;
         }
 
         ///
         @property @trusted @nogc
         void textureRect(RectangleI rect) nothrow
         {
-            sfSprite_setTextureRect(this.handle, rect.toSF!sfIntRect);
+            //sfSprite_setTextureRect(this.handle, rect.toSF!sfIntRect);
         }
 
         ///
@@ -140,7 +115,7 @@ class Sprite
         {
             assert(texture !is null);
             this._texture = texture;
-            sfSprite_setTexture(this.handle, texture.handle, false);
+            //sfSprite_setTexture(this.handle, texture.handle, false);
         }
 
         /++
@@ -492,7 +467,7 @@ class AnimatedSprite : Sprite
             {
                 this.advance(1);
                 this.changeFrame();
-                this._currentDelay.handle.microseconds -= this.animation.delayPerFrame.asMicroseconds;
+                this._currentDelay -= this.animation.delayPerFrame;
             }
         }
 
@@ -623,7 +598,7 @@ class AnimatedSprite : Sprite
             this.restart();
             this._currentAnimation = info;
 
-            sfSprite_setTexture(super.handle, info.spriteSheet.atlas._texture.handle, 1);
+            //sfSprite_setTexture(super.handle, info.spriteSheet.atlas._texture.handle, 1);
             info.spriteSheet.changeSprite(this, 0, 0);
         }
 

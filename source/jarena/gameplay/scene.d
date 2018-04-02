@@ -6,7 +6,6 @@ private
     import std.experimental.logger;
     import std.typecons : Flag;
 
-    import derelict.sfml2.window;
     import jarena.core, jarena.graphics, jarena.gameplay.gui;
 }
 

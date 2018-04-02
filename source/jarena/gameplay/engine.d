@@ -5,6 +5,7 @@ private
     import std.experimental.logger;
     import std.typecons;
     import jarena.core, jarena.graphics, jarena.gameplay, jarena.data;
+    import opengl;
 }
 
 const ENGINE_CONFIG_PATH        = "data/engineConf.sdl";
@@ -64,6 +65,7 @@ final class Engine
                 tracef("No config file exists. Please create one at '%s'", ENGINE_CONFIG_PATH);
                 
             // Setup variables
+            // The window also sets up the OpenGL context.
             this._window        = new Window(WINDOW_NAME, this._config.windowSize.get(WINDOW_DEFAULT_SIZE), 
                                                           this._config.targetFPS.get(WINDOW_DEFAULT_FPS));
             this._eventOffice   = new PostOffice();
@@ -77,7 +79,7 @@ final class Engine
             this._debugGui      = new StackContainer(DEBUG_CONTAINER_POSITION, StackContainer.Direction.Horizontal, DEBUG_CONTAINER_COLOUR);
             this._debugGui.addChild(this._debugText);
             this._debugCamera   = new Camera(RectangleF(0, 0, vec2(this._window.size)));
-
+            
             // Setup init info
             InitInfo.windowSize = this._window.size;
             this._windowSizePtr = InitInfo.windowSize_ptr; // Reminder: Only one pointer is given out before an assert fails, so this is safe.
@@ -109,8 +111,9 @@ final class Engine
             });
 
             // Load in assets
-            SdlangLoader.parseFile(ENGINE_DATA_PATH, this.scenes.cache);
+            //SdlangLoader.parseFile(ENGINE_DATA_PATH, this.scenes.cache);
 
+            // Debug stuff
             debug this._config.showDebugText = true;
             if(this._config.showDebugText.get(false))
                 this._timers.every(GameTime.fromMilliseconds(1), (){this.events.mailCommand(Event.UpdateFPSDisplay);});
@@ -122,7 +125,7 @@ final class Engine
             this._fps.onUpdate();
             this._input.onUpdate();
             this._window.handleEvents(this._eventOffice);
-
+            
             if(this._input.isKeyDown(Scancode.ESCAPE))
                 this._window.close();
 
@@ -137,6 +140,9 @@ final class Engine
             this.window.renderer.camera = old;
             
             this._window.renderer.displayChanges();
+            checkSDLError();
+            import opengl;
+            checkGLError();
         }
 
         ///

@@ -2,7 +2,6 @@ module jarena.gameplay.scenes.viewer_scene;
 
 private
 {
-    import derelict.sfml2.window;
     import jarena.core, jarena.gameplay, jarena.graphics;
 
     const DEFAULT_FONT_KEY      = "Calibri";

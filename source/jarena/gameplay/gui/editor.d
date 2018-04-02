@@ -4,7 +4,6 @@ private
 {
     import std.traits;
     import std.typecons : Flag;
-    import derelict.sfml2.window;
     import jarena.core, jarena.gameplay, jarena.graphics;
 
     const PANEL_POSITION        = vec2(1, 50);
@@ -136,9 +135,9 @@ final class EditorContainer : FreeFormContainer
                 if(!this.canEdit) 
                     return;
 
-                auto m = cast(ValueMail!sfKeyEvent)mail;
+                auto key = (cast(ValueMail!SDL_KeyboardEvent)mail).value;
                 foreach(ext; this._usedExtensions)
-                    ext.panelExt.handleKeyPress(this._input, m.value.code);
+                    ext.panelExt.handleKeyPress(this._input, cast(Scancode)key.keysym.scancode);
             });
 
             // Register pre-defined extensions
@@ -298,7 +297,7 @@ abstract class EditorPanelExtension
         struct Keybind
         {
             string      keyName;
-            sfKeyCode   keyCode;
+            Scancode    keyCode;
             string      description;
             KeybindFunc func;
         }
@@ -306,7 +305,7 @@ abstract class EditorPanelExtension
         Keybind[] _keybinds;
         string    _instructions;
 
-        void handleKeyPress(InputManager input, sfKeyCode key)
+        void handleKeyPress(InputManager input, Scancode key)
         {
             foreach(bind; this._keybinds)
             {
@@ -388,7 +387,7 @@ private final class GenericElementExtension : EditorPanelExtension
                 label = new SimpleLabel(new Text(fonts.get(GENERIC_FONT_KEY), ""d, vec2(0), GENERIC_CHAR_SIZE, Colour.white));
             }
             
-            super.registerKeybind!sfKeyE("Moves the selected item to the mouse",(input){
+            super.registerKeybind!(Scancode.E)("Moves the selected item to the mouse",(input){
                 this._element.position = input.mousePosition - (this._element.size / 2);
                 this._labelPosition.updateTextASCII(format("Position: %s", this._element.position));
             });
