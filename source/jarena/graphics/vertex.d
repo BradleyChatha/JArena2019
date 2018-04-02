@@ -11,7 +11,7 @@ struct Vertex
 {
     vec2   position;
     vec2   uv;
-    Colour colour;
+    Colour colour; // Internally: ubyte[4]
 
     /++
      + Calls `glVertexAttribPointer` to setup the attributes of a vertex array.
@@ -24,9 +24,9 @@ struct Vertex
     static void setupAtrribPointers() nothrow
     {
         auto stride = Vertex.sizeof;
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, null);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, cast(void*)(2 * float.sizeof));
-        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, stride, cast(void*)(4 * float.sizeof));
+        glVertexAttribPointer(0, 2, GL_FLOAT,         GL_FALSE, stride, null);
+        glVertexAttribPointer(1, 2, GL_FLOAT,         GL_FALSE, stride, cast(void*)(2 * float.sizeof));
+        glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE,  stride, cast(void*)(4 * float.sizeof)); // GL_TRUE means 128 = 0.5, 255 = 1.0f, etc. automatically
 
         foreach(i; 0..3)
             glEnableVertexAttribArray(i);

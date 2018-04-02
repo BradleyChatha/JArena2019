@@ -719,6 +719,21 @@ final class Renderer
             //sfRenderWindow_drawText(this._window.handle, text.handle, null);
         }
 
+        /// Draws a FixedVertexBuffer
+        void drawBuffer(B)(ref B buffer)
+        if(isFixedVertexBuffer!B)
+        {
+            glBindVertexArray(buffer.vao);
+            glDrawElements(buffer.dataType, buffer.indicies.length, GL_UNSIGNED_INT, null);
+        }
+
+        /// Sets whether to draw in wireframe or not.
+        @property @nogc
+        void useWireframe(bool use) nothrow
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, (use) ? GL_LINE : GL_FILL);
+        }
+
         /// Returns: The current `Camera` being used.
         @property
         Camera camera()

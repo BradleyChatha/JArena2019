@@ -141,7 +141,6 @@ final class Engine
             
             this._window.renderer.displayChanges();
             checkSDLError();
-            import opengl;
             checkGLError();
         }
 

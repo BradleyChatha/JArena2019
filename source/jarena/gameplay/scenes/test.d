@@ -139,7 +139,7 @@ class GLTest : Scene
                 Vertex(vec2(-0.5, -0.5), vec2(), Colour(255, 0, 0, 255)),
                 Vertex(vec2(-0.5,  0.5), vec2(), Colour(0, 255, 0, 255)),
                 Vertex(vec2( 0.5, -0.5), vec2(), Colour(0, 0, 255, 255)),
-                Vertex(vec2( 0.5,  0.5), vec2(), Colour.white)
+                Vertex(vec2( 0.5,  0.5), vec2(), Colour(255, 128, 64, 255))
             ],
             [
                 0, 1, 2,
@@ -161,11 +161,8 @@ class GLTest : Scene
 
         void onRender(Window window)
         {
-            // Testing code only
-            import opengl, std.stdio;
             this.shader.use();
-            glBindVertexArray(this.buffer.vao);
-            glDrawElements(this.buffer.dataType, 6, GL_UNSIGNED_INT, null);
+            window.renderer.drawBuffer(this.buffer);
         }
     }
 }
