@@ -49,6 +49,34 @@ private
 }
 
 /++
+ + Enforces that a type is formed correctly as a LoaderExtension.
+ +
+ + Notes:
+ +  If the enforce passes, this template evaluates to `true`.
+ +
+ +  Otherwise, a `static assert` will fail detailing the issue with `T`.
+ +
+ + Params:
+ +  T        = The type to check
+ +  TagType  = The tag type passed to `LoaderExtension` that `T` should be able to handle.
+ +  fileType = The @FileType that `T` should specify it's able to handle.
+ + ++/
+template EnforceLoaderExtensionFor(T, TagType, string fileType)
+{
+    enum TName = T.stringof;
+    
+    static assert(is(T : LoaderExtension!TagType), "The type "~TName~" doesn't inherit from " ~ LoaderExtension!TagType.stringof);
+    static assert(hasUDA!(T, Group),               "The type "~TName~" is missing @Group");
+    static assert(hasUDA!(T, Type),                "The type "~TName~" is missing @Type");
+    static assert(hasUDA!(T, FileType),            "The type "~TName~" is missing @FileType");
+
+    enum FTypeName = getUDAs!(T, FileType)[0].name;
+    static assert(FTypeName == fileType, "The type "~TName~" has a FileType of '"~FTypeName~"' instead of '"~fileType~"'");
+
+    enum EnforceLoaderExtensionFor = true;
+}
+
+/++
  + Provides functions that can load certain assets from an SDLang file.
  + ++/
 class SdlangLoader
@@ -65,14 +93,8 @@ class SdlangLoader
     alias ExtensionT = LoaderExtension!Tag;
 
     // Validate that the extensions are correctly formed.
-    private enum isExtension(T) = is(T : ExtensionT);
-    private enum hasGroup(T)    = hasUDA!(T, Group);
-    private enum hasType(T)     = hasUDA!(T, Type);
-    private enum hasFileType(T) = hasUDA!(T, FileType) && getUDAs!(T, FileType)[0].name == "sdlang";
-    static assert(allSatisfy!(isExtension, Extensions), "One of the extensions doesn't inherit from " ~ ExtensionT.stringof);
-    static assert(allSatisfy!(hasGroup,    Extensions), "One of the extensions is missing @Group");
-    static assert(allSatisfy!(hasType,     Extensions), "One of the extensions is missing @Type");
-    static assert(allSatisfy!(hasFileType, Extensions), "One of the extensions is missing @FileType OR it's not set to 'sdlang'");
+    enum IsExtension(T) = EnforceLoaderExtensionFor!(T, Tag, "sdlang");
+    static assert(allSatisfy!(IsExtension, Extensions));
 
     private static
     {
