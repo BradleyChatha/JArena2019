@@ -552,14 +552,19 @@ final class InputManager
             auto keyCode = mail.value.code;
             //assert(keyCode < this._keyStates.length); //Caps lock is enough to crash it...
 
-            this._funcKeyMask  = FuncKeyMask.None;
-            this._funcKeyMask |= (mail.value.shift)   ? FuncKeyMask.Shift   : 0;
-            this._funcKeyMask |= (mail.value.control) ? FuncKeyMask.Control : 0;
-            this._funcKeyMask |= (mail.value.alt)     ? FuncKeyMask.Alt     : 0;
-            
+            // Set/unset whether one of the function keys are pressed.
+            ubyte mask = 0;
+            mask |= (mail.value.shift)   ? FuncKeyMask.Shift   : 0;
+            mask |= (mail.value.control) ? FuncKeyMask.Control : 0;
+            mask |= (mail.value.alt)     ? FuncKeyMask.Alt     : 0;
+            if(m.type == Window.Event.KeyDown) this._funcKeyMask |= mask;
+            else                               this._funcKeyMask &= ~mask;
+
+            // Unknown key
             if(keyCode > this._keyStates.length)
                 return;
 
+            // Update the key state.
             auto state        = &this._keyStates[keyCode];
             state.wasRepeated = (state.isDown && m.type == Window.Event.KeyDown);
             state.isDown      = (m.type == Window.Event.KeyDown);
