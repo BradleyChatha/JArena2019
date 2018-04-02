@@ -1,4 +1,4 @@
-// Generated on Mar 21 2018 at 17:39:16 with jarena:generator
+// Generated on Apr  2 2018 at 07:21:55 with jarena:generator
 module jarena.graphics.colours;
 public import arsd.colour;
 abstract class Colours

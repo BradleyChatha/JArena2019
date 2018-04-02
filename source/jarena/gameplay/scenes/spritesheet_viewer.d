@@ -173,7 +173,7 @@ final class SpriteAtlasViewerScene : ViewerScene
          + Moves all the relevent indicies to either the right (increment) or the left (decrement)
          + when the `key` is pressed.
          + ++/
-        void moveIndex(Increment increment)(sfKeyCode key)
+        void moveIndex(Increment increment)(Scancode key)
         {
             static if(increment) alias Func = this.increment;
             else                 alias Func = this.decrement;
@@ -296,7 +296,7 @@ final class SpriteAtlasViewerScene : ViewerScene
 
         void onUpdate(GameTime deltaTime, InputManager input)
         {
-            if(input.wasKeyTapped(sfKeyBack))
+            if(input.wasKeyTapped(Scancode.BACKSPACE))
                 super.manager.swap!MenuScene;
 
             this._labelAtlasIndex.updateTextASCII(format(
@@ -306,10 +306,10 @@ final class SpriteAtlasViewerScene : ViewerScene
             if(this._atlases.length == 0)
                 return;
 
-            this.moveIndex!(Increment.yes)(sfKeyRight);
-            this.moveIndex!(Increment.no)(sfKeyLeft);
+            this.moveIndex!(Increment.yes)(Scancode.RIGHT);
+            this.moveIndex!(Increment.no)(Scancode.LEFT);
 
-            if(input.wasKeyTapped(sfKeyR))
+            if(input.wasKeyTapped(Scancode.R))
                 this.changeSprite(ShowAll.yes);
 
             super.updateScene(deltaTime);

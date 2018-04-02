@@ -80,13 +80,13 @@ final class AnimationViewerScene : ViewerScene
         {
             import std.format : format;
 
-            if(input.wasKeyTapped(sfKeyBack))
+            if(input.wasKeyTapped(Scancode.BACKSPACE))
                 super.manager.swap!MenuScene;
 
             if(this._animations.length == 0)
                 return;
 
-            if(input.wasKeyTapped(sfKeyRight))
+            if(input.wasKeyTapped(Scancode.RIGHT))
             {
                 this._animIndex += 1;
 
@@ -96,7 +96,7 @@ final class AnimationViewerScene : ViewerScene
                 this.changeAnimation();
             }
 
-            if(input.wasKeyTapped(sfKeyLeft))
+            if(input.wasKeyTapped(Scancode.LEFT))
             {
                 if(this._animIndex == 0)
                     this._animIndex = this._animations.length - 1;
@@ -106,9 +106,9 @@ final class AnimationViewerScene : ViewerScene
                 this.changeAnimation();
             }
 
-            if(input.isKeyDown(sfKeyR) && this._sprite !is null)
+            if(input.isKeyDown(Scancode.R) && this._sprite !is null)
             {
-                if(input.isShiftDown && input.wasKeyTapped(sfKeyR)) // wasKeyTapped is used give it a better behavoiouroiuouoru
+                if(input.isShiftDown && input.wasKeyTapped(Scancode.R)) // wasKeyTapped is used give it a better behavoiouroiuouoru
                 {
                     auto animPtr = &this._animations[this._animIndex];
                     animPtr.repeat = !animPtr.repeat;
@@ -118,10 +118,10 @@ final class AnimationViewerScene : ViewerScene
                     this._sprite.restart();
             }
 
-            if(input.wasKeyTapped(sfKeyAdd)
-            || input.wasKeyTapped(sfKeySubtract))
+            if(input.wasKeyTapped(Scancode.EQUALS)
+            || input.wasKeyTapped(Scancode.MINUS))
             {
-                auto multiplier = (super.manager.input.wasKeyTapped(sfKeyAdd)) ? 1 : -1;
+                auto multiplier = (input.wasKeyTapped(Scancode.EQUALS)) ? 1 : -1;
                 auto amount = 1;
 
                      if(input.isControlDown) amount = 5;

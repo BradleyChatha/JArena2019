@@ -75,34 +75,34 @@ class Test : Scene, IPostBox
             auto speedHorizontal = vec2(160 * deltaTime.asSeconds, 0);
             auto speedVertical   = vec2(0, 160 * deltaTime.asSeconds);
 
-            if(input.isKeyDown(sfKeyD))
+            if(input.isKeyDown(Scancode.D))
                 this.tahn.move(speedHorizontal);
-            if(input.isKeyDown(sfKeyA))
+            if(input.isKeyDown(Scancode.A))
                 this.tahn.move(-speedHorizontal);
-            if(input.isKeyDown(sfKeyW))
+            if(input.isKeyDown(Scancode.W))
                 this.tahn.move(-speedVertical);
-            if(input.isKeyDown(sfKeyS))
+            if(input.isKeyDown(Scancode.S))
                 this.tahn.move(speedVertical);
 
-            if(input.wasKeyTapped(sfKeyBack))
+            if(input.wasKeyTapped(Scancode.BACKSPACE))
                 super.manager.swap!MenuScene;
 
-            if(input.isKeyDown(sfKeyE))
+            if(input.isKeyDown(Scancode.E))
                 this.tahn.isHidden = true;
-            if(input.isKeyDown(sfKeyF))
+            if(input.isKeyDown(Scancode.F))
                 this.tahn.isHidden = false;
 
-            if(input.wasKeyTapped(sfKeyJ))
+            if(input.wasKeyTapped(Scancode.J))
                 this.atlas.changeSprite(this.tahn, "TahnBig");
-            if(input.wasKeyTapped(sfKeyK))
+            if(input.wasKeyTapped(Scancode.K))
                 this.atlas.changeSprite(this.tahn, "Tahn");
 
-            if(input.wasKeyTapped(sfKeyUp) && !input.wasKeyRepeated(sfKeyUp))
+            if(input.wasKeyTapped(Scancode.UP) && !input.wasKeyRepeated(Scancode.UP))
                 this.tahn.yLevel = this.tahn.yLevel + 1; // += doesn't work for some reason.
-            if(input.wasKeyTapped(sfKeyDown) && !input.wasKeyRepeated(sfKeyDown))
+            if(input.wasKeyTapped(Scancode.DOWN) && !input.wasKeyRepeated(Scancode.DOWN))
                 this.tahn.yLevel = this.tahn.yLevel - 1;
 
-            if(input.wasKeyTapped(sfKeyG) && !input.wasKeyRepeated(sfKeyG))
+            if(input.wasKeyTapped(Scancode.G) && !input.wasKeyRepeated(Scancode.G))
             {
                 if(gui.children.length == 1)
                     gui2.children[0].parent = gui;

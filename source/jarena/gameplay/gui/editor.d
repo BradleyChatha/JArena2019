@@ -200,7 +200,7 @@ final class EditorContainer : FreeFormContainer
             if(childCount == 0 || !this.canEdit)
                 return;
 
-            if(input.wasKeyTapped(sfKeyUp))
+            if(input.wasKeyTapped(Scancode.UP))
             {
                 auto container = cast(Container)this.selectedElement;
                 if(container !is null && container.children.length > 0)
@@ -210,10 +210,10 @@ final class EditorContainer : FreeFormContainer
                 }
             }
 
-            if(input.wasKeyTapped(sfKeyDown))
+            if(input.wasKeyTapped(Scancode.DOWN))
                 this.popContainers();
 
-            if(input.wasKeyTapped(sfKeyRight))
+            if(input.wasKeyTapped(Scancode.RIGHT))
             {
                 this.selectedIndex += 1;
                 if(this.selectedIndex >= childCount)
@@ -222,7 +222,7 @@ final class EditorContainer : FreeFormContainer
                 this.updateUsedExtensions();
             }
 
-            if(input.wasKeyTapped(sfKeyLeft))
+            if(input.wasKeyTapped(Scancode.LEFT))
             {
                 if(this.selectedIndex == 0)
                     this.selectedIndex = childCount - 1;
@@ -232,7 +232,7 @@ final class EditorContainer : FreeFormContainer
                 this.updateUsedExtensions();
             }
 
-            if(input.wasKeyTapped(sfKeyTab))
+            if(input.wasKeyTapped(Scancode.TAB))
                 this._showPanel = !this._showPanel;
 
             this._extensionPanel.clear();

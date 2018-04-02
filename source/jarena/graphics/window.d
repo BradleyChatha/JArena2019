@@ -7,13 +7,12 @@ private
     import derelict.sfml2.system, derelict.sfml2.window, derelict.sfml2.graphics, derelict.sdl2.sdl;
     import opengl;
     import jarena.core, jarena.graphics;
-    
-    enum CLEAR_COLOUR = Colours.rockSalt;
 }
 
 public
 {
-    import derelict.sfml2.window : sfKeyEvent;
+    import derelict.sdl2.sdl : SDL_KeyboardEvent;
+    import jarena.graphics.scancode;
 }
 
 /++
@@ -41,7 +40,7 @@ final class Window
          + Sent when a key is pressed down on the keyboard.
          +
          + Mail:
-         +  `ValueMail`!sfKeyEvent
+         +  `ValueMail`!SDL_KeyboardEvent
          + ++/
         KeyDown = 101,
 
@@ -49,7 +48,7 @@ final class Window
          + Sent when a key is no longer being pressed down on the keyboard.
          +
          + Mail:
-         +  `ValueMail`!sfKeyEvent
+         +  `ValueMail`!SDL_KeyboardEvent
          + ++/
         KeyUp = 102,
 
@@ -107,12 +106,12 @@ final class Window
         
         // Instead of making a bunch of different objects every frame where the user does something
         // we instead just reuse the objects.
-        CommandMail             _commandMail;       // Mail used for events without extra data (e.g. closing the window)
-        ValueMail!sfKeyEvent    _keyMail;           // Mail used for key events.
-        ValueMail!dchar         _textMail;          // Mail used for the Text Entered event.
-        ValueMail!vec2          _positionMail;      // Mail used for any event that provides a position (e.g. mouse moved)
-        ValueMail!uvec2         _upositionMail;     // ^^ but for uintegers.
-        ValueMail!MouseButton   _mouseMail;         // Mail used for mouse button events.
+        CommandMail                 _commandMail;       // Mail used for events without extra data (e.g. closing the window)
+        ValueMail!SDL_KeyboardEvent _keyMail;           // Mail used for key events.
+        ValueMail!dchar             _textMail;          // Mail used for the Text Entered event.
+        ValueMail!vec2              _positionMail;      // Mail used for any event that provides a position (e.g. mouse moved)
+        ValueMail!uvec2             _upositionMail;     // ^^ but for uintegers.
+        ValueMail!MouseButton       _mouseMail;         // Mail used for mouse button events.
 
         @property @safe @nogc
         inout(SDL_Window*) handle() nothrow inout
@@ -166,13 +165,15 @@ final class Window
             trace("Reloading OpenGL");
             DerelictGL3.reload();
 
+            SDL_GL_SetSwapInterval(1);
+
             trace("Creating Renderer");
             this._renderer = new Renderer(this);
             this._renderer.camera = new Camera(RectangleF(0, 0, vec2(size)));
 
             trace("Setting up reusuable mail");
             this._commandMail   = new CommandMail(0);
-            this._keyMail       = new ValueMail!sfKeyEvent(0, sfKeyEvent());
+            this._keyMail       = new ValueMail!SDL_KeyboardEvent(0, SDL_KeyboardEvent());
             this._textMail      = new ValueMail!dchar(0, '\0');
             this._positionMail  = new ValueMail!vec2(0, vec2(0));
             this._upositionMail = new ValueMail!uvec2(0, uvec2(0));
@@ -204,58 +205,58 @@ final class Window
         {
             assert(office !is null);
 
-            sfEvent e;
-            //while(sfRenderWindow_pollEvent(this.handle, &e))
+            SDL_Event e;
+            while(SDL_PollEvent(&e))
             {
-                switch(e.type)
+                switch(e.type) with(SDL_EventType)
                 {
-                    case sfEvtClosed:
+                    case SDL_QUIT:
                         this._commandMail.type = Window.Event.Close;
                         office.mail(this._commandMail);
                         break;
 
-                    case sfEvtKeyPressed:
+                    case SDL_KEYDOWN:
                         this._keyMail.type = Window.Event.KeyDown;
                         this._keyMail.value = e.key;
                         office.mail(this._keyMail);
                         break;
 
-                    case sfEvtKeyReleased:
+                    case SDL_KEYUP:
                         this._keyMail.type = Window.Event.KeyUp;
                         this._keyMail.value = e.key;
                         office.mail(this._keyMail);
                         break;
-
-                    case sfEvtTextEntered:
-                        import std.conv : to;
-                        this._textMail.type = Window.Event.TextEntered;
-                        this._textMail.value = e.text.unicode.to!dchar;
-                        office.mail(this._textMail);
-                        break;
-
-                    case sfEvtMouseMoved:
-                        this._positionMail.type = Window.Event.MouseMoved;
-                        this._positionMail.value = vec2(e.mouseMove.x, e.mouseMove.y);
-                        office.mail(this._positionMail);
-                        break;
-
-                    case sfEvtMouseButtonPressed:
-                        this._mouseMail.type = Window.Event.MouseButtonPressed;
-                        this._mouseMail.value = e.mouseButton.button.toArenaButton!MouseButton;
-                        office.mail(this._mouseMail);
-                        break;
-
-                    case sfEvtMouseButtonReleased:
-                        this._mouseMail.type = Window.Event.MouseButtonReleased;
-                        this._mouseMail.value = e.mouseButton.button.toArenaButton!MouseButton;
-                        office.mail(this._mouseMail);
-                        break;
-
-                    case sfEvtResized:
-                        this._upositionMail.type = Window.Event.Resized;
-                        this._upositionMail.value = uvec2(e.size.width, e.size.height);
-                        office.mail(this._upositionMail);
-                        break;
+                    //
+                    //case sfEvtTextEntered:
+                    //    import std.conv : to;
+                    //    this._textMail.type = Window.Event.TextEntered;
+                    //    this._textMail.value = e.text.unicode.to!dchar;
+                    //    office.mail(this._textMail);
+                    //    break;
+                    //
+                    //case sfEvtMouseMoved:
+                    //    this._positionMail.type = Window.Event.MouseMoved;
+                    //    this._positionMail.value = vec2(e.mouseMove.x, e.mouseMove.y);
+                    //    office.mail(this._positionMail);
+                    //    break;
+                    //
+                    //case sfEvtMouseButtonPressed:
+                    //    this._mouseMail.type = Window.Event.MouseButtonPressed;
+                    //    this._mouseMail.value = e.mouseButton.button.toArenaButton!MouseButton;
+                    //    office.mail(this._mouseMail);
+                    //    break;
+                    //
+                    //case sfEvtMouseButtonReleased:
+                    //    this._mouseMail.type = Window.Event.MouseButtonReleased;
+                    //    this._mouseMail.value = e.mouseButton.button.toArenaButton!MouseButton;
+                    //    office.mail(this._mouseMail);
+                    //    break;
+                    //
+                    //case sfEvtResized:
+                    //    this._upositionMail.type = Window.Event.Resized;
+                    //    this._upositionMail.value = uvec2(e.size.width, e.size.height);
+                    //    office.mail(this._upositionMail);
+                    //    break;
 
                     default:
                         break;
@@ -460,6 +461,8 @@ final class InputManager
 {
     private
     {
+        enum KEY_COUNT = SDL_Scancode.SDL_NUM_SCANCODES;
+        
         enum FuncKeyMask : ubyte
         {
             None, 
@@ -481,34 +484,34 @@ final class InputManager
             MouseButton buttonMask;
         }
 
-        KeyState[sfKeyCount] _keyStates;
-        sfKeyCode[]          _tapped;    // Any sfKey in this array was tapped down this frame.
+        KeyState[KEY_COUNT]  _keyStates; // Keys are indexed by scan code
+        Scancode[]           _tapped;    // Any ScanCodes in this array were tapped down this frame.
         MouseState           _mouse;
         FuncKeyMask          _funcKeyMask;
 
         void onKeyEvent(PostOffice office, Mail m)
         {
-            auto mail = cast(ValueMail!sfKeyEvent)m;
+            auto mail = cast(ValueMail!SDL_KeyboardEvent)m;
             assert(mail !is null);
 
-            auto keyCode = mail.value.code;
+            SDL_KeyboardEvent key = mail.value;
             //assert(keyCode < this._keyStates.length); //Caps lock is enough to crash it...
 
             this._funcKeyMask  = FuncKeyMask.None;
-            this._funcKeyMask |= (mail.value.shift)   ? FuncKeyMask.Shift   : 0;
-            this._funcKeyMask |= (mail.value.control) ? FuncKeyMask.Control : 0;
-            this._funcKeyMask |= (mail.value.alt)     ? FuncKeyMask.Alt     : 0;
+            this._funcKeyMask |= (key.keysym.mod & KMOD_SHIFT) ? FuncKeyMask.Shift   : 0;
+            this._funcKeyMask |= (key.keysym.mod & KMOD_CTRL)  ? FuncKeyMask.Control : 0;
+            this._funcKeyMask |= (key.keysym.mod & KMOD_ALT)   ? FuncKeyMask.Alt     : 0;
             
-            if(keyCode > this._keyStates.length)
+            if(key.keysym.scancode > this._keyStates.length)
                 return;
 
-            auto state        = &this._keyStates[keyCode];
-            state.wasRepeated = (state.isDown && m.type == Window.Event.KeyDown);
+            auto state        = &this._keyStates[key.keysym.scancode];
+            state.wasRepeated = (state.isDown && key.repeat);
             state.isDown      = (m.type == Window.Event.KeyDown);
             state.wasTapped   = state.isDown;
 
             if(state.wasTapped)
-                this._tapped ~= keyCode;
+                this._tapped ~= cast(Scancode)key.keysym.scancode; // Scancode is just SDL_Scancode, so this is safe.
         }
 
         void onMouseMoved(PostOffice office, Mail m)
@@ -558,7 +561,7 @@ final class InputManager
 
         ///
         @safe @nogc
-        bool isKeyDown(sfKeyCode key) nothrow const
+        bool isKeyDown(Scancode key) nothrow const
         {
             assert(key < this._keyStates.length);
             return this._keyStates[key].isDown;
@@ -570,7 +573,7 @@ final class InputManager
          +  `false` if `key` isn't pressed down, or if `key` has been held down for longer than 1 frame.
          + ++/
         @safe @nogc
-        bool wasKeyTapped(sfKeyCode key) nothrow const
+        bool wasKeyTapped(Scancode key) nothrow const
         {
             assert(key < this._keyStates.length);
             return this._keyStates[key].wasTapped;
@@ -581,7 +584,7 @@ final class InputManager
          +  `true` if the `key` has had it's input repeated by the OS (in the case that key repeation is enabled for the window).
          + ++/
         @safe @nogc
-        bool wasKeyRepeated(sfKeyCode key) nothrow const
+        bool wasKeyRepeated(Scancode key) nothrow const
         {
             assert(key < this._keyStates.length);
             return this._keyStates[key].wasRepeated;
@@ -654,9 +657,6 @@ final class Renderer
         this(Window window)
         {
             this._window = window;
-
-            float[4] clear = CLEAR_COLOUR.asGLColour;
-            glClearColor(clear[0], clear[1], clear[2], clear[3]);
             //this._rect = sfRectangleShape_create();
         }
 
@@ -669,6 +669,8 @@ final class Renderer
         /// Clears the screen
         void clear(Colour clearColour = Colour.white)
         {
+            float[4] clear = clearColour.asGLColour;
+            glClearColor(1, 1, 1, 1);
             glClear(GL_COLOR_BUFFER_BIT);
         }
 

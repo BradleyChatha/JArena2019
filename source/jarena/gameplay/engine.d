@@ -119,13 +119,11 @@ final class Engine
         ///
         void onUpdate()
         {
-            import derelict.sfml2.window : sfKeyEscape;
-
             this._fps.onUpdate();
             this._input.onUpdate();
             this._window.handleEvents(this._eventOffice);
 
-            if(this._input.isKeyDown(sfKeyEscape))
+            if(this._input.isKeyDown(Scancode.ESCAPE))
                 this._window.close();
 
             this._window.renderer.clear();

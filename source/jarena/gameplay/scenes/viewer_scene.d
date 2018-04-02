@@ -71,19 +71,19 @@ abstract class ViewerScene : Scene
             super.updateUI(deltaTime);
             auto dtSecs = deltaTime.asSeconds;
 
-            if(input.isKeyDown(sfKeyD))
+            if(input.isKeyDown(Scancode.D))
                 super.camera.move(vec2(CAMERA_SPEED, 0) * dtSecs);
 
-            if(input.isKeyDown(sfKeyA))
+            if(input.isKeyDown(Scancode.A))
                 super.camera.move(vec2(-CAMERA_SPEED, 0) * dtSecs);
 
-            if(input.isKeyDown(sfKeyW))
+            if(input.isKeyDown(Scancode.W))
                 super.camera.move(vec2(0, -CAMERA_SPEED) * dtSecs);
 
-            if(input.isKeyDown(sfKeyS))
+            if(input.isKeyDown(Scancode.S))
                 super.camera.move(vec2(0, CAMERA_SPEED) * dtSecs);
 
-            if(input.wasKeyTapped(sfKeyR))
+            if(input.wasKeyTapped(Scancode.R))
                 super.camera.reset(RectangleF(0, 0, vec2(InitInfo.windowSize)));
         }
 

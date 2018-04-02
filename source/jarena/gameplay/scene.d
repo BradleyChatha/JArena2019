@@ -10,7 +10,7 @@ private
     import jarena.core, jarena.graphics, jarena.gameplay.gui;
 }
 
-const TOGGLE_EDITOR_KEY = sfKeyF12;
+const TOGGLE_EDITOR_KEY = Scancode.F12;
 alias AutoRender = Flag!"render";
 
 /// A UDA to attach onto a `Scene` to provide it's name
