@@ -3,11 +3,13 @@ description "A minimal D application."
 authors "Sealab"
 copyright "Copyright © 2018, Sealab"
 license "MIT"
-dependency "derelict-sfml2" version="~>4.0.0-beta.2"
-dependency "dlsl" version="~>0.1.2"
-dependency "fluent-asserts" version="~>0.9.0"
-dependency "sdlang-d" version="~>0.10.2"
-dependency "resusage" version="~>0.2.7"
+dependency "derelict-sfml2" version="~>4.0.0-beta.2" // For windowing and audio (deprecated, replace by SDL2)
+dependency "dlsl" version="~>0.1.2"                  // For vector and matrix code
+dependency "fluent-asserts" version="~>0.9.0"        // For unittests
+dependency "sdlang-d" version="~>0.10.2"             // For data files
+dependency "resusage" version="~>0.2.7"              // For getting memory usage
+dependency "derelict-gl3" version="~>2.0.0-beta.6"   // For rendering
+dependency "derelict-sdl2" version="~>3.1.0-alpha.3" // For windowing
 
 configuration "default" {
     targetType "executable"

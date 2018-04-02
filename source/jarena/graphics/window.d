@@ -4,10 +4,11 @@ module jarena.graphics.window;
 private
 {
     import std.experimental.logger;
-    import derelict.sfml2.system, derelict.sfml2.window, derelict.sfml2.graphics;
+    import derelict.sfml2.system, derelict.sfml2.window, derelict.sfml2.graphics, derelict.sdl2.sdl;
+    import opengl;
     import jarena.core, jarena.graphics;
     
-    enum BITS_PER_PIXEL = 32;
+    enum CLEAR_COLOUR = Colours.rockSalt;
 }
 
 public
@@ -99,9 +100,11 @@ final class Window
 
     private
     {
-        Renderer _renderer;
-        sfRenderWindow* _handle;
-
+        Renderer      _renderer;
+        SDL_Window*   _handle;
+        SDL_GLContext _context;
+        bool          _shouldClose;
+        
         // Instead of making a bunch of different objects every frame where the user does something
         // we instead just reuse the objects.
         CommandMail             _commandMail;       // Mail used for events without extra data (e.g. closing the window)
@@ -112,10 +115,17 @@ final class Window
         ValueMail!MouseButton   _mouseMail;         // Mail used for mouse button events.
 
         @property @safe @nogc
-        inout(sfRenderWindow*) handle() nothrow inout
+        inout(SDL_Window*) handle() nothrow inout
         {
             assert(this._handle !is null);
             return this._handle;
+        }
+
+        @property @safe @nogc
+        inout(SDL_GLContext) context() nothrow inout
+        {
+            assert(this._context !is null);
+            return this._context;
         }
     }
 
@@ -129,16 +139,32 @@ final class Window
         {
             import std.string : toStringz;
 
-            tracef("Creating Window with size of %s and title of '%s'", size, title);
-            this._handle = sfRenderWindow_create(
-                                sfVideoMode(size.x, size.y, BITS_PER_PIXEL),
-                                title.toStringz(),
-                                sfClose,
-                                null
-                            );
+            trace("Initial OpenGL load...");
+            DerelictGL3.load();
+            
+            tracef("Creating Window called '%s' with size of %s", title, size);
+            this._handle = SDL_CreateWindow(title.toStringz,
+                                            SDL_WINDOWPOS_CENTERED,
+                                            SDL_WINDOWPOS_CENTERED,
+                                            size.x,
+                                            size.y,
+                                            SDL_WindowFlags.SDL_WINDOW_OPENGL
+                                           );
+            checkSDLError();
 
-            tracef("Setting FPS target to %s", fps);
-            sfRenderWindow_setFramerateLimit(this.handle, fps);
+            tracef("Configuring to use a core OpenGL%s context with a double buffer.", OPENGL_VERSION);
+            SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_CONTEXT_PROFILE_MASK,  SDL_GLprofile.SDL_GL_CONTEXT_PROFILE_CORE);
+            SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_CONTEXT_MAJOR_VERSION, OPENGL_VERSION.x);
+            SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_CONTEXT_MINOR_VERSION, OPENGL_VERSION.y);
+            SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_DOUBLEBUFFER,          1);
+            checkSDLError();
+
+            trace("Creating OpenGL context");
+            this._context = SDL_GL_CreateContext(this.handle);
+            checkSDLError();
+
+            trace("Reloading OpenGL");
+            DerelictGL3.reload();
 
             trace("Creating Renderer");
             this._renderer = new Renderer(this);
@@ -155,8 +181,11 @@ final class Window
 
         ~this()
         {
+            if(this._context !is null)
+                SDL_GL_DeleteContext(this.context);
+            
             if(this._handle !is null)
-                sfRenderWindow_destroy(this.handle);
+                SDL_DestroyWindow(this.handle);
         }
 
         /++
@@ -176,7 +205,7 @@ final class Window
             assert(office !is null);
 
             sfEvent e;
-            while(sfRenderWindow_pollEvent(this.handle, &e))
+            //while(sfRenderWindow_pollEvent(this.handle, &e))
             {
                 switch(e.type)
                 {
@@ -235,9 +264,10 @@ final class Window
         }
 
         /// Closes the window
-        void close()
+        @safe @nogc
+        void close() nothrow pure
         {
-            sfRenderWindow_close(this.handle);
+            this._shouldClose = true;
         }
     }
 
@@ -245,11 +275,11 @@ final class Window
     public
     {
         /// Returns:
-        ///  If the window is open or not.
-        @property @trusted @nogc
-        bool isOpen() nothrow const
+        ///  If the window should close or not.
+        @property @safe @nogc
+        bool shouldClose() nothrow const
         {
-            return cast(bool)sfRenderWindow_isOpen(this.handle);
+            return this._shouldClose;
         }
 
         /// Returns:
@@ -268,99 +298,11 @@ final class Window
         /// Returns:
         ///  The size of the window
         @property @trusted @nogc
-        uvec2 size() nothrow const
+        uvec2 size() nothrow
         {
-            return sfRenderWindow_getSize(this.handle).to!uvec2;
-        }
-    }
-}
-
-///
-final class Renderer
-{
-    private
-    {
-        Window _window;
-        sfRectangleShape* _rect;
-        Camera _camera;
-    }
-
-    public
-    {
-        this(Window window)
-        {
-            this._window = window;
-            this._rect = sfRectangleShape_create();
-        }
-
-        ~this()
-        {
-            if(this._rect !is null)
-                sfRectangleShape_destroy(this._rect);
-        }
-
-        /// Clears the screen
-        void clear(Colour clearColour = Colour.white)
-        {
-            sfRenderWindow_clear(this._window.handle, clearColour.toSF!sfColor);
-        }
-
-        /// Displays all rendered changes to the screen.
-        void displayChanges()
-        {
-            sfRenderWindow_display(this._window.handle);
-        }
-
-        /++
-         + Draws a rectangle to the screen.
-         +
-         + Params:
-         +  position        = The position of the rectangle.
-         +  size            = The size of the rectangle.
-         +  fillColour      = The colour of the inside of the rectangle. (See also - `jarena.util.colour`)
-         +  borderColour    = The colour of the border.
-         +  borderThickness = The thiccness of the border.
-         + ++/
-        void drawRect(vec2 position, vec2 size, Colour fillColour = Colour(255, 0, 0, 255), Colour borderColour = Colour.black, uint borderThickness = 1)
-        {
-            sfRectangleShape_setPosition        (this._rect, position.toSF!sfVector2f);
-            sfRectangleShape_setSize            (this._rect, size.toSF!sfVector2f);
-            sfRectangleShape_setFillColor       (this._rect, fillColour.toSF!sfColor);
-            sfRectangleShape_setOutlineColor    (this._rect, borderColour.toSF!sfColor);
-            sfRectangleShape_setOutlineThickness(this._rect, borderThickness);
-
-            sfRenderWindow_drawRectangleShape(this._window.handle, this._rect, null);
-        }
-
-        /// Draws a `Sprite` to the screen.
-        void drawSprite(Sprite sprite)
-        {
-            assert(sprite !is null);
-            sfRenderWindow_drawSprite(this._window.handle, sprite.handle, null);
-        }
-
-        /// Draws `Text` to the screen.
-        void drawText(Text text)
-        {
-            assert(text !is null);
-            sfRenderWindow_drawText(this._window.handle, text.handle, null);
-        }
-
-        /// Returns: The current `Camera` being used.
-        @property
-        Camera camera()
-        {
-            return this._camera;
-        }
-
-        /// Sets the current `Camera` to use.
-        @property
-        void camera(Camera cam)
-        {
-            assert(cam !is null);
-            
-            this._camera = cam;
-            sfRenderWindow_setView(this._window.handle, this._camera.handle);
+            ivec2 value;
+            SDL_GetWindowSize(this.handle, &value.data[0], &value.data[1]);
+            return uvec2(value);
         }
     }
 }
@@ -694,5 +636,98 @@ private MouseButton toArenaButton(T : MouseButton)(sfMouseButton button)
 
         case sfMouseMiddle:
             return MouseButton.Middle;
+    }
+}
+
+///
+final class Renderer
+{
+    private
+    {
+        Window _window;
+        //sfRectangleShape* _rect;
+        Camera _camera;
+    }
+
+    public
+    {
+        this(Window window)
+        {
+            this._window = window;
+
+            float[4] clear = CLEAR_COLOUR.asGLColour;
+            glClearColor(clear[0], clear[1], clear[2], clear[3]);
+            //this._rect = sfRectangleShape_create();
+        }
+
+        ~this()
+        {
+            //if(this._rect !is null)
+                //sfRectangleShape_destroy(this._rect);
+        }
+
+        /// Clears the screen
+        void clear(Colour clearColour = Colour.white)
+        {
+            glClear(GL_COLOR_BUFFER_BIT);
+        }
+
+        /// Displays all rendered changes to the screen.
+        void displayChanges()
+        {
+            SDL_GL_SwapWindow(this._window.handle);
+        }
+
+        /++
+         + Draws a rectangle to the screen.
+         +
+         + Params:
+         +  position        = The position of the rectangle.
+         +  size            = The size of the rectangle.
+         +  fillColour      = The colour of the inside of the rectangle. (See also - `jarena.util.colour`)
+         +  borderColour    = The colour of the border.
+         +  borderThickness = The thiccness of the border.
+         + ++/
+        void drawRect(vec2 position, vec2 size, Colour fillColour = Colour(255, 0, 0, 255), Colour borderColour = Colour.black, uint borderThickness = 1)
+        {
+            //sfRectangleShape_setPosition        (this._rect, position.toSF!sfVector2f);
+            //sfRectangleShape_setSize            (this._rect, size.toSF!sfVector2f);
+            //sfRectangleShape_setFillColor       (this._rect, fillColour.toSF!sfColor);
+            //sfRectangleShape_setOutlineColor    (this._rect, borderColour.toSF!sfColor);
+            //sfRectangleShape_setOutlineThickness(this._rect, borderThickness);
+
+            //sfRenderWindow_drawRectangleShape(this._window.handle, this._rect, null);
+        }
+
+        /// Draws a `Sprite` to the screen.
+        void drawSprite(Sprite sprite)
+        {
+            assert(sprite !is null);
+            //sfRenderWindow_drawSprite(this._window.handle, sprite.handle, null);
+        }
+
+        /// Draws `Text` to the screen.
+        void drawText(Text text)
+        {
+            assert(text !is null);
+            //sfRenderWindow_drawText(this._window.handle, text.handle, null);
+        }
+
+        /// Returns: The current `Camera` being used.
+        @property
+        Camera camera()
+        {
+            return this._camera;
+        }
+
+        /// Sets the current `Camera` to use.
+        @property
+        void camera(Camera cam)
+        {
+            assert(cam !is null);
+            
+            this._camera = cam;
+            //sfRenderWindow_setView(this._window.handle, this._camera.handle);
+        }
     }
 }

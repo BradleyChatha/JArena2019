@@ -6,7 +6,7 @@ private
     import std.experimental.logger;
     import resusage;
     import jarena.core.maths;
-    import derelict.sfml2.system, derelict.sfml2.graphics;
+    import derelict.sfml2.system, derelict.sfml2.graphics, derelict.sdl2.sdl;
 }
 
 private enum isSFMLVector(T) = (is(T == sfVector2f) || is(T == sfVector2i) || is(T == sfVector2u));
@@ -72,6 +72,23 @@ Colour to(T : Colour)(sfColor colour)
     return Colour(colour.r, colour.g, colour.b, colour.a);
 }
 
+/// Returns: A verison of `colour` that is suitable for certain OpenGL functions (such as glClear)
+float[4] asGLColour()(Colour colour)
+{
+    float[4] colours;
+    float convert(ubyte original)
+    {
+        return cast(float)original / 255.0f;
+    }
+
+    colours[0] = convert(colour.r);
+    colours[1] = convert(colour.g);
+    colours[2] = convert(colour.b);
+    colours[3] = convert(colour.a);
+    
+    return colours;
+}
+
 /++
  + Notes:
  +  If the current platform is not supported, then a `ProcessMemInfo.init` is returned.
@@ -91,6 +108,21 @@ ProcessMemInfo getMemInfo()
     else
     {
         return ProcessMemInfo.init;
+    }
+}
+
+/// Checks to see if SDL has thrown an error.
+@trusted
+void checkSDLError()
+{
+    import std.string : fromStringz;
+
+    auto msgPtr = SDL_GetError();
+    if(*msgPtr != '\0')
+    {
+        auto msg = msgPtr.fromStringz;
+        SDL_ClearError();
+        throw new Exception(msg.idup);
     }
 }
 

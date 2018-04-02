@@ -1,6 +1,11 @@
 /// Contains common code/data structures that don't properly fit into any existing module
 module jarena.core.common;
 
+private
+{
+    import derelict.sdl2.sdl;
+}
+
 private struct InitProperty
 {
     string publicName;

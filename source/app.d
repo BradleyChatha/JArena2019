@@ -1,15 +1,19 @@
 import std.stdio, std.experimental.logger;
-import derelict.sfml2.graphics, derelict.sfml2.system, derelict.sfml2.window;
+import derelict.sfml2.graphics, derelict.sfml2.system, derelict.sfml2.window, derelict.sdl2.sdl;
 import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jarena.gameplay.gui, jarena.gameplay.scenes;
 
 void main()
 {
     sharedLog = new ConsoleLogger(LogLevel.all);
-    
+
+    DerelictSDL2.load();
     DerelictSFML2Graphics.load();
     DerelictSFML2System.load();
     DerelictSFML2Window.load();
 
+    import std.exception : enforce;
+    enforce(SDL_Init(SDL_INIT_EVERYTHING) == 0, "SDL was not able to initialise everything.");
+    
     SdlangLoader.setup();
     
     auto engine = new Engine();
@@ -21,4 +25,6 @@ void main()
     engine.scenes.register(new SpriteAtlasViewerScene(engine.scenes.cache.getCache!SpriteAtlas));
     engine.scenes.swap!MenuScene;
     engine.doLoop();
+
+    SDL_Quit();
 }
