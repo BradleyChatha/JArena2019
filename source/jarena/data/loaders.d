@@ -485,11 +485,10 @@ private final class SpriteAtlasSDL : LoaderExtension!Tag
         @ForTag("sprite")
         void handleSprite(Tag tag, LoaderCache caches)
         {
-            SdlangSprite sprite;
             auto name = tag.expectValue!string;
 
             super.log("Parsing sprite called '%s'", name);
-            sprite.fromSdlTag(tag);
+            auto sprite = SdlangSprite.createFromSdlTag(tag);
 
             auto frame = RectangleI(sprite.position, sprite.size);
             this._atlas.register(name, frame);
@@ -498,11 +497,10 @@ private final class SpriteAtlasSDL : LoaderExtension!Tag
         @ForTag("spriteSheet")
         void handleSpriteSheet(Tag tag, LoaderCache caches)
         {
-            SdlangSpriteSheet sheet;
             auto name = tag.expectValue!string;
 
             super.log("Parsing spriteSheet called '%s'", name);
-            sheet.fromSdlTag(tag);
+            auto sheet = SdlangSpriteSheet.createFromSdlTag(tag);
 
             auto frame = RectangleI(sheet.position, sheet.size);
             this._atlas.registerSpriteSheet(name, frame, sheet.frameSize);

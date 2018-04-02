@@ -52,13 +52,22 @@ mixin template SerialisableInterface()
     /++
      + Updates the data in this struct based on the data in the given `tag`.
      + ++/
-    void fromSdlTag(Tag tag)
+    void updateFromSdlTag(Tag tag)
     {
         import std.exception : enforce;
         
         //pragma(msg, "For Type: " ~ ThisType.stringof);
         //pragma(msg, fromSdlTagGenerator!ThisType);
         mixin(fromSdlTagGenerator!ThisType);
+    }
+
+    /// Returns: The serialisable type created from the given `tag`.
+    static ThisType createFromSdlTag(Tag tag)
+    {
+        ThisType type;
+        type.updateFromSdlTag(tag);
+
+        return type;
     }
 }
 

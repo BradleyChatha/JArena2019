@@ -58,7 +58,7 @@ final class Engine
             if(exists(ENGINE_CONFIG_PATH))
             {
                 tracef("Loading config file from '%s'", ENGINE_CONFIG_PATH);
-                this._config.fromSdlTag(parseFile(ENGINE_CONFIG_PATH));
+                this._config.updateFromSdlTag(parseFile(ENGINE_CONFIG_PATH));
             }
             else
                 tracef("No config file exists. Please create one at '%s'", ENGINE_CONFIG_PATH);
