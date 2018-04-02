@@ -234,23 +234,23 @@ final class Window
                     //    office.mail(this._textMail);
                     //    break;
                     //
-                    //case sfEvtMouseMoved:
-                    //    this._positionMail.type = Window.Event.MouseMoved;
-                    //    this._positionMail.value = vec2(e.mouseMove.x, e.mouseMove.y);
-                    //    office.mail(this._positionMail);
-                    //    break;
-                    //
-                    //case sfEvtMouseButtonPressed:
-                    //    this._mouseMail.type = Window.Event.MouseButtonPressed;
-                    //    this._mouseMail.value = e.mouseButton.button.toArenaButton!MouseButton;
-                    //    office.mail(this._mouseMail);
-                    //    break;
-                    //
-                    //case sfEvtMouseButtonReleased:
-                    //    this._mouseMail.type = Window.Event.MouseButtonReleased;
-                    //    this._mouseMail.value = e.mouseButton.button.toArenaButton!MouseButton;
-                    //    office.mail(this._mouseMail);
-                    //    break;
+                    case SDL_MOUSEMOTION:
+                        this._positionMail.type  = Window.Event.MouseMoved;
+                        this._positionMail.value = vec2(e.motion.x, e.motion.y);
+                        office.mail(this._positionMail);
+                        break;
+
+                    case SDL_MOUSEBUTTONDOWN:
+                        this._mouseMail.type  = Window.Event.MouseButtonPressed;
+                        this._mouseMail.value = e.button.button.toArenaButton!MouseButton;
+                        office.mail(this._mouseMail);
+                        break;
+
+                    case SDL_MOUSEBUTTONUP:
+                        this._mouseMail.type  = Window.Event.MouseButtonReleased;
+                        this._mouseMail.value = e.button.button.toArenaButton!MouseButton;
+                        office.mail(this._mouseMail);
+                        break;
                     //
                     //case sfEvtResized:
                     //    this._upositionMail.type = Window.Event.Resized;
@@ -627,18 +627,21 @@ final class InputManager
     }
 }
 
-private MouseButton toArenaButton(T : MouseButton)(sfMouseButton button)
+private MouseButton toArenaButton(T : MouseButton)(ubyte button)
 {
-    final switch(button)
+    /*final*/ switch(cast(SDL_D_MouseButton)button) with(SDL_D_MouseButton)
     {
-        case sfMouseLeft:
+        case SDL_BUTTON_LEFT:
             return MouseButton.Left;
 
-        case sfMouseRight:
+        case SDL_BUTTON_RIGHT:
             return MouseButton.Right;
 
-        case sfMouseMiddle:
+        case SDL_BUTTON_MIDDLE:
             return MouseButton.Middle;
+
+        default:
+            return MouseButton.None;
     }
 }
 
