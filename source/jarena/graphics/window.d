@@ -251,12 +251,20 @@ final class Window
                         this._mouseMail.value = e.button.button.toArenaButton!MouseButton;
                         office.mail(this._mouseMail);
                         break;
-                    //
-                    //case sfEvtResized:
-                    //    this._upositionMail.type = Window.Event.Resized;
-                    //    this._upositionMail.value = uvec2(e.size.width, e.size.height);
-                    //    office.mail(this._upositionMail);
-                    //    break;
+
+                    case SDL_WINDOWEVENT:
+                        switch(e.window.event) with(SDL_WindowEventID)
+                        {
+                            case SDL_WINDOWEVENT_RESIZED:
+                                this._upositionMail.type  = Window.Event.Resized;
+                                this._upositionMail.value = uvec2(e.window.data1, e.window.data2);
+                                office.mail(this._upositionMail);
+                                break;
+
+                            default:
+                                break;
+                        }
+                        break;
 
                     default:
                         break;

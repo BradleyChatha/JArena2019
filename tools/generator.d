@@ -54,15 +54,21 @@ version(FileGenerator)
     private void genScancodes(CodeBuilder code)
     {
         import std.algorithm : splitter, map, substitute, joiner;
-        import std.uni       : toLower;
+        import std.uni       : toLower, isNumber;
         import std.array     : array;
         import std.regex     : matchFirst, ctRegex;
         import std.format    : format;
 
+        string fixName(string name)
+        {
+            return (name[0].isNumber) ? "NUM"~name
+                                      : name;
+        }
+
         auto exp      = ctRegex!`(SDL_SCANCODE_(\w+)).*`;
         auto enumCode = scancodeData.splitter("\n")
                                     .map!(line => line.matchFirst(exp))
-                                    .map!(cap  => format("%s = %s", cap[2], cap[1]))
+                                    .map!(cap  => format("%s = %s", fixName(cap[2]), cap[1]))
                                     .joiner(",\n\t")
                                     .array;
 
