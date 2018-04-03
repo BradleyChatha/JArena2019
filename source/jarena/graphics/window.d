@@ -159,9 +159,12 @@ final class Window
             trace("Reloading OpenGL");
             DerelictGL3.reload();
 
-            SDL_GL_SetSwapInterval(1);
-            glViewport(0, 0, size.x, size.y);
-
+            SDL_GL_SetSwapInterval(1);        // Vsync
+            glViewport(0, 0, size.x, size.y); // Use the entire window to render
+            glEnable(GL_BLEND);               // Enable blending
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            checkGLError();
+            
             trace("Creating Renderer");
             this._renderer = new Renderer(this);
             this._renderer.camera = new Camera(RectangleF(0, 0, vec2(size)));
