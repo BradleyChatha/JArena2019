@@ -20,5 +20,6 @@ trace.def
 trace.html
 profilegc.log
 bin/*.dll
+bin/data/debug/compound/
 dcd.log
 ui.log

@@ -69,7 +69,7 @@ class Test : Scene, IPostBox
         {
         }
 
-        void onUpdate(GameTime deltaTime, InputManager input)
+        void onUpdate(Duration deltaTime, InputManager input)
         {
             auto speedHorizontal = vec2(160 * deltaTime.asSeconds, 0);
             auto speedVertical   = vec2(0, 160 * deltaTime.asSeconds);
@@ -136,7 +136,7 @@ class GLTest : Scene
         void onInit()
         {
             this.shader = new Shader(defaultVertexShader, defaultFragmentShader);
-            this.texture = new Texture("data/Textures/EXPLOSION.png");
+            this.texture = super.manager.cache.get!SpriteAtlas("Explosion Atlas").texture;
             this.sprite = new Sprite(this.texture);
             InitInfo.renderResources.dumpTextures();
         }
@@ -149,7 +149,7 @@ class GLTest : Scene
         {
         }
 
-        void onUpdate(GameTime deltaTime, InputManager input)
+        void onUpdate(Duration deltaTime, InputManager input)
         {
         }
 

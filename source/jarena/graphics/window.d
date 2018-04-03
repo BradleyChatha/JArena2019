@@ -531,7 +531,7 @@ final class InputManager
             if(m.type == Window.Event.MouseButtonPressed)
                 this._mouse.buttonMask |= mail.value;
             else
-                this._mouse.buttonMask &= ~(mail.value);
+                this._mouse.buttonMask &= ~cast(int)(mail.value);
         }
     }
 

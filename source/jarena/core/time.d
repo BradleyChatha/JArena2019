@@ -1,126 +1,22 @@
 ///
 module jarena.core.time;
 
+public import core.time;
+
+/++
+ + Converts a duration into seconds.
+ +
+ + Notes:
+ +  This is preferred over using `myDuration.total!"seconds"` as this function will provide
+ +  a float form of the number, whereas `total` seems to round it to the nearest second.
+ + ++/
+float asSeconds()(Duration dur)
+{
+    return (cast(float)dur.total!"usecs" / 1_000_000.0f);
+}
+
 ///
 alias TimerFunc = void delegate();
-
-///
-struct GameTime
-{
-    public
-    {
-        ///
-        //sfTime handle;
-
-        ///
-        @safe
-        string toString() nothrow const
-        {
-            import std.exception : assumeWontThrow;
-            import std.format    : format;
-
-            return format("GameTime(%s seconds, %s ms, %s microseconds)", 
-                          this.asSeconds, this.asMilliseconds, this.asMicroseconds).assumeWontThrow;
-        }
-
-        ///
-        @trusted
-        static GameTime fromSeconds(float seconds)
-        {
-            GameTime time;
-            //time.handle = sfSeconds(seconds);
-
-            return time;
-        }
-
-        ///
-        @trusted
-        static GameTime fromMilliseconds(int ms)
-        {
-            GameTime time;
-            //time.handle = sfMilliseconds(ms);
-
-            return time;
-        }
-
-        ///
-        @trusted
-        static GameTime fromMicroseconds(long micro)
-        {
-            GameTime time;
-            //time.handle.microseconds = micro;
-
-            return time;
-        }
-
-        ///
-        @trusted @nogc
-        float asSeconds() nothrow const
-        {
-            return 0;
-        }
-
-        ///
-        @trusted @nogc
-        int asMilliseconds() nothrow const
-        {
-            return 0;
-        }
-
-        ///
-        @safe @nogc
-        long asMicroseconds() nothrow const
-        {
-            return 0;
-        }
-
-        GameTime opBinary(string op)(GameTime rhs)
-        {
-            return rhs;
-            //return mixin("GameTime(sfTime(this.handle.microseconds "~op~" rhs.handle.microseconds))");
-        }
-
-        void opOpAssign(string op)(GameTime rhs)
-        {
-            //mixin("this = this "~op~" rhs;");
-        }
-    }
-}
-
-///
-class Clock
-{
-    private
-    {
-        //sfClock* _handle;
-    }
-
-    public
-    {
-        ///
-        @trusted @nogc
-        this() nothrow
-        {
-            //this._handle = sfClock_create();
-        }
-
-        ///
-        @trusted @nogc
-        GameTime getElapsedTime() nothrow const
-        {
-            return GameTime();
-            //return GameTime(sfClock_getElapsedTime(this.handle));
-        }
-
-        ///
-        @trusted @nogc
-        GameTime restart() nothrow
-        {
-            return GameTime();
-            //return GameTime(sfClock_restart(this.handle));
-        }
-    }
-}
 
 /++
  + Repeatedly sends a given `Mail` to a PostOffice after a delay.
@@ -136,8 +32,8 @@ class MailTimer
     {
         PostOffice  _office;
         Mail        _mail;
-        GameTime    _delay;
-        GameTime    _current;
+        Duration    _delay;
+        Duration    _current;
         bool        _isStopped;
     }
 
@@ -147,10 +43,10 @@ class MailTimer
          + Params:
          +  office = The `PostOffice` to send the mail to.
          +  mail   = The `Mail` to send. This mail won't be changed (inside of this class at least) between repeated maililngs.
-         +  delay  = A `GameTime` which specifies the delay between each mailing.
+         +  delay  = A `Duration` which specifies the delay between each mailing.
          + ++/
         @safe @nogc
-        this(PostOffice office, Mail mail, GameTime delay) nothrow pure
+        this(PostOffice office, Mail mail, Duration delay) nothrow pure
         {
             assert(office !is null);
             assert(mail !is null);
@@ -161,16 +57,16 @@ class MailTimer
         }
 
         ///
-        void onUpdate(GameTime deltaTime)
+        void onUpdate(Duration deltaTime)
         {
             if(this._isStopped)
                 return;
 
             this._current += deltaTime;
-            if(this._current.asMicroseconds >= this._delay.asMicroseconds)
+            if(this._current >= this._delay)
             {
                 this._office.mail(this._mail);
-                this._current = GameTime();
+                this._current = Duration();
             }
         }
 
@@ -190,7 +86,7 @@ class MailTimer
         void restart()
         {
             this.start();
-            this._delay = GameTime();
+            this._delay = Duration();
         }
     }
 }
@@ -203,8 +99,8 @@ class Timers
     {
         struct After
         {
-            GameTime delay;
-            GameTime lastUpdateTime;
+            Duration delay;
+            Duration lastUpdateTime;
             TimerEvent func;
         }
 
@@ -212,7 +108,7 @@ class Timers
 
         After[] _after;
         Every[] _every;
-        GameTime _currentTime;
+        Duration _currentTime;
     }
 
     public
@@ -225,7 +121,7 @@ class Timers
          +  func = The function to execute.
          + ++/
         @safe
-        void after(GameTime delay, TimerEvent func) nothrow
+        void after(Duration delay, TimerEvent func) nothrow
         {
             this._after ~= After(delay, this._currentTime, func);
         }
@@ -238,20 +134,20 @@ class Timers
          +  func = The function to execute.
          + ++/
         @safe
-        void every(GameTime delay, TimerEvent func) nothrow
+        void every(Duration delay, TimerEvent func) nothrow
         {
             this._every ~= Every(delay, this._currentTime, func);
         }
 
         ///
-        void onUpdate(GameTime deltaTime)
+        void onUpdate(Duration deltaTime)
         {
             this._currentTime += deltaTime;
-
+            
             bool processEvent(ref After event)
             {
-                auto elapsed = (this._currentTime.asMicroseconds - event.lastUpdateTime.asMicroseconds);
-                if(elapsed >= event.delay.asMicroseconds)
+                auto elapsed = (this._currentTime - event.lastUpdateTime);
+                if(elapsed >= event.delay)
                 {
                     event.lastUpdateTime = this._currentTime;
                     event.func();
@@ -284,8 +180,8 @@ class FPS
 {
     private
     {
-        Clock _clock;
-        GameTime _previousFrame;
+        MonoTime _previousFrame;
+        Duration _elapsedTime;
         float _elapsedSeconds;
         uint _frameCountPrevious;
         uint _frameCount;
@@ -296,16 +192,17 @@ class FPS
         ///
         this()
         {
-            this._clock = new Clock();
             this._elapsedSeconds = 0;
+            this._previousFrame = MonoTime.currTime;
         }
 
         ///
         void onUpdate()
         {
-            this._previousFrame = this._clock.restart();
-            this._elapsedSeconds += this._previousFrame.asSeconds;
-
+            this._elapsedTime = (MonoTime.currTime - this._previousFrame);
+            this._elapsedSeconds += this.elapsedTime.asSeconds;
+            this._previousFrame = MonoTime.currTime;
+            
             this._frameCount++;
             if(this._elapsedSeconds >= 1)
             {
@@ -324,9 +221,9 @@ class FPS
 
         ///
         @property @safe @nogc
-        GameTime elapsedTime() nothrow const
+        Duration elapsedTime() nothrow const
         {
-            return this._previousFrame;
+            return this._elapsedTime;
         }
     }
 }

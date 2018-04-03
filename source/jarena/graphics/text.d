@@ -262,7 +262,7 @@ class TextObject : DrawableObject
         void onUnregister(PostOffice office){}
         
         ///
-        void onUpdate(GameTime deltaTime, InputManager input){}
+        void onUpdate(Duration deltaTime, InputManager input){}
 
         ///
         void onRegister(PostOffice office){}

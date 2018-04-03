@@ -173,7 +173,7 @@ final class EditorContainer : FreeFormContainer
 
     override
     {
-        public void onUpdate(InputManager input, GameTime deltaTime)
+        public void onUpdate(InputManager input, Duration deltaTime)
         {
             this._input = input;
             

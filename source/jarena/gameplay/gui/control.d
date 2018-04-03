@@ -271,7 +271,7 @@ abstract class UIElement
         protected void onColourChanged(Colour oldColour, Colour newColour);
 
         ///
-        public void onUpdate(InputManager input, GameTime deltaTime);
+        public void onUpdate(InputManager input, Duration deltaTime);
 
         ///
         public void onRender(Window window);
@@ -303,7 +303,7 @@ final class TestControl : UIElement
         protected void onRemoveChild(UIElement child){}
         protected void onPositionChanged(vec2 oldPos, vec2 newPos){}
         protected void onColourChanged(Colour oldColour, Colour newColour){}
-        public void onUpdate(InputManager input, GameTime deltaTime){}
+        public void onUpdate(InputManager input, Duration deltaTime){}
 
         public void onRender(Window window)
         {

@@ -104,7 +104,7 @@ final class Engine
                 import std.stdio;
                 writeln(sformat(this._debugBuffer, "FPS: %s | Time: %sms | RAM: %sMB", 
                                                     this._fps.frameCount, 
-                                                    this._fps.elapsedTime.asMilliseconds,
+                                                    this._fps.elapsedTime.total!"msecs",
                                                     getMemInfo().usedRAM / (1024 * 1024)));
             });
             this.events.subscribe(Window.Event.Close, (_,__) => this._window.close());
@@ -117,12 +117,12 @@ final class Engine
             });
 
             // Load in assets
-            //SdlangLoader.parseFile(ENGINE_DATA_PATH, this.scenes.cache);
+            SdlangLoader.parseFile(ENGINE_DATA_PATH, this.scenes.cache);
 
             // Debug stuff
             debug this._config.showDebugText = true;
             if(this._config.showDebugText.get(false))
-                this._timers.every(GameTime.fromSeconds(1), (){this.events.mailCommand(Event.UpdateFPSDisplay);});
+                this._timers.every(1.seconds, (){this.events.mailCommand(Event.UpdateFPSDisplay);});
         }
 
         ///

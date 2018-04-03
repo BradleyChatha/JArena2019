@@ -65,7 +65,7 @@ abstract class ViewerScene : Scene
             this._instructionPanel.position = vec2(0, InitInfo.windowSize.y - this._instructionPanel.size.y);
         }
 
-        override void onUpdate(GameTime deltaTime, InputManager input)
+        override void onUpdate(Duration deltaTime, InputManager input)
         {
             super.updateUI(deltaTime);
             auto dtSecs = deltaTime.asSeconds;

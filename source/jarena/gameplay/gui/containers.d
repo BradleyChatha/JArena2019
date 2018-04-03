@@ -165,7 +165,7 @@ final class StackContainer : Container
             this.sortPositions();
         }
 
-        public void onUpdate(InputManager input, GameTime deltaTime)
+        public void onUpdate(InputManager input, Duration deltaTime)
         {
             foreach(child; this.children)
                 child.onUpdate(input, deltaTime);
@@ -217,7 +217,7 @@ class FreeFormContainer : Container
         protected void onPositionChanged(vec2 oldPos, vec2 newPos){}
         protected void onColourChanged(Colour oldColour, Colour newColour){}
 
-        public void onUpdate(InputManager input, GameTime deltaTime)
+        public void onUpdate(InputManager input, Duration deltaTime)
         {
             foreach(child; this.children)
                 child.onUpdate(input, deltaTime);
@@ -385,7 +385,7 @@ final class GridContainer : Container
             this._childrenInfo.removeAt(index);
         }
 
-        public void onUpdate(InputManager input, GameTime deltaTime)
+        public void onUpdate(InputManager input, Duration deltaTime)
         {
             foreach(child; this.children)
                 child.onUpdate(input, deltaTime);

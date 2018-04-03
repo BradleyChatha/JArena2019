@@ -52,7 +52,7 @@ final class MenuScene : Scene
         {
         }
 
-        void onUpdate(GameTime deltaTime, InputManager input)
+        void onUpdate(Duration deltaTime, InputManager input)
         {
             super.updateScene(deltaTime);
             super.updateUI(deltaTime);

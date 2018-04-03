@@ -47,7 +47,7 @@ abstract class SimpleButton : Button
         protected void onPositionChanged(vec2 oldPos, vec2 newPos){}
         protected void onSizeChanged(vec2 oldSize, vec2 newSize){}
         
-        public void onUpdate(InputManager input, GameTime deltaTime)
+        public void onUpdate(InputManager input, Duration deltaTime)
         {
             auto thisRect = RectangleF(super.position, super.size);
             if(thisRect.contains(input.mousePosition)) // If the mouse is hovered over
@@ -163,7 +163,7 @@ class SimpleTextButton : SimpleButton
             this.updateLayout();
         }
         
-        public void onUpdate(InputManager input, GameTime deltaTime)
+        public void onUpdate(InputManager input, Duration deltaTime)
         {
             super.onUpdate(input, deltaTime);
         }
@@ -220,7 +220,7 @@ class SimpleLabel : Control
         protected void onChildStateChanged(UIElement child, StateChange change){}
         protected void onAddChild(UIElement child){}
         protected void onRemoveChild(UIElement child){}
-        public void onUpdate(InputManager input, GameTime deltaTime){}
+        public void onUpdate(InputManager input, Duration deltaTime){}
         protected void onSizeChanged(vec2 oldSize, vec2 newSize){}
 
         protected void onPositionChanged(vec2 oldPos, vec2 newPos)

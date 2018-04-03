@@ -44,7 +44,7 @@ final class AnimationViewerScene : ViewerScene
                        "Columns: %s\n"~
                        "Frame Count: %s",
                        next.name, 
-                       next.delayPerFrame.asMilliseconds, 
+                       next.delayPerFrame.total!"msecs", 
                        next.repeat,
                        next.spriteSheet.rows,
                        next.spriteSheet.columns,
@@ -75,7 +75,7 @@ final class AnimationViewerScene : ViewerScene
             this._labelChangingData = super.makeDataLabel();
         }
 
-        void onUpdate(GameTime deltaTime, InputManager input)
+        void onUpdate(Duration deltaTime, InputManager input)
         {
             import std.format : format;
 
@@ -127,7 +127,7 @@ final class AnimationViewerScene : ViewerScene
                 else if(input.isShiftDown)   amount = 10;
                 else if(input.isAltDown)     amount = 50;
 
-                this._animations[this._animIndex].delayPerFrame += GameTime.fromMilliseconds(amount * multiplier);
+                this._animations[this._animIndex].delayPerFrame += (amount * multiplier).msecs;
                 this.changeAnimation(); // This is to update the animation data in the sprite.
             }
 

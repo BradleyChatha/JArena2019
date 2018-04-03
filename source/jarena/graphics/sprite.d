@@ -499,7 +499,7 @@ struct AnimationInfo
     SpriteAtlas.Sheet spriteSheet;
 
     /// How much time to wait between each frame.
-    GameTime delayPerFrame;
+    Duration delayPerFrame;
 
     /// Whether the animation should repeat or not.
     bool repeat;
@@ -530,7 +530,7 @@ class AnimatedSprite : Sprite
         // Information about the current animation.
         AnimationInfo _currentAnimation;
         uvec2         _currentFrame;
-        GameTime      _currentDelay;
+        Duration      _currentDelay;
         bool          _finished;
     }
 
@@ -565,13 +565,13 @@ class AnimatedSprite : Sprite
          +  and `changeFrame`. Remember to stop calling this function as well.
          + ++/
         @safe
-        void onUpdate(GameTime delta)
+        void onUpdate(Duration delta)
         {
             if(this._finished)
                 return;
 
             this._currentDelay += delta;
-            if(this._currentDelay.asMicroseconds >= this.animation.delayPerFrame.asMicroseconds)
+            if(this._currentDelay >= this.animation.delayPerFrame)
             {
                 this.advance(1);
                 this.changeFrame();
@@ -604,7 +604,7 @@ class AnimatedSprite : Sprite
         @safe
         void restart()
         {
-            this._currentDelay = GameTime.fromMicroseconds(0);
+            this._currentDelay = Duration.zero;
             this._finished = false;
             this._currentFrame = uvec2(0);
 
@@ -774,7 +774,7 @@ class AnimatedObject : DrawableObject
         void onUnregister(PostOffice office){}
         
         ///
-        void onUpdate(GameTime deltaTime, InputManager input)
+        void onUpdate(Duration deltaTime, InputManager input)
         {
             this._sprite.onUpdate(deltaTime);
         }
@@ -876,7 +876,7 @@ class StaticObject : DrawableObject
         void onUnregister(PostOffice office){}
         
         ///
-        void onUpdate(GameTime deltaTime, InputManager input){}
+        void onUpdate(Duration deltaTime, InputManager input){}
 
         ///
         void onRegister(PostOffice office)

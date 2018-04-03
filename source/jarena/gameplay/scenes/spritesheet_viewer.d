@@ -293,7 +293,7 @@ final class SpriteAtlasViewerScene : ViewerScene
             this._labelAtlasIndex = super.makeDataLabel();
         }
 
-        void onUpdate(GameTime deltaTime, InputManager input)
+        void onUpdate(Duration deltaTime, InputManager input)
         {
             if(input.wasKeyTapped(Scancode.BACKSPACE))
                 super.manager.swap!MenuScene;

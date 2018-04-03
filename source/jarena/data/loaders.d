@@ -592,7 +592,7 @@ private final class AnimationSpriteSheetSDL : LoaderExtension!Tag
         @Mandatory
         void handleFrameDelayMS(Tag tag, LoaderCache caches)
         {
-            this._info.delayPerFrame = GameTime.fromMilliseconds(tag.expectValue!int);
+            this._info.delayPerFrame = tag.expectValue!int.msecs;
             super.log("The animation has a frame delay of '%s'", this._info.delayPerFrame);
         }
 

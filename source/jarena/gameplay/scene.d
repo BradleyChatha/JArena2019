@@ -95,7 +95,7 @@ abstract class Scene
         {
             if(object._flags & GameObject.Flags.IS_AUTO_RENDERED)
             {
-                object._flags &= ~GameObject.Flags.IS_AUTO_RENDERED;
+                object._flags &= ~cast(int)GameObject.Flags.IS_AUTO_RENDERED;
 
                 import std.algorithm : countUntil;
                 auto index = this._drawOrder.countUntil(object);
@@ -125,7 +125,7 @@ abstract class Scene
             this._sceneCamera       = new Camera(cameraRect);
         }
 
-        void _onUpdate(GameTime deltaTime, InputManager input)
+        void _onUpdate(Duration deltaTime, InputManager input)
         {
             import std.stdio : writeln;
             
@@ -280,7 +280,7 @@ abstract class Scene
          + Params:
          +  deltaTime = The amount of time the last frame took to process.
          + ++/
-        void updateScene(GameTime deltaTime)
+        void updateScene(Duration deltaTime)
         {
             foreach(object; this._objects.byValue)
                 object.onUpdate(deltaTime, this.manager.input);
@@ -318,7 +318,7 @@ abstract class Scene
          + Params:
          +  deltaTime = The amount of time the previous frame took.
          + ++/
-        void updateUI(GameTime deltaTime)
+        void updateUI(Duration deltaTime)
         {
             this._gui.onUpdate(this.manager.input, deltaTime);
         }
@@ -445,7 +445,7 @@ abstract class Scene
          +  deltaTime = The amount of time the last frame took to process (used for making speed frame-independent).
          +  input     = A shortcut to the `SceneManager`'s `InputManager`. (so you don't have to do `super.manager.input` everywhere)
          + ++/
-        void onUpdate(GameTime deltaTime, InputManager input);
+        void onUpdate(Duration deltaTime, InputManager input);
 
         /++
          + Called everytime the scene should render it's current state to the screen.
@@ -532,7 +532,7 @@ class SceneManager
          +  window = The game's `Window`.
          +  deltaTime = The time the last frame of the game took.
          + ++/
-        void onUpdate(Window window, GameTime deltaTime)
+        void onUpdate(Window window, Duration deltaTime)
         {
             assert(window !is null);
 
@@ -688,7 +688,7 @@ abstract class GameObject
          +  deltaTime = The amount of time the last frame took to process.
          +  input     = A shortcut to the `SceneManager`'s `InputManager`. (so you don't have `super.scene.manager.input` everywhere.)
          + ++/
-        void onUpdate(GameTime deltaTime, InputManager input);
+        void onUpdate(Duration deltaTime, InputManager input);
     }
 }
 
@@ -741,7 +741,7 @@ abstract class DrawableObject : GameObject
             if(hidden)
                 this._flags |= Flags.IS_HIDDEN;
             else
-                this._flags &= ~Flags.IS_HIDDEN;
+                this._flags &= ~cast(int)Flags.IS_HIDDEN;
         }
     }
 
