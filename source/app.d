@@ -23,8 +23,8 @@ void main()
     engine.scenes.register(new MenuScene());
     engine.scenes.register(new AnimationViewerScene(engine.scenes.cache.getCache!AnimationInfo));
     engine.scenes.register(new SpriteAtlasViewerScene(engine.scenes.cache.getCache!SpriteAtlas));
-    //engine.scenes.swap!GLTest;
-    engine.scenes.swap!Test;
+    engine.scenes.swap!GLTest;
+    //engine.scenes.swap!AnimationViewerScene;
     engine.doLoop();
 
     SDL_Quit();

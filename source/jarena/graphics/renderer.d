@@ -18,32 +18,32 @@ final class Renderer
         // Used for batching.
         struct RenderBucket
         {
-            Texture texture;
+            Texture  texture;
             Vertex[] verts;
             uint[]   indicies;
         }
         
-        Window _window;
-        //sfRectangleShape* _rect;
-        Camera _camera;
-        RendererResources _resources;
-        RenderBucket[] _buckets;
-        VertexBuffer _buffer;
-        Shader _defaultShader;
+        Window              _window;
+        Sprite              _rect; // Feels a bit hacky, but I'm not gonna have a 'RectangleShape' class for a while/at all.
+        Camera              _camera;
+        RendererResources   _resources;
+        RenderBucket[]      _buckets;
+        VertexBuffer        _buffer;
+        Shader              _defaultShader;
     }
 
     public
     {
         this(Window window)
         {
-            this._window        = window;
-            this._resources     = new RendererResources();
-            this._defaultShader = new Shader(defaultVertexShader, defaultFragmentShader);
+            this._window             = window;
+            this._resources          = new RendererResources();
+            this._defaultShader      = new Shader(defaultVertexShader, defaultFragmentShader);
+            InitInfo.renderResources = this._resources;
             
             this._buffer.setup();
-            
-            InitInfo.renderResources = this._resources;
-            //this._rect = sfRectangleShape_create();
+
+            this._rect = new Sprite(null, true);
         }
 
         ~this()
@@ -73,12 +73,22 @@ final class Renderer
 
                 this._buffer.verts ~= bucket.verts;
                 this._buffer.indicies ~= bucket.indicies;
+
+                import std.stdio;
+                
                 
                 this._buffer.update();
                 debug checkGLError();
 
-                bucket.texture.use();
-                glActiveTexture(GL_TEXTURE0);
+                // Textureless renders can be used for things like shapes
+                if(bucket.texture !is null)
+                {
+                    bucket.texture.use();
+                    glActiveTexture(GL_TEXTURE0);
+                }
+                else
+                    glBindTexture(GL_TEXTURE_2D, 0);
+                
                 this.drawBuffer(this._buffer);
             }
 
@@ -98,13 +108,8 @@ final class Renderer
          + ++/
         void drawRect(vec2 position, vec2 size, Colour fillColour = Colour(255, 0, 0, 255), Colour borderColour = Colour.black, uint borderThickness = 1)
         {
-            //sfRectangleShape_setPosition        (this._rect, position.toSF!sfVector2f);
-            //sfRectangleShape_setSize            (this._rect, size.toSF!sfVector2f);
-            //sfRectangleShape_setFillColor       (this._rect, fillColour.toSF!sfColor);
-            //sfRectangleShape_setOutlineColor    (this._rect, borderColour.toSF!sfColor);
-            //sfRectangleShape_setOutlineThickness(this._rect, borderThickness);
-
-            //sfRenderWindow_drawRectangleShape(this._window.handle, this._rect, null);
+            // TODO: Actually use most of those parameters when possible (border stuff will be a bit hard with our current hack)
+            this.drawQuad(null, this._rect.verts[]);
         }
 
         /// Draws a `Sprite` to the screen.
@@ -113,30 +118,7 @@ final class Renderer
             import std.algorithm : countUntil;
             assert(sprite !is null);
 
-            // All sprites that have the same texture are batched together into a single bucket
-            // When 'sprite' has a different texture than the last one, a new bucket is created
-            // Even there is a bucket that already has 'sprite''s texture, it won't be added into that bucket unless it's the latest one
-            // This preserves draw order, while also being a slight optimisation.
-            if(this._buckets.length == 0 || this._buckets[0].texture != sprite.texture)
-                this._buckets ~= RenderBucket(sprite.texture, []~sprite.verts[], [0, 1, 2, 1, 2, 3]);
-             else
-             {
-                auto firstVert = this._buckets[$-1].indicies[$-1];
-                this._buckets[$-1].verts ~= sprite.verts;
-                this._buckets[$-1].indicies ~= [firstVert, firstVert+1, firstVert+2, firstVert+3];
-
-                assert(this._buckets[$-1].indicies[$-1] < this._buckets[$-1].verts.length);
-             }
-
-            // TODO:
-            //   If the GC becomes an issue, with the constant array allocations then
-            //   keep an array of Vertex[]s that is then given to newly made buckets.
-            //
-            //   Modify the length of the slices so that the previous memory is still
-            //   allocated, but can be used like normal, avoiding _some_ (not all) GC allocations.
-            //
-            //   This also means that if the game runs for a bit, eventually no/very little
-            //   GC allocations should take place, since everything will have all the memory it needs then.
+            this.drawQuad(sprite.texture, []~sprite.verts[]);
         }
 
         /// Draws `Text` to the screen.
@@ -176,6 +158,35 @@ final class Renderer
             this._camera = cam;
             //sfRenderWindow_setView(this._window.handle, this._camera.handle);
         }
+    }
+
+    // Long functions go at the bottom
+    private void drawQuad(Texture texture, Vertex[] verts)
+    {
+        // All sprites that have the same texture are batched together into a single bucket
+        // When 'sprite' has a different texture than the last one, a new bucket is created
+        // Even there is a bucket that already has 'sprite''s texture, it won't be added into that bucket unless it's the latest one
+        // This preserves draw order, while also being a slight optimisation.
+        if(this._buckets.length == 0 || this._buckets[0].texture != texture)
+            this._buckets ~= RenderBucket(texture, verts, [0, 1, 2, 1, 2, 3]);
+         else
+         {
+            auto firstVert = this._buckets[$-1].indicies[$-1];
+            this._buckets[$-1].verts ~= verts;
+            this._buckets[$-1].indicies ~= [firstVert, firstVert+1, firstVert+2, firstVert+3];
+
+            assert(this._buckets[$-1].indicies[$-1] < this._buckets[$-1].verts.length);
+         }
+
+        // TODO:
+        //   If the GC becomes an issue, with the constant array allocations then
+        //   keep an array of Vertex[]s that is then given to newly made buckets.
+        //
+        //   Modify the length of the slices so that the previous memory is still
+        //   allocated, but can be used like normal, avoiding _some_ (not all) GC allocations.
+        //
+        //   This also means that if the game runs for a bit, eventually no/very little
+        //   GC allocations should take place, since everything will have all the memory it needs then.
     }
 }
 

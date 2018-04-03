@@ -134,19 +134,23 @@ class Sprite
     {
         ///
         @safe
-        this(Texture texture)
+        this(Texture texture, bool allowNull = false)
         {
-            assert(texture !is null);
+            assert((texture !is null) || allowNull);
             this._verts = 
             [
+                // Positions that are non-0 are debug values
                 Vertex(vec2(0), vec2(0), Colour.white),
-                Vertex(vec2(0), vec2(0), Colour.white),
-                Vertex(vec2(0), vec2(0), Colour.white),
-                Vertex(vec2(0), vec2(0), Colour.white)
+                Vertex(vec2(-0.5, 0), vec2(0), Colour.white),
+                Vertex(vec2(-0.5, -0.5), vec2(0), Colour.white),
+                Vertex(vec2(0, -0.5), vec2(0), Colour.white)
             ];
 
-            this.texture = texture;
-            this.textureRect = RectangleI(0, 0, ivec2(texture.size));
+            if(texture !is null)
+            {
+                this.texture = texture;
+                this.textureRect = RectangleI(0, 0, ivec2(texture.size));
+            }
         }
 
         ///

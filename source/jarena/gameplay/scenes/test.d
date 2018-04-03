@@ -128,6 +128,7 @@ class GLTest : Scene
     {
         Sprite sprite;
         Sprite sprite2;
+        Sprite[1_000] stressTest;
     }
     
     public override
@@ -137,7 +138,10 @@ class GLTest : Scene
             this.sprite  = new Sprite(super.manager.cache.get!SpriteAtlas("Test Atlas").texture);
             this.sprite2 = new Sprite(super.manager.cache.get!SpriteAtlas("Explosion Atlas").texture);
             this.sprite.textureRect = RectangleI(32, 32, 256, 256);
-            //InitInfo.renderResources.dumpTextures();
+            InitInfo.renderResources.dumpTextures();
+
+            foreach(i; 0..stressTest.length)
+                this.stressTest[i] = new Sprite(super.manager.cache.get!SpriteAtlas("Explosion Atlas").texture);
         }
 
         void onSwap(PostOffice office)
@@ -156,6 +160,8 @@ class GLTest : Scene
         {
             window.renderer.drawSprite(this.sprite);
             window.renderer.drawSprite(this.sprite2);
+            foreach(sprite; this.stressTest)
+                window.renderer.drawSprite(sprite);
         }
     }
 }
