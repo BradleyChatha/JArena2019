@@ -137,10 +137,10 @@ class GLTest : Scene
         {
             this.shader = new Shader(defaultVertexShader, defaultFragmentShader);
             this.buffer.setup([
-                Vertex(vec2(-0.5, -0.5), vec2(0,0), Colour(255, 255, 255, 255)),
-                Vertex(vec2(-0.5,  0.5), vec2(0,256), Colour(255, 255, 255, 255)),
-                Vertex(vec2( 0.5, -0.5), vec2(256,0), Colour(255, 255, 255, 255)),
-                Vertex(vec2( 0.5,  0.5), vec2(256,256), Colour(255, 255, 255, 255))
+                Vertex(vec2(-0.5, -0.5), vec2(0,256), Colour(255, 255, 255, 255)),
+                Vertex(vec2(-0.5,  0.5), vec2(0,0), Colour(255, 255, 255, 255)),
+                Vertex(vec2( 0.5, -0.5), vec2(256,256), Colour(255, 255, 255, 255)),
+                Vertex(vec2( 0.5,  0.5), vec2(256,0), Colour(255, 255, 255, 255))
             ],
             [
                 0, 1, 2,
@@ -166,6 +166,7 @@ class GLTest : Scene
         void onRender(Window window)
         {
             this.shader.use();
+            this.texture.use();
             window.renderer.drawBuffer(this.buffer);
         }
     }

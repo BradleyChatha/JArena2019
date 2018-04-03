@@ -255,7 +255,7 @@ private class CompoundTexture
     const(uvec2) size;
     uint nextY; // For now, we just stack them on top of eachother, and pretend the X-axis doesn't exist.
                 // TODO: Come up with/research packing algorithms.
-                // IMPORTANT: 0 = bottom. size.y = top.
+                // IMPORTANT: Normally OpenGL goes from the bottom-left, but our code makes coordinates work from the top-left.
 
     this(uvec2 size)
     {
@@ -320,7 +320,7 @@ private class CompoundTexture
             GL_TEXTURE_2D,
             0,
             0, // xoffset
-            0,//nextY,
+            (this.size.y - nextY) - size.y, // yoffset, with some maths so we can work from the top-left
             size.x,
             size.y,
             GL_RGBA,

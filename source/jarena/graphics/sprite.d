@@ -123,7 +123,6 @@ class Sprite
 {
     private
     {
-        //sfSprite* _handle;
         Texture   _texture;
     }
 
@@ -189,7 +188,6 @@ class Sprite
         {
             assert(texture !is null);
             this._texture = texture;
-            //sfSprite_setTexture(this.handle, texture.handle, false);
         }
 
         /++

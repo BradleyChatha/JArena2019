@@ -8,8 +8,17 @@ uniform sampler2D texture0;
 
 void main()
 {
-    ivec2 texSize  = textureSize(texture0, 0).xy;
-    vec2 onePixel  = vec2(1.0, 1.0) / vec2(texSize);
-    vec2 texel     = onePixel * _vertUV;
-    colour         = texture(texture0, texel) * _vertColour;
+    // Size of the texture.
+    ivec2 texSize = textureSize(texture0, 0).xy;
+
+    // Fixup the UV. They're specified from the top-left but OpenGL wants the bottom-left.
+    vec2 finalUV = _vertUV;
+    finalUV.y    = texSize.y - finalUV.y;
+
+    // Convert pixels to NDC
+    vec2 onePixel = vec2(1.0, 1.0) / vec2(texSize);
+    vec2 texel = onePixel * finalUV;
+
+    //
+    colour = texture(texture0, texel) * _vertColour;
 } 
