@@ -43,8 +43,7 @@ enum BufferDrawType : GLenum
     Static = GL_STATIC_DRAW
 }
 
-enum isFixedVertexBuffer(T) = isInstanceOf!(FixedVertexBuffer, T);
-struct FixedVertexBuffer(size_t vertCount, size_t indexCount)
+struct VertexBuffer
 {
     private
     {
@@ -54,7 +53,8 @@ struct FixedVertexBuffer(size_t vertCount, size_t indexCount)
         BufferDataType _dataType;
         BufferDrawType _drawType;
 
-        private void free()
+        @nogc
+        private void free() nothrow
         {
             glDeleteVertexArrays(1, &this._vao);
             glDeleteBuffers(1, &this._vbo);
@@ -64,8 +64,8 @@ struct FixedVertexBuffer(size_t vertCount, size_t indexCount)
     
     public
     {
-        Vertex[vertCount] verts;
-        uint[indexCount]  indicies;
+        Vertex[] verts;
+        uint[]  indicies;
         alias verts this;
 
         /// This type cannot be copied, use `ref` or put it on the heap if needed.
@@ -88,21 +88,18 @@ struct FixedVertexBuffer(size_t vertCount, size_t indexCount)
         void update() nothrow
         {
             glBindBuffer(GL_ARRAY_BUFFER, this._vbo);
-            glBufferData(GL_ARRAY_BUFFER, (Vertex.sizeof * vertCount), &this.verts[0], this._drawType);
+            glBufferData(GL_ARRAY_BUFFER, (Vertex.sizeof * this.verts.length), &this.verts[0], this._drawType);
 
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this._ebo);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, (uint.sizeof * indexCount), &this.indicies[0], this._drawType);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, (uint.sizeof * this.indicies.length), &this.indicies[0], this._drawType);
         }
         
         /++
          + Call this to prepare this buffer for actual use.
          + ++/
         @nogc
-        void setup(
-                   Vertex[vertCount] vertData  = typeof(verts).init,
-                   uint[indexCount]  indexData = typeof(indicies).init,
-                   BufferDataType    dataType  = BufferDataType.Triangles,
-                   BufferDrawType    drawType  = BufferDrawType.Static
+        void setup(BufferDataType dataType  = BufferDataType.Triangles,
+                   BufferDrawType drawType  = BufferDrawType.Static
                   ) nothrow
         {
             // In case this buffer already has been setup.
@@ -112,26 +109,21 @@ struct FixedVertexBuffer(size_t vertCount, size_t indexCount)
             // Set our variables
             this._dataType = dataType;
             this._drawType = drawType;
-            this.verts     = vertData;
-            this.indicies  = indexData;
 
             // Generate the objects
             glGenVertexArrays(1, &this._vao);
             glGenBuffers(1, &this._vbo);
             glGenBuffers(1, &this._ebo);
 
-            // Bind the VAO
+            // Bind the objects
             glBindVertexArray(this._vao);
-
-            // Update the data in our VBO and EBO (they are left bound afterwards)
-            this.update();
+            glBindBuffer(GL_ARRAY_BUFFER, this._vbo);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this._ebo);
 
             Vertex.setupAtrribPointers();
 
             // Unbind things
-            glBindVertexArray(0);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         }
 
         @property @safe @nogc

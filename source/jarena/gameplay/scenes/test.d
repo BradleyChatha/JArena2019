@@ -126,9 +126,9 @@ class GLTest : Scene
 {
     private
     {
-        FixedVertexBuffer!(4, 6) buffer;
         Shader shader;
         Texture texture;
+        Sprite sprite;
     }
     
     public override
@@ -136,18 +136,8 @@ class GLTest : Scene
         void onInit()
         {
             this.shader = new Shader(defaultVertexShader, defaultFragmentShader);
-            this.buffer.setup([
-                Vertex(vec2(-0.5, -0.5), vec2(0,256), Colour(255, 255, 255, 255)),
-                Vertex(vec2(-0.5,  0.5), vec2(0,0), Colour(255, 255, 255, 255)),
-                Vertex(vec2( 0.5, -0.5), vec2(256,256), Colour(255, 255, 255, 255)),
-                Vertex(vec2( 0.5,  0.5), vec2(256,0), Colour(255, 255, 255, 255))
-            ],
-            [
-                0, 1, 2,
-                1, 2, 3
-            ]);
-
             this.texture = new Texture("data/Textures/EXPLOSION.png");
+            this.sprite = new Sprite(this.texture);
             InitInfo.renderResources.dumpTextures();
         }
 
@@ -166,8 +156,7 @@ class GLTest : Scene
         void onRender(Window window)
         {
             this.shader.use();
-            this.texture.use();
-            window.renderer.drawBuffer(this.buffer);
+            window.renderer.drawSprite(this.sprite);
         }
     }
 }

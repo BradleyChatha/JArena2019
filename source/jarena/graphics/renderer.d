@@ -15,10 +15,20 @@ final class Renderer
 {
     private
     {
+        // Used for batching.
+        struct RenderBucket
+        {
+            Texture texture;
+            Vertex[] verts;
+            uint[]   indicies;
+        }
+        
         Window _window;
         //sfRectangleShape* _rect;
         Camera _camera;
         RendererResources _resources;
+        RenderBucket[] _buckets;
+        VertexBuffer _buffer;
     }
 
     public
@@ -27,6 +37,7 @@ final class Renderer
         {
             this._window = window;
             this._resources = new RendererResources();
+            this._buffer.setup();
             InitInfo.renderResources = this._resources;
             //this._rect = sfRectangleShape_create();
         }
@@ -48,6 +59,24 @@ final class Renderer
         /// Displays all rendered changes to the screen.
         void displayChanges()
         {
+            foreach(bucket; this._buckets)
+            {
+                // Setting their length to 0 lets me reuse the memory without angering the GC
+                this._buffer.verts.length = 0;
+                this._buffer.indicies.length = 0;
+
+                this._buffer.verts ~= bucket.verts;
+                this._buffer.indicies ~= bucket.indicies;
+                
+                this._buffer.update();
+                debug checkGLError();
+
+                bucket.texture.use();
+                glActiveTexture(GL_TEXTURE0);
+                this.drawBuffer(this._buffer);
+            }
+
+            this._buckets.length = 0;
             SDL_GL_SwapWindow(this._window.handle);
         }
 
@@ -75,8 +104,33 @@ final class Renderer
         /// Draws a `Sprite` to the screen.
         void drawSprite(Sprite sprite)
         {
+            import std.algorithm : countUntil;
             assert(sprite !is null);
-            //sfRenderWindow_drawSprite(this._window.handle, sprite.handle, null);
+
+            // All sprites that have the same texture are batched together into a single bucket
+            // When 'sprite' has a different texture than the last one, a new bucket is created
+            // Even there is a bucket that already has 'sprite''s texture, it won't be added into that bucket unless it's the latest one
+            // This preserves draw order, while also being a slight optimisation.
+            if(this._buckets.length == 0 || this._buckets[0].texture != sprite.texture)
+                this._buckets ~= RenderBucket(sprite.texture, []~sprite.verts[], [0, 1, 2, 1, 2, 3]);
+             else
+             {
+                auto firstVert = this._buckets[$-1].indicies[$-1];
+                this._buckets[$-1].verts ~= sprite.verts;
+                this._buckets[$-1].indicies ~= [firstVert, firstVert+1, firstVert+2, firstVert+3];
+
+                assert(this._buckets[$-1].indicies[$-1] < this._buckets[$-1].verts.length);
+             }
+
+            // TODO:
+            //   If the GC becomes an issue, with the constant array allocations then
+            //   keep an array of Vertex[]s that is then given to newly made buckets.
+            //
+            //   Modify the length of the slices so that the previous memory is still
+            //   allocated, but can be used like normal, avoiding _some_ (not all) GC allocations.
+            //
+            //   This also means that if the game runs for a bit, eventually no/very little
+            //   GC allocations should take place, since everything will have all the memory it needs then.
         }
 
         /// Draws `Text` to the screen.
@@ -86,9 +140,8 @@ final class Renderer
             //sfRenderWindow_drawText(this._window.handle, text.handle, null);
         }
 
-        /// Draws a FixedVertexBuffer
-        void drawBuffer(B)(ref B buffer)
-        if(isFixedVertexBuffer!B)
+        /// Draws a VertexBuffer
+        void drawBuffer(ref VertexBuffer buffer)
         {
             glBindVertexArray(buffer.vao);
             glDrawElements(buffer.dataType, buffer.indicies.length, GL_UNSIGNED_INT, null);
@@ -121,14 +174,14 @@ final class Renderer
 }
 
 /++
- + A class that is used to manage the resources used by the renderer.
+ + A class that is used to manage the special resources used by the renderer.
  +
  + This class is mostly for internal usage of the engine, and can be safely
  + ignored by most other parts of the game.
  + ++/
 final class RendererResources
 {
-    struct TextureHandle
+    static struct TextureHandle
     {
         private RendererResources _resources;
         private CompoundTexture   _texture;
@@ -143,7 +196,7 @@ final class RendererResources
         @safe @nogc
         bool isNull() nothrow pure const
         {
-            return (this._texture !is null);
+            return (this._texture is null);
         }
     }
     
@@ -152,6 +205,11 @@ final class RendererResources
         CompoundTexture[] _textures;
     }
 
+    /++
+     +==================================
+     +=            Textures            =
+     +==================================
+     + ++/
     public
     {
         /++

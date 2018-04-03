@@ -38,6 +38,7 @@ class Texture
             tracef("Loading texture at path '%s'", filePath);
             auto texID   = this.loadImage(filePath);
             this._handle = InitInfo.renderResources.finaliseTexture(texID);
+            this.handle(); // For the null assert check
         }
 
         /++
@@ -123,56 +124,73 @@ class Sprite
 {
     private
     {
-        Texture   _texture;
+        Transform  _transform;
+        Texture    _texture;
+        RectangleI _textureRect;
+        Vertex[4]  _verts; // [0]TopLeft|[1]TopRight|[2]BotLeft|[3]BotRight
     }
 
     public
     {
         ///
-        @trusted
+        @safe
         this(Texture texture)
         {
             assert(texture !is null);
+            this._verts = 
+            [
+                Vertex(vec2(0), vec2(0), Colour.white),
+                Vertex(vec2(0), vec2(0), Colour.white),
+                Vertex(vec2(0), vec2(0), Colour.white),
+                Vertex(vec2(0), vec2(0), Colour.white)
+            ];
 
-            //this._handle = sfSprite_create();
             this.texture = texture;
+            this.textureRect = RectangleI(0, 0, ivec2(texture.size));
         }
 
         ///
-        @trusted @nogc
+        @safe @nogc
         void move(vec2 offset) nothrow
         {
-            //sfSprite_move(this.handle, offset.toSF!sfVector2f);
+            this._transform.translation += offset;
         }
 
         ///
-        @property @trusted @nogc
+        @property @safe @nogc
         const(vec2) position() nothrow const
         {
-            return vec2();
-            //return sfSprite_getPosition(this.handle).to!vec2;
+            return this._transform.translation;
         }
 
         ///
-        @property @trusted @nogc
+        @property @safe @nogc
         void position(vec2 pos) nothrow
         {
-            //sfSprite_setPosition(this.handle, pos.toSF!sfVector2f);
+            this._transform.translation = pos;
         }
 
         ///
-        @property @trusted @nogc
+        @property @safe @nogc
         const(RectangleI) textureRect() nothrow const
         {
-            return RectangleI(0, 0, 0, 0);
-            //return sfSprite_getTextureRect(this.handle).to!RectangleI;
+            return this._textureRect;
         }
 
         ///
-        @property @trusted @nogc
+        @property @safe @nogc
         void textureRect(RectangleI rect) nothrow
         {
-            //sfSprite_setTextureRect(this.handle, rect.toSF!sfIntRect);
+            this._textureRect = rect;
+
+            // Reminder: Textures are stitched into singular massive textures
+            // So we have to modify the UV a bit to make sure it takes that fact into account.
+            auto textureArea  = this.texture._handle.area;
+            auto topLeft      = vec2(rect.position + textureArea.position);
+            this._verts[0].uv = topLeft + vec2(0, rect.size.y);
+            this._verts[1].uv = topLeft + vec2(rect.size.x, rect.size.y);
+            this._verts[2].uv = topLeft + vec2(0, 0);
+            this._verts[3].uv = topLeft + vec2(rect.size.x, 0);
         }
 
         ///
@@ -183,11 +201,20 @@ class Sprite
         }
 
         ///
-        @property @trusted @nogc
+        @property @safe @nogc
         void texture(Texture texture) nothrow
         {
             assert(texture !is null);
             this._texture = texture;
+
+            // DEBUG: dividing by scrren size and mutiplying by 2 (mvp not setup yet).
+            auto screenSize = vec2(InitInfo.windowSize);
+
+            auto rect = RectangleF(0, 0, vec2(texture.size));
+            this._verts[0].position = vec2(0);
+            this._verts[1].position = (rect.topRight / screenSize) * 2;
+            this._verts[2].position = (rect.botLeft / screenSize) * 2;
+            this._verts[3].position = (rect.botRight / screenSize) * 2;
         }
 
         /++
@@ -201,14 +228,23 @@ class Sprite
          +  This function is basically so the `Sprite` class and any inheriting classes can properly provide
          +  a rectangle describing the 'correct' position and size of the sprite in it's current state.
          +
+         +  This function does $(B not) have to take rotation into account.
+         +
          + Returns:
          +  The bounds of the sprite.
          + ++/
-        @property @trusted @nogc
+        @property @safe @nogc
         RectangleF bounds() nothrow
         {
             auto rect = this.textureRect;
             return RectangleF(this.position, vec2(rect.size.x, rect.size.y));
+        }
+
+        /// Internal use only.
+        @property @safe @nogc
+        Vertex[4] verts() nothrow
+        {
+            return this._verts;
         }
     }
 }

@@ -95,11 +95,17 @@ final class Engine
             this.events.subscribe(Event.UpdateFPSDisplay, (_, __)
             {
                 import std.format : sformat;
-                this._debugText.updateTextASCII(sformat(this._debugBuffer, "FPS: %s | Time: %sms | RAM: %sMB", 
+                /+this._debugText.updateTextASCII(sformat(this._debugBuffer, "FPS: %s | Time: %sms | RAM: %sMB", 
                                                         this._fps.frameCount, 
                                                         this._fps.elapsedTime.asMilliseconds,
-                                                        getMemInfo().usedRAM / (1024 * 1024)));
+                                                        getMemInfo().usedRAM / (1024 * 1024)));+/
                 this._debugGui.size = this._debugGui.size + vec2(0, DEBUG_CONTAINER_Y_PADDING);
+
+                import std.stdio;
+                writeln(sformat(this._debugBuffer, "FPS: %s | Time: %sms | RAM: %sMB", 
+                                                    this._fps.frameCount, 
+                                                    this._fps.elapsedTime.asMilliseconds,
+                                                    getMemInfo().usedRAM / (1024 * 1024)));
             });
             this.events.subscribe(Window.Event.Close, (_,__) => this._window.close());
             this.events.subscribe(Window.Event.Resized, (_, m)
@@ -116,7 +122,7 @@ final class Engine
             // Debug stuff
             debug this._config.showDebugText = true;
             if(this._config.showDebugText.get(false))
-                this._timers.every(GameTime.fromMilliseconds(1), (){this.events.mailCommand(Event.UpdateFPSDisplay);});
+                this._timers.every(GameTime.fromSeconds(1), (){this.events.mailCommand(Event.UpdateFPSDisplay);});
         }
 
         ///
