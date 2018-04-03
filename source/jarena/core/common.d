@@ -4,6 +4,7 @@ module jarena.core.common;
 private
 {
     import derelict.sdl2.sdl;
+    import jarena.graphics;
 }
 
 private struct InitProperty
@@ -41,11 +42,17 @@ class InitInfo
         @InitProperty("windowSize")
         @CanEdit
         uvec2 _windowSize;
+
+        // The game officially only supports being able to display one window
+        // How awful of me.
+        @InitProperty("renderResources")
+        RendererResources _renderResources;
     }
 
     public static
     {
         mixin(generateProperties!_windowSize);
+        mixin(generateProperties!_renderResources);
     }
 
     private static dstring generateProperties(alias Var)()
@@ -70,7 +77,7 @@ class InitInfo
         });
 
         // Getter
-        builder.putf("const(%s) %s() @safe @nogc nothrow", TypeName, PropertyName);
+        builder.putf("%s %s() @safe @nogc nothrow", TypeName, PropertyName);
         builder.putScope((_)
         {
             builder.putf("assert((\"%s\" in _locks) !is null, \"The value for '%s' hasn't been set yet!\");", VarName, VarName);

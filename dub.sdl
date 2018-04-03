@@ -9,6 +9,7 @@ dependency "sdlang-d" version="~>0.10.2"             // For data files
 dependency "resusage" version="~>0.2.7"              // For getting memory usage
 dependency "derelict-gl3" version="~>2.0.0-beta.6"   // For rendering
 dependency "derelict-sdl2" version="~>3.1.0-alpha.3" // For windowing
+dependency "derelict-fi" version="~>3.0.0-beta.1"    // For image loading
 
 configuration "default" {
     targetType "executable"

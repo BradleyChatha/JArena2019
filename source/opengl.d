@@ -53,10 +53,13 @@ GLError nextGLError() nothrow
     }
 }
 
-void checkGLError()
+void checkGLError(int line = __LINE__, string file = __FILE__,
+        string funcName = __FUNCTION__,
+        string prettyFuncName = __PRETTY_FUNCTION__,
+        string moduleName = __MODULE__)()
 {
-    import std.format : format;
+    import std.experimental.logger;
     auto next = nextGLError();
     if(next.code != GL_NO_ERROR)
-        throw new Exception(format("[Code:%s | Msg:'%s']", next.code, next.message));
+        errorf!(line, file, funcName, prettyFuncName, moduleName)("[Code:%s | Msg:'%s']", next.code, next.message);
 }

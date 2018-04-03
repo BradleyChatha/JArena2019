@@ -23,7 +23,7 @@ struct Vertex
     @nogc
     static void setupAtrribPointers() nothrow
     {
-        auto stride = Vertex.sizeof;
+        uint stride = cast(uint)Vertex.sizeof; // Normally size_t, but we know we won't ever exceed uint in size
         glVertexAttribPointer(0, 2, GL_FLOAT,         GL_FALSE, stride, null);
         glVertexAttribPointer(1, 2, GL_FLOAT,         GL_FALSE, stride, cast(void*)(2 * float.sizeof));
         glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE,  stride, cast(void*)(4 * float.sizeof)); // GL_TRUE means 128 = 0.5, 255 = 1.0f, etc. automatically
@@ -53,6 +53,13 @@ struct FixedVertexBuffer(size_t vertCount, size_t indexCount)
         uint _ebo;
         BufferDataType _dataType;
         BufferDrawType _drawType;
+
+        private void free()
+        {
+            glDeleteVertexArrays(1, &this._vao);
+            glDeleteBuffers(1, &this._vbo);
+            glDeleteBuffers(1, &this._ebo);
+        }
     }
     
     public
@@ -68,11 +75,7 @@ struct FixedVertexBuffer(size_t vertCount, size_t indexCount)
         ~this()
         {
             if(this._vbo > 0)
-            {
-                glDeleteVertexArrays(1, &this._vao);
-                glDeleteBuffers(1, &this._vbo);
-                glDeleteBuffers(1, &this._ebo);
-            }
+                this.free();
         }
 
         /++
@@ -98,10 +101,14 @@ struct FixedVertexBuffer(size_t vertCount, size_t indexCount)
         void setup(
                    Vertex[vertCount] vertData  = typeof(verts).init,
                    uint[indexCount]  indexData = typeof(indicies).init,
-                   BufferDataType     dataType  = BufferDataType.Triangles,
-                   BufferDrawType     drawType  = BufferDrawType.Static
+                   BufferDataType    dataType  = BufferDataType.Triangles,
+                   BufferDrawType    drawType  = BufferDrawType.Static
                   ) nothrow
         {
+            // In case this buffer already has been setup.
+            if(this._vbo > 0)
+                this.free();
+                
             // Set our variables
             this._dataType = dataType;
             this._drawType = drawType;

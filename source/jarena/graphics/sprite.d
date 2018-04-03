@@ -6,6 +6,7 @@ private
     import std.experimental.logger;
     import sdlang;
     import jarena.core, jarena.gameplay, jarena.graphics;
+    import opengl, derelict.opengl.versions.base;
 }
 
 ///
@@ -13,7 +14,14 @@ class Texture
 {
     private
     {
-        //sfTexture* _handle;
+        RendererResources.TextureHandle _handle;
+
+        @safe @nogc
+        inout(typeof(_handle)) handle() nothrow inout
+        {
+            assert(!this._handle.isNull, "This handle is null.");
+            return this._handle;
+        }
     }
 
     public
@@ -28,19 +36,85 @@ class Texture
             import std.string    : toStringz;
 
             tracef("Loading texture at path '%s'", filePath);
-            enforce(filePath.exists, format("File does not exist: '%s'", filePath));
+            auto texID   = this.loadImage(filePath);
+            this._handle = InitInfo.renderResources.finaliseTexture(texID);
+        }
 
-            //this._handle = sfTexture_createFromFile(filePath.toStringz, null);
-            //enforce(this._handle !is null, "Unable to load texture at: '%s'", filePath);
+        /++
+         + Binds this texture as the active texture.
+         +
+         + Mostly only for internal use.
+         + ++/
+        void use()
+        {
+            this._handle.bind();
         }
 
         ///
         @property @trusted @nogc
         inout(uvec2) size() nothrow inout
         {
-            return uvec2();
-            //return sfTexture_getSize(this.handle).to!uvec2;
+            return uvec2(this.handle.area.size);
         }
+    }
+
+    // This function is massive, so it can go at the bottom.
+    enum GL_NEAREST = 0x2600; // For some reason it can't find this normally...
+    private uint loadImage(string filePath, GLenum minFilter = GL_NEAREST, GLenum magFilter = GL_NEAREST)
+    {
+        import std.format       : format;
+        import std.file         : exists;
+        import std.string       : toStringz;
+        import std.exception    : enforce;
+        import derelict.freeimage.freeimage;
+
+        enforce(filePath.exists, format("Cannot load texture at '%s' since it does not exist.", filePath));        
+        auto cStrPath = filePath.toStringz;
+
+        // Figure out what the image's format is.
+        auto imageFormat = FreeImage_GetFileType(cStrPath);
+        enforce(imageFormat != -1, format("FreeImage could not find the texture at '%s'", filePath));
+        if(imageFormat == FIF_UNKNOWN)
+            imageFormat = FreeImage_GetFIFFromFilename(cStrPath);
+
+        enforce(FreeImage_FIFSupportsReading(imageFormat), 
+                format("FreeImage doesn't know the format of the texture at '%s'", filePath));
+
+        // Load it in, and make sure it's in the right format (R8G8B8A8)
+        auto image = FreeImage_Load(imageFormat, cStrPath);
+        auto bpp   = FreeImage_GetBPP(image);
+        if(bpp != 32)
+        {
+            auto temp = FreeImage_ConvertTo32Bits(image); // This is a _copy_
+            FreeImage_Unload(image); // Which is why we have to store it in a temp first.
+            image = temp;
+        }
+
+        // Now setup the OpenGL texture
+        auto size   = ivec2(FreeImage_GetWidth(image), FreeImage_GetHeight(image));
+        auto pixels = FreeImage_GetBits(image); // FreeImage_Unload frees this data.
+        uint texID;
+        glGenTextures(1, &texID);
+        glBindTexture(GL_TEXTURE_2D, texID);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RGBA,
+            size.x,
+            size.y,
+            0,
+            GL_BGRA,
+            GL_UNSIGNED_BYTE,
+            pixels
+        );
+        checkGLError();
+
+        FreeImage_Unload(image);
+        return texID;
     }
 }
 

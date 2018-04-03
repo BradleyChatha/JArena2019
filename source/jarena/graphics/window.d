@@ -114,13 +114,6 @@ final class Window
         ValueMail!MouseButton       _mouseMail;         // Mail used for mouse button events.
 
         @property @safe @nogc
-        inout(SDL_Window*) handle() nothrow inout
-        {
-            assert(this._handle !is null);
-            return this._handle;
-        }
-
-        @property @safe @nogc
         inout(SDL_GLContext) context() nothrow inout
         {
             assert(this._context !is null);
@@ -314,6 +307,13 @@ final class Window
             ivec2 value;
             SDL_GetWindowSize(this.handle, &value.data[0], &value.data[1]);
             return uvec2(value);
+        }
+
+         @property @safe @nogc
+        inout(SDL_Window*) handle() nothrow inout
+        {
+            assert(this._handle !is null);
+            return this._handle;
         }
     }
 }
@@ -643,112 +643,5 @@ private MouseButton toArenaButton(T : MouseButton)(ubyte button)
 
         default:
             return MouseButton.None;
-    }
-}
-
-///
-final class Renderer
-{
-    private
-    {
-        Window _window;
-        //sfRectangleShape* _rect;
-        Camera _camera;
-    }
-
-    public
-    {
-        this(Window window)
-        {
-            this._window = window;
-            //this._rect = sfRectangleShape_create();
-        }
-
-        ~this()
-        {
-            //if(this._rect !is null)
-                //sfRectangleShape_destroy(this._rect);
-        }
-
-        /// Clears the screen
-        void clear(Colour clearColour = Colour.white)
-        {
-            float[4] clear = clearColour.asGLColour;
-            glClearColor(clear[0], clear[1], clear[2], clear[3]);
-            glClear(GL_COLOR_BUFFER_BIT);
-        }
-
-        /// Displays all rendered changes to the screen.
-        void displayChanges()
-        {
-            SDL_GL_SwapWindow(this._window.handle);
-        }
-
-        /++
-         + Draws a rectangle to the screen.
-         +
-         + Params:
-         +  position        = The position of the rectangle.
-         +  size            = The size of the rectangle.
-         +  fillColour      = The colour of the inside of the rectangle. (See also - `jarena.util.colour`)
-         +  borderColour    = The colour of the border.
-         +  borderThickness = The thiccness of the border.
-         + ++/
-        void drawRect(vec2 position, vec2 size, Colour fillColour = Colour(255, 0, 0, 255), Colour borderColour = Colour.black, uint borderThickness = 1)
-        {
-            //sfRectangleShape_setPosition        (this._rect, position.toSF!sfVector2f);
-            //sfRectangleShape_setSize            (this._rect, size.toSF!sfVector2f);
-            //sfRectangleShape_setFillColor       (this._rect, fillColour.toSF!sfColor);
-            //sfRectangleShape_setOutlineColor    (this._rect, borderColour.toSF!sfColor);
-            //sfRectangleShape_setOutlineThickness(this._rect, borderThickness);
-
-            //sfRenderWindow_drawRectangleShape(this._window.handle, this._rect, null);
-        }
-
-        /// Draws a `Sprite` to the screen.
-        void drawSprite(Sprite sprite)
-        {
-            assert(sprite !is null);
-            //sfRenderWindow_drawSprite(this._window.handle, sprite.handle, null);
-        }
-
-        /// Draws `Text` to the screen.
-        void drawText(Text text)
-        {
-            assert(text !is null);
-            //sfRenderWindow_drawText(this._window.handle, text.handle, null);
-        }
-
-        /// Draws a FixedVertexBuffer
-        void drawBuffer(B)(ref B buffer)
-        if(isFixedVertexBuffer!B)
-        {
-            glBindVertexArray(buffer.vao);
-            glDrawElements(buffer.dataType, buffer.indicies.length, GL_UNSIGNED_INT, null);
-        }
-
-        /// Sets whether to draw in wireframe or not.
-        @property @nogc
-        void useWireframe(bool use) nothrow
-        {
-            glPolygonMode(GL_FRONT_AND_BACK, (use) ? GL_LINE : GL_FILL);
-        }
-
-        /// Returns: The current `Camera` being used.
-        @property
-        Camera camera()
-        {
-            return this._camera;
-        }
-
-        /// Sets the current `Camera` to use.
-        @property
-        void camera(Camera cam)
-        {
-            assert(cam !is null);
-            
-            this._camera = cam;
-            //sfRenderWindow_setView(this._window.handle, this._camera.handle);
-        }
     }
 }
