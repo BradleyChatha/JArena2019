@@ -19,11 +19,12 @@ void main()
     engine.onInit();
 
     engine.scenes.register(new GLTest());
-    //engine.scenes.register(new Test());
-    //engine.scenes.register(new MenuScene());
-    //engine.scenes.register(new AnimationViewerScene(engine.scenes.cache.getCache!AnimationInfo));
-    //engine.scenes.register(new SpriteAtlasViewerScene(engine.scenes.cache.getCache!SpriteAtlas));
-    engine.scenes.swap!GLTest;
+    engine.scenes.register(new Test());
+    engine.scenes.register(new MenuScene());
+    engine.scenes.register(new AnimationViewerScene(engine.scenes.cache.getCache!AnimationInfo));
+    engine.scenes.register(new SpriteAtlasViewerScene(engine.scenes.cache.getCache!SpriteAtlas));
+    //engine.scenes.swap!GLTest;
+    engine.scenes.swap!Test;
     engine.doLoop();
 
     SDL_Quit();

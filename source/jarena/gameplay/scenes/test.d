@@ -126,19 +126,18 @@ class GLTest : Scene
 {
     private
     {
-        Shader shader;
-        Texture texture;
         Sprite sprite;
+        Sprite sprite2;
     }
     
     public override
     {
         void onInit()
         {
-            this.shader = new Shader(defaultVertexShader, defaultFragmentShader);
-            this.texture = super.manager.cache.get!SpriteAtlas("Explosion Atlas").texture;
-            this.sprite = new Sprite(this.texture);
-            InitInfo.renderResources.dumpTextures();
+            this.sprite  = new Sprite(super.manager.cache.get!SpriteAtlas("Test Atlas").texture);
+            this.sprite2 = new Sprite(super.manager.cache.get!SpriteAtlas("Explosion Atlas").texture);
+            this.sprite.textureRect = RectangleI(32, 32, 256, 256);
+            //InitInfo.renderResources.dumpTextures();
         }
 
         void onSwap(PostOffice office)
@@ -155,8 +154,8 @@ class GLTest : Scene
 
         void onRender(Window window)
         {
-            this.shader.use();
             window.renderer.drawSprite(this.sprite);
+            window.renderer.drawSprite(this.sprite2);
         }
     }
 }

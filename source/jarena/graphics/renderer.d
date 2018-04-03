@@ -29,15 +29,19 @@ final class Renderer
         RendererResources _resources;
         RenderBucket[] _buckets;
         VertexBuffer _buffer;
+        Shader _defaultShader;
     }
 
     public
     {
         this(Window window)
         {
-            this._window = window;
-            this._resources = new RendererResources();
+            this._window        = window;
+            this._resources     = new RendererResources();
+            this._defaultShader = new Shader(defaultVertexShader, defaultFragmentShader);
+            
             this._buffer.setup();
+            
             InitInfo.renderResources = this._resources;
             //this._rect = sfRectangleShape_create();
         }
@@ -59,6 +63,8 @@ final class Renderer
         /// Displays all rendered changes to the screen.
         void displayChanges()
         {
+            this._defaultShader.use();
+            
             foreach(bucket; this._buckets)
             {
                 // Setting their length to 0 lets me reuse the memory without angering the GC
