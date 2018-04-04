@@ -727,7 +727,7 @@ class AnimatedSprite : Sprite
             this.restart();
             this._currentAnimation = info;
 
-            //sfSprite_setTexture(super.handle, info.spriteSheet.atlas._texture.handle, 1);
+            this.texture = info.spriteSheet.atlas._texture;
             info.spriteSheet.changeSprite(this, 0, 0);
         }
 
