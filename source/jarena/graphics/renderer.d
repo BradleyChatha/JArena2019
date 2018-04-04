@@ -26,7 +26,16 @@ final class Camera
     private
     {
         Transform _view;
+        vec2      _size;
         mat4      _ortho;
+
+        @trusted
+        void updateProjection() nothrow
+        {
+            import std.exception : assumeWontThrow;
+            import dlsl.projection;
+            this._ortho = glOrthographic(0, this.size.x, this.size.y, 0, -1, 1).assumeWontThrow;
+        }
     }
 
     public
@@ -61,16 +70,18 @@ final class Camera
          + Params:
          +  rect = The portion of the world to reset to viewing.
          + ++/
-        @trusted
+        @safe
         void reset(RectangleF rect) nothrow
         {
-            import std.exception : assumeWontThrow;
-            import dlsl.projection;
-            this._ortho = glOrthographic(rect.position.x, rect.size.x, rect.size.y, rect.position.y, -1, 1).assumeWontThrow;
+            this.size = rect.size;
+            this._view.translation = rect.position;
+
+            this._view.markDirty();
+            this.updateProjection();
         }
 
         ///
-        @property @trusted @nogc
+        @property @safe @nogc
         vec2 center() nothrow const
         {
             return vec2();
@@ -78,14 +89,14 @@ final class Camera
         }
 
         ///
-        @property @trusted @nogc
+        @property @safe @nogc
         void center(vec2 centerPos) nothrow
         {
             //sfView_setCenter(this.handle, centerPos.toSF!sfVector2f);
         }
 
         ///
-        @property @trusted @nogc
+        @property @safe @nogc
         const(AngleDegrees) rotation() nothrow const
         {
             return AngleDegrees(0);
@@ -93,36 +104,36 @@ final class Camera
         }
 
         ///
-        @property @trusted @nogc
+        @property @safe @nogc
         void rotation(float degrees) nothrow
         {
             //sfView_setRotation(this.handle, degrees);
         }
 
         ///
-        @property @trusted @nogc
+        @property @safe @nogc
         void rotation(AngleDegrees degrees) nothrow
         {
             this.rotation = degrees.angle;
         }
 
         ///
-        @property @trusted @nogc
+        @property @safe @nogc
         const(vec2) size() nothrow const
         {
-            return vec2();
-            //return sfView_getSize(this.handle).to!vec2;
+            return this._size;
         }
 
         ///
-        @property @trusted @nogc
+        @property @safe
         void size(vec2 siz) nothrow
         {
-            //sfView_setSize(this.handle, siz.toSF!sfVector2f);
+            this._size = siz;
+            this.updateProjection();
         }
 
         ///
-        @property @trusted @nogc
+        @property @safe @nogc
         const(RectangleF) viewport() nothrow const
         {
             return RectangleF(0, 0, 0, 0);
@@ -130,7 +141,7 @@ final class Camera
         }
         
         ///
-        @property @trusted @nogc
+        @property @safe @nogc
         void viewport(RectangleF port) nothrow
         {
             //sfView_setViewport(this.handle, port.toSF!sfFloatRect);
