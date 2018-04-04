@@ -18,9 +18,12 @@ final class MenuScene : Scene
 {
     private
     {
-        alias SCENES = TypeTuple!(Test, AnimationViewerScene, SpriteAtlasViewerScene);
+        alias SCENES = TypeTuple!(Test,
+                                  GLTest,
+                                  AnimationViewerScene, 
+                                  SpriteAtlasViewerScene);
 
-        StackContainer  _list;
+        StackContainer _list;
     }
 
     public override

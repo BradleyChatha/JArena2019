@@ -263,8 +263,7 @@ class Sprite : ITransformable
         Vertex[4] verts() nothrow
         {
             Vertex[4] toReturn = this._verts;
-            foreach(ref vert; toReturn)
-                vert.position = vec2(this._transform.matrix * vec4(vert.position, 0, 1.0));
+            this._transform.transformVerts(toReturn[]);
 
             return toReturn;
         }

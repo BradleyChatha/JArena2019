@@ -254,11 +254,19 @@ final class Renderer
          + ++/
         void drawRect(vec2 position, vec2 size, Colour fillColour = Colour(255, 0, 0, 255), Colour borderColour = Colour.black, uint borderThickness = 1)
         {
-            // TODO: Support borders
-            this._rect.area = RectangleF(position, size);
-            this._rect.colour = fillColour;
+            this._rect.area         = RectangleF(position, size);
+            this._rect.colour       = fillColour;
+            this._rect.borderColour = borderColour;
+            this._rect.borderSize   = borderThickness;
 
-            this.drawQuad(null, []~this._rect.verts[], this._colourShader);
+            // Draw the rectangle's filling
+            this.drawQuad(null, this._rect.verts,             this._colourShader);
+
+            // Draw the border. TODO: Optimise if this becomes an issue.
+            this.drawQuad(null, this._rect.borderLeftVerts,   this._colourShader);
+            this.drawQuad(null, this._rect.borderRightVerts,  this._colourShader);
+            this.drawQuad(null, this._rect.borderTopVerts,    this._colourShader);
+            this.drawQuad(null, this._rect.borderBottomVerts, this._colourShader);
         }
 
         /// Draws a `Sprite` to the screen.
@@ -267,7 +275,7 @@ final class Renderer
             import std.algorithm : countUntil;
             assert(sprite !is null);
 
-            this.drawQuad(sprite.texture, []~sprite.verts[], this._textureShader);
+            this.drawQuad(sprite.texture, sprite.verts, this._textureShader);
         }
 
         /// Draws `Text` to the screen.
@@ -308,7 +316,7 @@ final class Renderer
     }
 
     // Long functions go at the bottom
-    private void drawQuad(Texture texture, Vertex[] verts, Shader shader)
+    private void drawQuad(Texture texture, Vertex[4] verts, Shader shader)
     {
         // All sprites that have the same texture and shader are batched together into a single bucket
         // When 'sprite' has a different texture or shader than the last one, a new bucket is created
@@ -319,11 +327,11 @@ final class Renderer
         || this._buckets[$-1].texture != texture 
         || this._buckets[$-1].shader != shader
         || this._buckets[$-1].camera != camera)
-            this._buckets ~= RenderBucket(texture, shader, camera, verts, [0, 1, 2, 1, 2, 3]);
+            this._buckets ~= RenderBucket(texture, shader, camera, []~verts[], [0, 1, 2, 1, 2, 3]);
         else
         {
             auto firstVert = this._buckets[$-1].indicies[$-1];
-            this._buckets[$-1].verts ~= verts;
+            this._buckets[$-1].verts ~= verts[];
             this._buckets[$-1].indicies ~= [firstVert+1, firstVert+2, firstVert+3, 
                                             firstVert+2, firstVert+3, firstVert+4];
 

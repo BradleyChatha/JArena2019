@@ -34,6 +34,16 @@ struct Transform
         {
             this._matrix = matrix;
         }
+
+        // Helper function to make verticies easier to transform
+        @safe @nogc
+        Vertex[] transformVerts(return Vertex[] verts) nothrow
+        {
+            foreach(ref vert; verts)
+                vert.position = vec2(this.matrix * vec4(vert.position, 0, 1.0));
+
+            return verts;
+        }
         
         /++
          + Notes:
