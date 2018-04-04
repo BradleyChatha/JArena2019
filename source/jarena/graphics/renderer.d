@@ -143,13 +143,22 @@ final class Renderer
 {
     private
     {
+        // Since we want to use the info in the current camera *at the time that verticies are submitted*
+        // we have to store it in a struct before the actual rendering, otherwise the camera info may be incorrect.
+        struct CameraInfo
+        {
+            mat4 view;
+            mat4 projection;
+        }
+
         // Used for batching.
         struct RenderBucket
         {
-            Texture  texture;
-            Shader   shader;
-            Vertex[] verts;
-            uint[]   indicies;
+            Texture    texture;
+            Shader     shader;
+            CameraInfo camera; // To make cameras work how I want, this is needed.
+            Vertex[]   verts;
+            uint[]     indicies;
         }
         
         Window              _window;
@@ -193,16 +202,18 @@ final class Renderer
         /// Displays all rendered changes to the screen.
         void displayChanges()
         {            
-            Shader previous;
+            Shader previousShader;
+            CameraInfo previousCam;
             foreach(bucket; this._buckets)
             {
-                // Change the shader
-                if(bucket.shader != previous)
+                // Change the shader/camera data
+                if(bucket.shader != previousShader || bucket.camera != previousCam)
                 {
                     bucket.shader.use();
-                    bucket.shader.setUniform("view", this.camera._view.matrix);
-                    bucket.shader.setUniform("projection", this.camera._ortho);
-                    previous = bucket.shader;
+                    bucket.shader.setUniform("view", bucket.camera.view);
+                    bucket.shader.setUniform("projection", bucket.camera.projection);
+                    previousShader = bucket.shader;
+                    previousCam    = bucket.camera;
                 }
 
                 // Setting their length to 0 lets me reuse the memory without angering the GC
@@ -303,8 +314,12 @@ final class Renderer
         // When 'sprite' has a different texture or shader than the last one, a new bucket is created
         // Even there is a bucket that already has 'sprite''s texture and shader, it won't be added into that bucket unless it's the latest one
         // This preserves draw order, while also being a slight optimisation.
-        if(this._buckets.length == 0 || this._buckets[$-1].texture != texture || this._buckets[$-1].shader != shader)
-            this._buckets ~= RenderBucket(texture, shader, verts, [0, 1, 2, 1, 2, 3]);
+        auto camera = CameraInfo(this.camera._view.matrix.invert, this.camera._ortho);
+        if(this._buckets.length == 0 
+        || this._buckets[$-1].texture != texture 
+        || this._buckets[$-1].shader != shader
+        || this._buckets[$-1].camera != camera)
+            this._buckets ~= RenderBucket(texture, shader, camera, verts, [0, 1, 2, 1, 2, 3]);
         else
         {
             auto firstVert = this._buckets[$-1].indicies[$-1];
