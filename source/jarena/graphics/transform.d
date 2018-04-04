@@ -6,6 +6,18 @@ private
     import opengl;
 }
 
+interface ITransformable
+{
+    public
+    {
+        @property @safe @nogc
+        void position(vec2 pos) nothrow;
+
+        @property @safe @nogc
+        const(vec2) position() const nothrow;
+    }
+}
+
 struct Transform
 {
     private

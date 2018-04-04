@@ -120,7 +120,7 @@ class Texture
 }
 
 ///
-class Sprite
+class Sprite : ITransformable
 {
     private
     {

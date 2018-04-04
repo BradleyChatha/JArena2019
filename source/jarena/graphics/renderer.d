@@ -39,15 +39,15 @@ final class Camera
             if(rect == DEFAULT_CAMERA_RECT)
                 rect = RectangleF(0, 0, vec2(InitInfo.windowSize));
 
-            import dlsl.projection;
-            this._ortho = glOrthographic(rect.position.x, rect.size.x, rect.size.y, rect.position.y, -1, 1);
+            this.reset(rect);
         }
 
         ///
-        @trusted @nogc
-        void move(vec2 offset) nothrow
+        @safe @nogc
+        void move(vec2 offset) nothrow pure
         {
-            //sfView_move(this.handle, offset.toSF!sfVector2f);
+            this._view.translation += offset;
+            this._view.markDirty();
         }
 
         /++
@@ -61,10 +61,12 @@ final class Camera
          + Params:
          +  rect = The portion of the world to reset to viewing.
          + ++/
-        @trusted @nogc
+        @trusted
         void reset(RectangleF rect) nothrow
         {
-            //sfView_reset(this.handle, rect.toSF!sfFloatRect);
+            import std.exception : assumeWontThrow;
+            import dlsl.projection;
+            this._ortho = glOrthographic(rect.position.x, rect.size.x, rect.size.y, rect.position.y, -1, 1).assumeWontThrow;
         }
 
         ///
