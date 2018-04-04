@@ -156,7 +156,7 @@ final class Renderer
         Camera              _camera;
         RendererResources   _resources;
         RenderBucket[]      _buckets;
-        VertexBuffer        _buffer;
+        VertexBuffer        _quadBuffer;
         Shader              _defaultShader;
     }
 
@@ -169,7 +169,7 @@ final class Renderer
             this._defaultShader      = new Shader(defaultVertexShader, defaultFragmentShader);
             InitInfo.renderResources = this._resources;
             
-            this._buffer.setup();
+            this._quadBuffer.setup();
 
             this._rect = new Sprite(null, true);
         }
@@ -198,13 +198,13 @@ final class Renderer
             foreach(bucket; this._buckets)
             {
                 // Setting their length to 0 lets me reuse the memory without angering the GC
-                this._buffer.verts.length = 0;
-                this._buffer.indicies.length = 0;
+                this._quadBuffer.verts.length = 0;
+                this._quadBuffer.indicies.length = 0;
 
-                this._buffer.verts ~= bucket.verts;
-                this._buffer.indicies ~= bucket.indicies;
+                this._quadBuffer.verts ~= bucket.verts;
+                this._quadBuffer.indicies ~= bucket.indicies;
                 
-                this._buffer.update();
+                this._quadBuffer.update();
                 debug checkGLError();
 
                 // Textureless renders can be used for things like shapes
@@ -216,7 +216,7 @@ final class Renderer
                 else
                     glBindTexture(GL_TEXTURE_2D, 0);
                 
-                this.drawBuffer(this._buffer);
+                this.drawBuffer(this._quadBuffer);
             }
 
             this._buckets.length = 0;

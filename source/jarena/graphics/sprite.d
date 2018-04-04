@@ -139,7 +139,6 @@ class Sprite : ITransformable
             assert((texture !is null) || allowNull);
             this._verts = 
             [
-                // Positions that are non-0 are debug values
                 Vertex(vec2(0), vec2(0), Colour.white),
                 Vertex(vec2(0), vec2(0), Colour.white),
                 Vertex(vec2(0), vec2(0), Colour.white),
