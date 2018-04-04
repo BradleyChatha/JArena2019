@@ -73,9 +73,6 @@ final class Renderer
 
                 this._buffer.verts ~= bucket.verts;
                 this._buffer.indicies ~= bucket.indicies;
-
-                import std.stdio;
-                
                 
                 this._buffer.update();
                 debug checkGLError();
@@ -233,7 +230,7 @@ final class RendererResources
          + Notes:
          +  The texture pointer to by `texID` $(B will be deleted) at the end of this function.
          + ++/
-        TextureHandle finaliseTexture(uint texID)
+        TextureHandle finaliseTexture(ref uint texID)
         {
             scope(exit) glDeleteTextures(1, &texID);
             
@@ -253,6 +250,7 @@ final class RendererResources
             if(!texture.stitch(texID, area))
                 assert(false, "The texture is probably too large, or there's a bug.");
 
+            texID = 0;
             return TextureHandle(this, texture, area);
         }
 

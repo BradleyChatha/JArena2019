@@ -141,9 +141,9 @@ class Sprite
             [
                 // Positions that are non-0 are debug values
                 Vertex(vec2(0), vec2(0), Colour.white),
-                Vertex(vec2(-0.5, 0), vec2(0), Colour.white),
-                Vertex(vec2(-0.5, -0.5), vec2(0), Colour.white),
-                Vertex(vec2(0, -0.5), vec2(0), Colour.white)
+                Vertex(vec2(0), vec2(0), Colour.white),
+                Vertex(vec2(0), vec2(0), Colour.white),
+                Vertex(vec2(0), vec2(0), Colour.white)
             ];
 
             if(texture !is null)
@@ -245,10 +245,15 @@ class Sprite
         }
 
         /// Internal use only.
+        /// NOTE: These verts will have the model transform already applied
         @property @safe @nogc
         Vertex[4] verts() nothrow
         {
-            return this._verts;
+            Vertex[4] toReturn = this._verts;
+            foreach(ref vert; toReturn)
+                vert.position = vec2(this._transform.matrix * vec4(vert.position, 0, 1.0));
+
+            return toReturn;
         }
     }
 }

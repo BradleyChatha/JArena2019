@@ -128,7 +128,7 @@ class GLTest : Scene
     {
         Sprite sprite;
         Sprite sprite2;
-        Sprite[1_000] stressTest;
+        Sprite[1] stressTest;
     }
     
     public override
@@ -139,6 +139,8 @@ class GLTest : Scene
             this.sprite2 = new Sprite(super.manager.cache.get!SpriteAtlas("Explosion Atlas").texture);
             this.sprite.textureRect = RectangleI(32, 32, 256, 256);
             InitInfo.renderResources.dumpTextures();
+
+            this.sprite.move(vec2(-0.5, 0));
 
             foreach(i; 0..stressTest.length)
                 this.stressTest[i] = new Sprite(super.manager.cache.get!SpriteAtlas("Explosion Atlas").texture);

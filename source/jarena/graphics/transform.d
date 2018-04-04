@@ -11,9 +11,9 @@ struct Transform
     private
     {
         mat4 _matrix;
-        vec2 _translation;
+        vec2 _translation = vec2(0);
 
-        bool _dirty;
+        bool _dirty = true;
     }
 
     public
