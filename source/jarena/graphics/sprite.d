@@ -193,10 +193,10 @@ class Sprite
             // So we have to modify the UV a bit to make sure it takes that fact into account.
             auto textureArea  = this.texture._handle.area;
             auto topLeft      = vec2(rect.position + textureArea.position);
-            this._verts[0].uv = topLeft + vec2(0, rect.size.y);
-            this._verts[1].uv = topLeft + vec2(rect.size.x, rect.size.y);
-            this._verts[2].uv = topLeft + vec2(0, 0);
-            this._verts[3].uv = topLeft + vec2(rect.size.x, 0);
+            this._verts[0].uv = topLeft + vec2(0, 0);
+            this._verts[1].uv = topLeft + vec2(rect.size.x, 0);
+            this._verts[2].uv = topLeft + vec2(0, rect.size.y);
+            this._verts[3].uv = topLeft + vec2(rect.size.x, rect.size.y);
 
             auto posRect = RectangleF(0, 0, vec2(rect.size));
             this._verts[0].position = vec2(0);

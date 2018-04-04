@@ -40,7 +40,7 @@ final class Camera
                 rect = RectangleF(0, 0, vec2(InitInfo.windowSize));
 
             import dlsl.projection;
-            this._ortho = glOrthographic(rect.position.x, rect.size.x, rect.position.y, rect.size.y, -1, 1);
+            this._ortho = glOrthographic(rect.position.x, rect.size.x, rect.size.y, rect.position.y, -1, 1);
         }
 
         ///
