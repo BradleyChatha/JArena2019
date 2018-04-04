@@ -140,6 +140,10 @@ class GLTest : Scene
             this.sprite.textureRect = RectangleI(32, 32, 256, 256);
             InitInfo.renderResources.dumpTextures();
 
+            assert(this.sprite.texture == this.sprite2.texture,
+                   "While both sprites technically have two different Texture objects, their handles should point to the"~
+                   "same compound texture.");
+
             this.sprite.move(vec2(0, 200));
 
             foreach(i; 0..stressTest.length)

@@ -51,6 +51,17 @@ class Texture
             this._handle.bind();
         }
 
+        override bool opEquals(Object o)
+        {
+            auto tex = cast(Texture)o;
+            if(tex is null)
+                return false;
+
+            // Note: This calls TextureHandle.opEquals, which tests
+            // if the internal compound textures are the same. (i.e. _handle.area is ignored)
+            return (this._handle == tex._handle);
+        }
+
         ///
         @property @trusted @nogc
         inout(uvec2) size() nothrow inout

@@ -271,7 +271,7 @@ final class Renderer
             this._rect.borderSize   = borderThickness;
 
             // Draw the rectangle's filling
-            this.drawQuad(null, this._rect.verts,             this._colourShader);
+            this.drawQuad(null, this._rect.verts, this._colourShader);
 
             // Draw the border.
             this.drawQuad(null, this._rect.borderLeftVerts,   this._colourShader);
@@ -335,14 +335,14 @@ final class Renderer
         // This preserves draw order, while also being a slight optimisation.
         auto camera = CameraInfo(this.camera._view.matrix.invert, this.camera._ortho);
         if(this._buckets.length == 0 
-        || this._buckets[$-1].texture != texture 
+        || (this._buckets[$-1].texture != texture)
         || this._buckets[$-1].shader != shader
         || this._buckets[$-1].camera != camera)
             this._buckets ~= RenderBucket(texture, shader, camera, []~verts[], [0, 1, 2, 1, 2, 3]);
         else
         {
             auto firstVert = this._buckets[$-1].indicies[$-1];
-            this._buckets[$-1].verts ~= verts[];
+            this._buckets[$-1].verts    ~= verts[];
             this._buckets[$-1].indicies ~= [firstVert+1, firstVert+2, firstVert+3, 
                                             firstVert+2, firstVert+3, firstVert+4];
 
@@ -379,6 +379,11 @@ final class RendererResources
         void bind()
         {
             glBindTexture(GL_TEXTURE_2D, this._texture.textureID);
+        }
+
+        bool opEquals(const ref TextureHandle other)
+        {
+            return (this._texture == other._texture);
         }
 
         @safe @nogc
