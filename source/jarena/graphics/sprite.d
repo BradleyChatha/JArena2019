@@ -197,6 +197,12 @@ class Sprite
             this._verts[1].uv = topLeft + vec2(rect.size.x, rect.size.y);
             this._verts[2].uv = topLeft + vec2(0, 0);
             this._verts[3].uv = topLeft + vec2(rect.size.x, 0);
+
+            auto posRect = RectangleF(0, 0, vec2(rect.size));
+            this._verts[0].position = vec2(0);
+            this._verts[1].position = posRect.topRight;
+            this._verts[2].position = posRect.botLeft;
+            this._verts[3].position = posRect.botRight;
         }
 
         ///
@@ -212,12 +218,7 @@ class Sprite
         {
             assert(texture !is null);
             this._texture = texture;
-
-            auto rect = RectangleF(0, 0, vec2(texture.size));
-            this._verts[0].position = vec2(0);
-            this._verts[1].position = rect.topRight;
-            this._verts[2].position = rect.botLeft;
-            this._verts[3].position = rect.botRight;
+            this.textureRect = RectangleI(0, 0, ivec2(texture.size));
         }
 
         /++
