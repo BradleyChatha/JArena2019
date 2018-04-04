@@ -134,9 +134,9 @@ class Sprite : ITransformable
     {
         ///
         @safe
-        this(Texture texture, bool allowNull = false)
+        this(Texture texture)
         {
-            assert((texture !is null) || allowNull);
+            assert(texture !is null);
             this._verts = 
             [
                 Vertex(vec2(0), vec2(0), Colour.white),
@@ -145,11 +145,8 @@ class Sprite : ITransformable
                 Vertex(vec2(0), vec2(0), Colour.white)
             ];
 
-            if(texture !is null)
-            {
-                this.texture = texture;
-                this.textureRect = RectangleI(0, 0, ivec2(texture.size));
-            }
+            this.texture = texture;
+            this.textureRect = RectangleI(0, 0, ivec2(texture.size));
         }
 
         ///
@@ -218,6 +215,21 @@ class Sprite : ITransformable
             assert(texture !is null);
             this._texture = texture;
             this.textureRect = RectangleI(0, 0, ivec2(texture.size));
+        }
+
+        ///
+        @property @safe @nogc
+        const(Colour) colour() nothrow const
+        {
+            return this._verts[0].colour;
+        }
+
+        ///
+        @property @safe @nogc
+        void colour(Colour col) nothrow
+        {
+            foreach(ref vert; this._verts)
+                vert.colour = col;
         }
 
         /++

@@ -8,8 +8,11 @@ private
 /// Code for the default vertex shader.
 immutable string defaultVertexShader   = cast(string)import("shaders/default.vert");
 
-/// Code for the default fragment shader.
-immutable string defaultFragmentShader = cast(string)import("shaders/default.frag");
+/// Code for the textured fragment shader. (Draws the texture multiplied by the vertex colour)
+immutable string texturedFragmentShader = cast(string)import("shaders/textured.frag");
+
+/// Code for the coloured fragment shader. (Only draws the vertex colour, no textures)
+immutable string colouredFragmentShader = cast(string)import("shaders/coloured.frag");
 
 /// A high-level wrapper over an OpenGL shader program.
 class Shader

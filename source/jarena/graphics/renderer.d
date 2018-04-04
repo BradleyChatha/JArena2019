@@ -147,17 +147,19 @@ final class Renderer
         struct RenderBucket
         {
             Texture  texture;
+            Shader   shader;
             Vertex[] verts;
             uint[]   indicies;
         }
         
         Window              _window;
-        Sprite              _rect; // Feels a bit hacky, but I'm not gonna have a 'RectangleShape' class for a while/at all.
         Camera              _camera;
         RendererResources   _resources;
         RenderBucket[]      _buckets;
         VertexBuffer        _quadBuffer;
-        Shader              _defaultShader;
+        Shader              _textureShader;
+        Shader              _colourShader;
+        RectangleShape      _rect;
     }
 
     public
@@ -166,12 +168,12 @@ final class Renderer
         {
             this._window             = window;
             this._resources          = new RendererResources();
-            this._defaultShader      = new Shader(defaultVertexShader, defaultFragmentShader);
+            this._textureShader      = new Shader(defaultVertexShader, texturedFragmentShader);
+            this._colourShader       = new Shader(defaultVertexShader, colouredFragmentShader);
             InitInfo.renderResources = this._resources;
+            this._rect               = new RectangleShape();
             
             this._quadBuffer.setup();
-
-            this._rect = new Sprite(null, true);
         }
 
         ~this()
@@ -190,13 +192,19 @@ final class Renderer
 
         /// Displays all rendered changes to the screen.
         void displayChanges()
-        {
-            this._defaultShader.use();
-            this._defaultShader.setUniform("view", this.camera._view.matrix);
-            this._defaultShader.setUniform("projection", this.camera._ortho);
-            
+        {            
+            Shader previous;
             foreach(bucket; this._buckets)
             {
+                // Change the shader
+                if(bucket.shader != previous)
+                {
+                    bucket.shader.use();
+                    bucket.shader.setUniform("view", this.camera._view.matrix);
+                    bucket.shader.setUniform("projection", this.camera._ortho);
+                    previous = bucket.shader;
+                }
+
                 // Setting their length to 0 lets me reuse the memory without angering the GC
                 this._quadBuffer.verts.length = 0;
                 this._quadBuffer.indicies.length = 0;
@@ -235,8 +243,11 @@ final class Renderer
          + ++/
         void drawRect(vec2 position, vec2 size, Colour fillColour = Colour(255, 0, 0, 255), Colour borderColour = Colour.black, uint borderThickness = 1)
         {
-            // TODO: Actually use most of those parameters when possible (border stuff will be a bit hard with our current hack)
-            this.drawQuad(null, this._rect.verts[]);
+            // TODO: Support borders
+            this._rect.area = RectangleF(position, size);
+            this._rect.colour = fillColour;
+
+            this.drawQuad(null, []~this._rect.verts[], this._colourShader);
         }
 
         /// Draws a `Sprite` to the screen.
@@ -245,7 +256,7 @@ final class Renderer
             import std.algorithm : countUntil;
             assert(sprite !is null);
 
-            this.drawQuad(sprite.texture, []~sprite.verts[]);
+            this.drawQuad(sprite.texture, []~sprite.verts[], this._textureShader);
         }
 
         /// Draws `Text` to the screen.
@@ -286,23 +297,23 @@ final class Renderer
     }
 
     // Long functions go at the bottom
-    private void drawQuad(Texture texture, Vertex[] verts)
+    private void drawQuad(Texture texture, Vertex[] verts, Shader shader)
     {
-        // All sprites that have the same texture are batched together into a single bucket
-        // When 'sprite' has a different texture than the last one, a new bucket is created
-        // Even there is a bucket that already has 'sprite''s texture, it won't be added into that bucket unless it's the latest one
+        // All sprites that have the same texture and shader are batched together into a single bucket
+        // When 'sprite' has a different texture or shader than the last one, a new bucket is created
+        // Even there is a bucket that already has 'sprite''s texture and shader, it won't be added into that bucket unless it's the latest one
         // This preserves draw order, while also being a slight optimisation.
-        if(this._buckets.length == 0 || this._buckets[0].texture != texture)
-            this._buckets ~= RenderBucket(texture, verts, [0, 1, 2, 1, 2, 3]);
-         else
-         {
+        if(this._buckets.length == 0 || this._buckets[$-1].texture != texture || this._buckets[$-1].shader != shader)
+            this._buckets ~= RenderBucket(texture, shader, verts, [0, 1, 2, 1, 2, 3]);
+        else
+        {
             auto firstVert = this._buckets[$-1].indicies[$-1];
             this._buckets[$-1].verts ~= verts;
             this._buckets[$-1].indicies ~= [firstVert+1, firstVert+2, firstVert+3, 
                                             firstVert+2, firstVert+3, firstVert+4];
 
             assert(this._buckets[$-1].indicies[$-1] < this._buckets[$-1].verts.length);
-         }
+        }
 
         // TODO:
         //   If the GC becomes an issue, with the constant array allocations then
