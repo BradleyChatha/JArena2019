@@ -6,10 +6,13 @@ layout(location = 2) in vec4 vertColour;
 out vec4 _vertColour;
 out vec2 _vertUV;
 
+uniform mat4 view;
+uniform mat4 projection;
+
 void main()
 {
     _vertColour = vertColour;
     _vertUV     = vertUV;
 
-    gl_Position = vec4(vertPos, 0.0, 1.0);
+    gl_Position = projection * view * vec4(vertPos, 0.0, 1.0);
 }

@@ -150,8 +150,6 @@ class Shader
          + ++/
         void setUniform(T)(const int location, T data)
         {
-            import jengine.common.maths;
-
                  static if(is(T == float))  glUniform1f(location, data);
             else static if(is(T == int))    glUniform1i(location, data);
             else static if(is(T == vec2))   glUniform2f(location, data.x, data.y);

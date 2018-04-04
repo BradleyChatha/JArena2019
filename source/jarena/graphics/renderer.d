@@ -10,6 +10,132 @@ private
     const COMPOUNT_TEXTURE_DIRECTORY = "data/debug/compound/";
 }
 
+/++
+ + Contains information about a Camera, which can be used to control what is shown on screen.
+ +
+ + Helpful_Read:
+ +  https://www.sfml-dev.org/tutorials/2.4/graphics-view.php
+ +
+ + Notes:
+ +  
+ + ++/
+final class Camera
+{
+    static const DEFAULT_CAMERA_RECT = RectangleF(float.nan, float.nan, float.nan, float.nan);
+    
+    private
+    {
+        Transform _view;
+        mat4      _ortho;
+    }
+
+    public
+    {
+        /++
+         + 
+         + ++/
+        this(RectangleF rect = DEFAULT_CAMERA_RECT)
+        {
+            if(rect == DEFAULT_CAMERA_RECT)
+                rect = RectangleF(0, 0, vec2(InitInfo.windowSize));
+
+            import dlsl.projection;
+            this._ortho = glOrthographic(rect.position.x, rect.size.x, rect.position.y, rect.size.y, -1, 1);
+        }
+
+        ///
+        @trusted @nogc
+        void move(vec2 offset) nothrow
+        {
+            //sfView_move(this.handle, offset.toSF!sfVector2f);
+        }
+
+        /++
+         + Resets the camera to a certain portion of the world.
+         +
+         + Notes:
+         +  This will also reset the camera's rotation.
+         +
+         +  The camera will of course, be centered within `rect`.
+         +
+         + Params:
+         +  rect = The portion of the world to reset to viewing.
+         + ++/
+        @trusted @nogc
+        void reset(RectangleF rect) nothrow
+        {
+            //sfView_reset(this.handle, rect.toSF!sfFloatRect);
+        }
+
+        ///
+        @property @trusted @nogc
+        vec2 center() nothrow const
+        {
+            return vec2();
+            //return sfView_getCenter(this.handle).to!vec2;
+        }
+
+        ///
+        @property @trusted @nogc
+        void center(vec2 centerPos) nothrow
+        {
+            //sfView_setCenter(this.handle, centerPos.toSF!sfVector2f);
+        }
+
+        ///
+        @property @trusted @nogc
+        const(AngleDegrees) rotation() nothrow const
+        {
+            return AngleDegrees(0);
+            //return typeof(return)(sfView_getRotation(this.handle));
+        }
+
+        ///
+        @property @trusted @nogc
+        void rotation(float degrees) nothrow
+        {
+            //sfView_setRotation(this.handle, degrees);
+        }
+
+        ///
+        @property @trusted @nogc
+        void rotation(AngleDegrees degrees) nothrow
+        {
+            this.rotation = degrees.angle;
+        }
+
+        ///
+        @property @trusted @nogc
+        const(vec2) size() nothrow const
+        {
+            return vec2();
+            //return sfView_getSize(this.handle).to!vec2;
+        }
+
+        ///
+        @property @trusted @nogc
+        void size(vec2 siz) nothrow
+        {
+            //sfView_setSize(this.handle, siz.toSF!sfVector2f);
+        }
+
+        ///
+        @property @trusted @nogc
+        const(RectangleF) viewport() nothrow const
+        {
+            return RectangleF(0, 0, 0, 0);
+            //return sfView_getViewport(this.handle).to!RectangleF;
+        }
+        
+        ///
+        @property @trusted @nogc
+        void viewport(RectangleF port) nothrow
+        {
+            //sfView_setViewport(this.handle, port.toSF!sfFloatRect);
+        }
+    }
+}
+
 ///
 final class Renderer
 {
@@ -64,6 +190,8 @@ final class Renderer
         void displayChanges()
         {
             this._defaultShader.use();
+            this._defaultShader.setUniform("view", this.camera._view.matrix);
+            this._defaultShader.setUniform("projection", this.camera._ortho);
             
             foreach(bucket; this._buckets)
             {
@@ -129,7 +257,7 @@ final class Renderer
         void drawBuffer(ref VertexBuffer buffer)
         {
             glBindVertexArray(buffer.vao);
-            glDrawElements(buffer.dataType, buffer.indicies.length, GL_UNSIGNED_INT, null);
+            glDrawElements(buffer.dataType, cast(uint)buffer.indicies.length, GL_UNSIGNED_INT, null);
         }
 
         /// Sets whether to draw in wireframe or not.
@@ -151,9 +279,7 @@ final class Renderer
         void camera(Camera cam)
         {
             assert(cam !is null);
-            
             this._camera = cam;
-            //sfRenderWindow_setView(this._window.handle, this._camera.handle);
         }
     }
 

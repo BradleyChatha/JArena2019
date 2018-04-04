@@ -18,6 +18,8 @@ void main()
     auto engine = new Engine();
     engine.onInit();
 
+    //engine.window.renderer.useWireframe = true;
+
     engine.scenes.register(new GLTest());
     engine.scenes.register(new Test());
     engine.scenes.register(new MenuScene());

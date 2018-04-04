@@ -158,6 +158,7 @@ class Sprite
         void move(vec2 offset) nothrow
         {
             this._transform.translation += offset;
+            this._transform.markDirty();
         }
 
         ///
@@ -172,6 +173,7 @@ class Sprite
         void position(vec2 pos) nothrow
         {
             this._transform.translation = pos;
+            this._transform.markDirty();
         }
 
         ///
@@ -211,14 +213,11 @@ class Sprite
             assert(texture !is null);
             this._texture = texture;
 
-            // DEBUG: dividing by scrren size and mutiplying by 2 (mvp not setup yet).
-            auto screenSize = vec2(InitInfo.windowSize);
-
             auto rect = RectangleF(0, 0, vec2(texture.size));
             this._verts[0].position = vec2(0);
-            this._verts[1].position = (rect.topRight / screenSize) * 2;
-            this._verts[2].position = (rect.botLeft / screenSize) * 2;
-            this._verts[3].position = (rect.botRight / screenSize) * 2;
+            this._verts[1].position = rect.topRight;
+            this._verts[2].position = rect.botLeft;
+            this._verts[3].position = rect.botRight;
         }
 
         /++
@@ -246,6 +245,8 @@ class Sprite
 
         /// Internal use only.
         /// NOTE: These verts will have the model transform already applied
+        /// Also: We peform the model transform on the CPU, so we don't have to pass the data to the GPU
+        ///       which would (in my beginner mind) make batching impossible.
         @property @safe @nogc
         Vertex[4] verts() nothrow
         {

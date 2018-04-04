@@ -140,7 +140,7 @@ class GLTest : Scene
             this.sprite.textureRect = RectangleI(32, 32, 256, 256);
             InitInfo.renderResources.dumpTextures();
 
-            this.sprite.move(vec2(-0.5, 0));
+            this.sprite.move(vec2(0, 200));
 
             foreach(i; 0..stressTest.length)
                 this.stressTest[i] = new Sprite(super.manager.cache.get!SpriteAtlas("Explosion Atlas").texture);
@@ -156,6 +156,8 @@ class GLTest : Scene
 
         void onUpdate(Duration deltaTime, InputManager input)
         {
+            if(input.isKeyDown(Scancode.W))
+                this.sprite.move(vec2(0, 100 * deltaTime.asSeconds));
         }
 
         void onRender(Window window)

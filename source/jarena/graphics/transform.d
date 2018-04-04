@@ -18,6 +18,11 @@ struct Transform
 
     public
     {
+        this(mat4 matrix)
+        {
+            this._matrix = matrix;
+        }
+        
         /++
          + Notes:
          +  Can basically imagine as the position.
@@ -29,6 +34,18 @@ struct Transform
         ref inout(vec2) translation() nothrow pure inout
         {
             return this._translation;
+        }
+
+        /++
+         + Use this to tell the transform to update it's matrix.
+         +
+         + Any setter functions will do this automatically, but functions such as `translation`[get]
+         + can be used to modify the transform without the dirty flag being set.
+         + ++/
+        @safe @nogc
+        void markDirty() nothrow pure
+        {
+            this._dirty = true;
         }
         
         /++
