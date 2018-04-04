@@ -124,7 +124,7 @@ class Text
         @property @trusted @nogc
         const(vec2) screenSize() nothrow const
         {
-            return vec2();
+            return vec2(5, 5); // debug
             //auto rect = sfText_getLocalBounds(this.handle);
             //return vec2(rect.width, rect.height);
         }
