@@ -164,7 +164,10 @@ class GLTest : Scene
         {
             window.renderer.drawSprite(this.sprite);
             window.renderer.drawSprite(this.sprite2);
-            window.renderer.drawRect(vec2(100, 400), vec2(50, 100), Colours.azure, Colours.amazon);
+
+            foreach(i; 0..1) // Like stressTest, use this to semi-accurately test how well the renderer holds up.
+                window.renderer.drawRect(vec2(100, 400), vec2(50, 100), Colours.azure, Colours.amazon);
+
             foreach(sprite; this.stressTest)
                 window.renderer.drawSprite(sprite);
         }

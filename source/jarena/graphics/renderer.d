@@ -262,7 +262,7 @@ final class Renderer
             // Draw the rectangle's filling
             this.drawQuad(null, this._rect.verts,             this._colourShader);
 
-            // Draw the border. TODO: Optimise if this becomes an issue.
+            // Draw the border.
             this.drawQuad(null, this._rect.borderLeftVerts,   this._colourShader);
             this.drawQuad(null, this._rect.borderRightVerts,  this._colourShader);
             this.drawQuad(null, this._rect.borderTopVerts,    this._colourShader);
