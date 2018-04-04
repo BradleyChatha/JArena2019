@@ -18,14 +18,14 @@ void main()
     auto engine = new Engine();
     engine.onInit();
 
-    //engine.window.renderer.useWireframe = true;
+    engine.window.renderer.useWireframe = false;
 
     engine.scenes.register(new GLTest());
     engine.scenes.register(new Test());
     engine.scenes.register(new MenuScene());
     engine.scenes.register(new AnimationViewerScene(engine.scenes.cache.getCache!AnimationInfo));
     engine.scenes.register(new SpriteAtlasViewerScene(engine.scenes.cache.getCache!SpriteAtlas));
-    engine.scenes.swap!GLTest;
+    engine.scenes.swap!Test;
     //engine.scenes.swap!AnimationViewerScene;
     engine.doLoop();
 

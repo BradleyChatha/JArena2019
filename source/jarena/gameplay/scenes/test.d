@@ -128,7 +128,7 @@ class GLTest : Scene
     {
         Sprite sprite;
         Sprite sprite2;
-        Sprite[1] stressTest;
+        Sprite[2] stressTest;
     }
     
     public override
@@ -143,7 +143,7 @@ class GLTest : Scene
             this.sprite.move(vec2(0, 200));
 
             foreach(i; 0..stressTest.length)
-                this.stressTest[i] = new Sprite(super.manager.cache.get!SpriteAtlas("Explosion Atlas").texture);
+                this.stressTest[i] = new Sprite(super.manager.cache.get!SpriteAtlas("Test Atlas").texture);
         }
 
         void onSwap(PostOffice office)
@@ -157,13 +157,13 @@ class GLTest : Scene
         void onUpdate(Duration deltaTime, InputManager input)
         {
             if(input.isKeyDown(Scancode.W))
-                this.sprite.move(vec2(0, 100 * deltaTime.asSeconds));
+                this.stressTest[0].move(vec2(0, 100 * deltaTime.asSeconds));
         }
 
         void onRender(Window window)
         {
-            window.renderer.drawSprite(this.sprite);
-            window.renderer.drawSprite(this.sprite2);
+            //window.renderer.drawSprite(this.sprite);
+            //window.renderer.drawSprite(this.sprite2);
             foreach(sprite; this.stressTest)
                 window.renderer.drawSprite(sprite);
         }

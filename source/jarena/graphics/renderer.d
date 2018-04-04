@@ -296,7 +296,8 @@ final class Renderer
          {
             auto firstVert = this._buckets[$-1].indicies[$-1];
             this._buckets[$-1].verts ~= verts;
-            this._buckets[$-1].indicies ~= [firstVert, firstVert+1, firstVert+2, firstVert+3];
+            this._buckets[$-1].indicies ~= [firstVert+1, firstVert+2, firstVert+3, 
+                                            firstVert+2, firstVert+3, firstVert+4];
 
             assert(this._buckets[$-1].indicies[$-1] < this._buckets[$-1].verts.length);
          }
