@@ -165,11 +165,11 @@ final class Renderer
         // Used for batching.
         struct RenderBucket
         {
-            Texture    texture;
-            Shader     shader;
-            CameraInfo camera; // To make cameras work how I want, this is needed.
-            Vertex[]   verts;
-            uint[]     indicies;
+            TextureBase texture;
+            Shader      shader;
+            CameraInfo  camera; // To make cameras work how I want, this is needed.
+            Vertex[]    verts;
+            uint[]      indicies;
         }
         
         Window              _window;
@@ -327,7 +327,7 @@ final class Renderer
     }
 
     // Long functions go at the bottom
-    private void drawQuad(Texture texture, Vertex[4] verts, Shader shader)
+    private void drawQuad(TextureBase texture, Vertex[4] verts, Shader shader)
     {
         // All sprites that have the same texture and shader are batched together into a single bucket
         // When 'sprite' has a different texture or shader than the last one, a new bucket is created

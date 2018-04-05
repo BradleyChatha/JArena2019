@@ -9,8 +9,45 @@ private
     import opengl, derelict.opengl.versions.base;
 }
 
-///
-class Texture
+/++
+ + The base class for all textures.
+ +
+ + Notes:
+ +  This class mostly exists to make it easier for the internal rendering code to work with different
+ +  texture types, so only the bare minimum is needed for inheriting classes.
+ + ++/
+abstract class TextureBase
+{
+    public abstract
+    {
+        /++
+         + Binds this texture as the active texture.
+         +
+         + Mostly only for internal use.
+         + ++/
+        void use();
+
+        /++
+         + Notes:
+         +  This function doesn't have to return the actual size of the internal texture,
+         +  but only the size of which the user needs to know about.
+         +
+         +  For example, the `Texture` class will internally point to a mega-texture that's
+         +  something like 2048x2048, but it only uses, say, 256x256 pixels of that texture.
+         +  The 256x256 is the size that it should return in that case.
+         +
+         + Returns:
+         +  The size of the texture.
+         + ++/
+        @safe @nogc
+        const(uvec2) size() nothrow const;
+    }
+}
+
+/++
+ + 
+ + ++/
+class Texture : TextureBase
 {
     private
     {
@@ -46,7 +83,7 @@ class Texture
          +
          + Mostly only for internal use.
          + ++/
-        void use()
+        override void use()
         {
             this._handle.bind();
         }
@@ -64,7 +101,7 @@ class Texture
 
         ///
         @property @trusted @nogc
-        inout(uvec2) size() nothrow inout
+        override const(uvec2) size() nothrow const
         {
             return uvec2(this.handle.area.size);
         }
