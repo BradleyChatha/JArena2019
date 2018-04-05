@@ -448,7 +448,7 @@ final class RendererResources
             auto size  = this._textures[0].size; // They all have the same size for now.
             auto image = FreeImage_Allocate(size.x, size.y, 32);
             scope(exit) FreeImage_Unload(image);
-
+            
             // I don't gain much by using the GC here.
             trace("Allocating pixel buffer");
             import core.stdc.stdlib : malloc, free;

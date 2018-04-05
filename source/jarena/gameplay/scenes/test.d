@@ -137,7 +137,6 @@ class GLTest : Scene
         {
             this.sprite  = new Sprite(super.manager.cache.get!SpriteAtlas("Test Atlas").texture);
             this.sprite2 = new Sprite(super.manager.cache.get!SpriteAtlas("Explosion Atlas").texture);
-            this.sprite.textureRect = RectangleI(32, 32, 256, 256);
             InitInfo.renderResources.dumpTextures();
 
             assert(this.sprite.texture == this.sprite2.texture,

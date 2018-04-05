@@ -29,7 +29,7 @@ spriteSheet "TahnAnimation" {
 }
 
 spriteSheet "TileAnimation" {
-	position 512 172
+	position 512 170
 	size 96 32
 	frameSize 32 32
 }
