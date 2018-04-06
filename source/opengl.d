@@ -1,8 +1,13 @@
 module opengl;
 
 private import jarena.core.maths : uvec2;
-public import derelict.opengl;
+public import derelict.opengl, derelict.opengl.versions.gl2x;
 enum OPENGL_VERSION = uvec2(3, 3);
+
+// For some reason... these _sometimes_ can be seen but _sometimes_ can't??
+enum GL_TRIANGLES = 0x0004;
+enum GL_STATIC_DRAW = 0x88E4;
+enum GL_DYNAMIC_DRAW = 0x88E8;
 
 /// Contains information about an OpenGL error.
 struct GLError
@@ -73,11 +78,12 @@ struct PixelInfo
 PixelInfo getInfoFor(GLenum ColourFormat)()
 {
     // I want a custom error message, which is why I'm not using a contract.
-    static assert(ColourFormat == GL_RGBA8, 
+    static assert(ColourFormat == GL_RGBA8 || ColourFormat == GL_RED,
                 "The given ColourFormat is unsupported.\n"~
                 "Supported types: GL_RGBA8");
 
     // Configure certain data depending on the colour format.
-    static if(ColourFormat == GL_RGBA8) return PixelInfo(4, GL_RGBA);
+         static if(ColourFormat == GL_RGBA8)    return PixelInfo(4, GL_RGBA);
+    else static if(ColourFormat == GL_RED)      return PixelInfo(1, GL_RED);
     else static assert(false);
 }

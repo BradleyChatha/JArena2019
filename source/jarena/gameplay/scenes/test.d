@@ -54,9 +54,9 @@ class Test : Scene, IPostBox
             gui2.addChild(new TestControl(vec2(0,0), vec2(25, 60), Colour(0, 128, 128, 255)));
 
             auto font = super.manager.cache.get!Font("Crackdown");
-            super.register("Some random text", new TextObject(font, "A B C D E F G 1 2 3"d, vec2(0,550), 14, Colour(128, 0, 128, 255), 0));
+            super.register("Some random text", new TextObject(font, "A B C D E F G 1 2 3", vec2(0,550), 14, Colour(128, 0, 128, 255), 0));
             
-            auto btnText = new Text(font, "Click Me"d, vec2(0), 14, Colour(255, 255, 255, 255));
+            auto btnText = new Text(font, "Click Me", vec2(0), 14, Colour(255, 255, 255, 255));
             gui.addChild(new SimpleTextButton(btnText, btn => writeln("Button position: ", btn.position)));
             gui.getChild!SimpleTextButton(gui.children.length - 1).fitToText();
         }
@@ -138,6 +138,9 @@ class GLTest : Scene
             this.sprite  = new Sprite(super.manager.cache.get!SpriteAtlas("Test Atlas").texture);
             this.sprite2 = new Sprite(super.manager.cache.get!SpriteAtlas("Explosion Atlas").texture);
             InitInfo.renderResources.dumpTextures();
+
+            auto dummy = new Text(super.manager.cache.get!Font("Crackdown"), "hey guuurl", vec2(0), 48);
+            (cast(MutableTexture)dummy.texture).dump("font");
 
             assert(this.sprite.texture == this.sprite2.texture,
                    "While both sprites technically have two different Texture objects, their handles should point to the"~

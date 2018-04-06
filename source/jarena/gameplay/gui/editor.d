@@ -124,7 +124,7 @@ final class EditorContainer : FreeFormContainer
             this._instructionPanel = new StackContainer(vec2(0, INSTRUCTION_Y), StackContainer.Direction.Vertical, PANEL_COLOUR);
 
             auto label = this._instructionPanel.addChild(new SimpleLabel(
-                new Text(cache.get!Font(GENERIC_FONT_KEY), ""d, vec2(0), GENERIC_CHAR_SIZE, Colour.white)
+                new Text(cache.get!Font(GENERIC_FONT_KEY), "", vec2(0), GENERIC_CHAR_SIZE, Colour.white)
             ));
             label.name = "labelText";
             label.updateTextASCII("Press left or right arrow keys");
@@ -384,7 +384,7 @@ private final class GenericElementExtension : EditorPanelExtension
         {
             void makeLabel(ref SimpleLabel label)
             {
-                label = new SimpleLabel(new Text(fonts.get(GENERIC_FONT_KEY), ""d, vec2(0), GENERIC_CHAR_SIZE, Colour.white));
+                label = new SimpleLabel(new Text(fonts.get(GENERIC_FONT_KEY), "", vec2(0), GENERIC_CHAR_SIZE, Colour.white));
             }
             
             super.registerKeybind!(Scancode.E)("Moves the selected item to the mouse",(input){
@@ -434,7 +434,7 @@ private final class GenericContainerExtension : EditorPanelExtension
         {
             void makeLabel(ref SimpleLabel label)
             {
-                label = new SimpleLabel(new Text(fonts.get(GENERIC_FONT_KEY), ""d, vec2(0), GENERIC_CHAR_SIZE, Colour.white));
+                label = new SimpleLabel(new Text(fonts.get(GENERIC_FONT_KEY), "", vec2(0), GENERIC_CHAR_SIZE, Colour.white));
             }
 
             makeLabel(this._labelChildCount);

@@ -7,6 +7,8 @@ private
     import sdlang;
     import jarena.core, jarena.gameplay, jarena.graphics;
     import opengl, derelict.opengl.versions.base;
+
+    const TEXTURE_DUMP_DIRECTORY = "data/debug/compound/";
 }
 
 /++
@@ -177,6 +179,60 @@ class MutableTexture : TextureBase
 
             // Perform the stitch.
             return this.stitch!GL_RGBA8(bytes, size, area);
+        }
+
+        void dump(string id)
+        {
+            import derelict.freeimage.freeimage;
+
+            trace("Allocating FreeImage buffer");
+            auto size  = this.size;
+            auto image = FreeImage_Allocate(size.x, size.y, 32);
+            scope(exit) FreeImage_Unload(image);
+            
+            // I don't gain much by using the GC here.
+            trace("Allocating pixel buffer");
+            import core.stdc.stdlib : malloc, free;
+            auto totalBytes = (size.y * size.x) * Colour.sizeof;
+            auto buffer     = (cast(ubyte*)malloc(totalBytes))[0..totalBytes];
+            scope(exit)
+            {
+                if(buffer.ptr !is null)
+                    free(buffer.ptr);
+            }
+            tracef("Buffer size in bytes: %s", buffer.length);
+
+            if(buffer.ptr is null)
+            {
+                error("Malloc returned null when allocating the buffer. Aborting dump.");
+                return;
+            }
+
+            trace("Getting pixel data from OpenGL");
+            this.use();
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, cast(void*)buffer.ptr);
+            checkGLError();
+
+            RGBQUAD quad;
+            uint x, y;
+            foreach(i2; 0..buffer.length / 4)
+            {
+                auto bgra = buffer[i2*4..(i2*4)+4];
+                quad = RGBQUAD(bgra[2], bgra[1], bgra[0], bgra[3]);
+
+                FreeImage_SetPixelColor(image, x, y, &quad);
+                x += 1;
+
+                if(x >= size.x)
+                {
+                    y += 1;
+                    x = 0;
+                }
+            }
+            
+            auto fileName = TEXTURE_DUMP_DIRECTORY~(id~".png\0");
+            tracef("Writing to file '%s'", fileName);
+            FreeImage_Save(FIF_PNG, image, fileName.ptr);
         }
     }
 }

@@ -83,7 +83,7 @@ class SimpleTextButton : SimpleButton
         // SFML is slightly incorrect when reporting the size of text, so these offsets can be fiddled with to give
         // a better result.
         const SFML_TEXT_OFFSET_X = 0;
-        const SFML_TEXT_OFFSET_Y = -2;
+        const SFML_TEXT_OFFSET_Y = 0;
         Text _text;
 
         void centerText()

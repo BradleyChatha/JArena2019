@@ -132,7 +132,7 @@ final class SpriteAtlasViewerScene : ViewerScene
         
         SimpleLabel makeLabel(Container gui, Font font)
         {
-            return gui.addChild(new SimpleLabel(new Text(font, ""d, vec2(0), TEXT_CHAR_SIZE, TEXT_COLOUR)));
+            return gui.addChild(new SimpleLabel(new Text(font, "", vec2(0), TEXT_CHAR_SIZE, TEXT_COLOUR)));
         }
 
         // Tuple is a struct, so use this function anytime you need to update it's data.

@@ -16,7 +16,6 @@ const WINDOW_DEFAULT_FPS        = 60;
 const DEBUG_FONT                = "Data/Fonts/Spaceport_2006.otf";
 const DEBUG_FONT_SIZE           = 10;
 const DEBUG_TEXT_COLOUR         = Colours.rockSalt;
-const DEBUG_TEXT_THICC          = 0;
 const DEBUG_CONTAINER_COLOUR    = Colour(0, 0, 0, 128);
 const DEBUG_CONTAINER_POSITION  = vec2(1);
 const DEBUG_CONTAINER_Y_PADDING = 0; // Used to try and combat SFML's inaccurate Y-axis readings for fonts.
@@ -74,8 +73,7 @@ final class Engine
             this._scenes        = new SceneManager(this._eventOffice, this._input);
             this._timers        = new Timers();
             this._debugFont     = new Font(DEBUG_FONT);
-            this._debugText     = new SimpleLabel(new Text(this._debugFont, ""d, vec2(0), DEBUG_FONT_SIZE, DEBUG_TEXT_COLOUR));
-            this._debugText.text.outlineThickness(DEBUG_TEXT_THICC);
+            this._debugText     = new SimpleLabel(new Text(this._debugFont, "", vec2(0), DEBUG_FONT_SIZE, DEBUG_TEXT_COLOUR));
             this._debugGui      = new StackContainer(DEBUG_CONTAINER_POSITION, StackContainer.Direction.Horizontal, DEBUG_CONTAINER_COLOUR);
             this._debugGui.addChild(this._debugText);
             this._debugCamera   = new Camera(RectangleF(0, 0, vec2(this._window.size)));
@@ -95,17 +93,11 @@ final class Engine
             this.events.subscribe(Event.UpdateFPSDisplay, (_, __)
             {
                 import std.format : sformat;
-                /+this._debugText.updateTextASCII(sformat(this._debugBuffer, "FPS: %s | Time: %sms | RAM: %sMB", 
+                this._debugText.updateTextASCII(sformat(this._debugBuffer, "FPS: %s | Time: %sms | RAM: %sMB", 
                                                         this._fps.frameCount, 
-                                                        this._fps.elapsedTime.asMilliseconds,
-                                                        getMemInfo().usedRAM / (1024 * 1024)));+/
+                                                        this._fps.elapsedTime.total!"msecs",
+                                                        getMemInfo().usedRAM / (1024 * 1024)));
                 this._debugGui.size = this._debugGui.size + vec2(0, DEBUG_CONTAINER_Y_PADDING);
-
-                import std.stdio;
-                writeln(sformat(this._debugBuffer, "FPS: %s | Time: %sms | RAM: %sMB", 
-                                                    this._fps.frameCount, 
-                                                    this._fps.elapsedTime.total!"msecs",
-                                                    getMemInfo().usedRAM / (1024 * 1024)));
             });
             this.events.subscribe(Window.Event.Close, (_,__) => this._window.close());
             this.events.subscribe(Window.Event.Resized, (_, m)

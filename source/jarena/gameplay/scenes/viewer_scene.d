@@ -24,7 +24,7 @@ abstract class ViewerScene : Scene
 
         SimpleLabel makeLabel(Container gui, Font font)
         {
-            return gui.addChild(new SimpleLabel(new Text(font, ""d, vec2(0), TEXT_CHAR_SIZE, TEXT_COLOUR)));
+            return gui.addChild(new SimpleLabel(new Text(font, "", vec2(0), TEXT_CHAR_SIZE, TEXT_COLOUR)));
         }
     }
 

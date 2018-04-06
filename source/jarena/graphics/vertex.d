@@ -40,7 +40,8 @@ enum BufferDataType : GLenum
 
 enum BufferDrawType : GLenum
 {
-    Static = GL_STATIC_DRAW
+    Static  = GL_STATIC_DRAW,
+    Dynamic = GL_DYNAMIC_DRAW
 }
 
 struct VertexBuffer
@@ -99,7 +100,7 @@ struct VertexBuffer
          + ++/
         @nogc
         void setup(BufferDataType dataType  = BufferDataType.Triangles,
-                   BufferDrawType drawType  = BufferDrawType.Static
+                   BufferDrawType drawType  = BufferDrawType.Dynamic
                   ) nothrow
         {
             // In case this buffer already has been setup.

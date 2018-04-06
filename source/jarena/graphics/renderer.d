@@ -179,6 +179,7 @@ final class Renderer
         VertexBuffer        _quadBuffer;
         Shader              _textureShader;
         Shader              _colourShader;
+        Shader              _textShader;
         RectangleShape      _rect;
     }
 
@@ -190,6 +191,7 @@ final class Renderer
             this._resources          = new RendererResources();
             this._textureShader      = new Shader(defaultVertexShader, texturedFragmentShader);
             this._colourShader       = new Shader(defaultVertexShader, colouredFragmentShader);
+            this._textShader         = new Shader(defaultVertexShader, textFragmentShader);
             InitInfo.renderResources = this._resources;
             this._rect               = new RectangleShape();
             
@@ -293,7 +295,18 @@ final class Renderer
         void drawText(Text text)
         {
             assert(text !is null);
-            //sfRenderWindow_drawText(this._window.handle, text.handle, null);
+            auto verts = text.verts;
+            if(verts.length == 0)
+                return;
+
+            assert((verts.length % 4) == 0);
+
+            Vertex[4] buffer;
+            foreach(i; 0..verts.length / 4)
+            {
+                buffer[0..4] = verts[i*4..(i*4)+4];
+                this.drawQuad(text.texture, buffer, this._textShader);
+            }
         }
 
         /// Draws a VertexBuffer
@@ -441,65 +454,14 @@ final class RendererResources
          + ++/
         void dumpTextures()
         {
-            import derelict.freeimage.freeimage;
+            import std.conv : to;
 
             if(this._textures.length == 0)
                 return;
 
             trace("Dumping all compound textures");
-            trace("Allocating FreeImage buffer");
-            auto size  = this._textures[0].size; // They all have the same size for now.
-            auto image = FreeImage_Allocate(size.x, size.y, 32);
-            scope(exit) FreeImage_Unload(image);
-            
-            // I don't gain much by using the GC here.
-            trace("Allocating pixel buffer");
-            import core.stdc.stdlib : malloc, free;
-            auto totalBytes = (size.y * size.x) * Colour.sizeof;
-            auto buffer     = (cast(ubyte*)malloc(totalBytes))[0..totalBytes];
-            scope(exit)
-            {
-                if(buffer.ptr !is null)
-                    free(buffer.ptr);
-            }
-            tracef("Buffer size in bytes: %s", buffer.length);
-
-            if(buffer.ptr is null)
-            {
-                error("Malloc returned null when allocating the buffer. Aborting dump.");
-                return;
-            }
-
-            foreach(i, compound; this._textures)
-            {
-                import std.conv : to;
-
-                trace("Getting pixel data from OpenGL");
-                compound.use();
-                glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, cast(void*)buffer.ptr);
-                checkGLError();
-
-                RGBQUAD quad;
-                uint x, y;
-                foreach(i2; 0..buffer.length / 4)
-                {
-                    auto bgra = buffer[i2*4..(i2*4)+4];
-                    quad = RGBQUAD(bgra[2], bgra[1], bgra[0], bgra[3]);
-
-                    FreeImage_SetPixelColor(image, x, y, &quad);
-                    x += 1;
-
-                    if(x >= size.x)
-                    {
-                        y += 1;
-                        x = 0;
-                    }
-                }
-                
-                auto fileName = COMPOUNT_TEXTURE_DIRECTORY~(i.to!string~".png\0");
-                tracef("Writing to file '%s'", fileName);
-                FreeImage_Save(FIF_PNG, image, fileName.ptr);
-            }
+            foreach(i, tex; this._textures)
+                tex.dump(i.to!string);
         }
     }
 }

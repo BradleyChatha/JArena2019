@@ -14,6 +14,9 @@ immutable string texturedFragmentShader = cast(string)import("shaders/textured.f
 /// Code for the coloured fragment shader. (Only draws the vertex colour, no textures)
 immutable string colouredFragmentShader = cast(string)import("shaders/coloured.frag");
 
+/// A slight modification of the textured fragment shader, that only cares about the R channel of colours.
+immutable string textFragmentShader = cast(string)import("shaders/text.frag");
+
 /// A high-level wrapper over an OpenGL shader program.
 class Shader
 {
