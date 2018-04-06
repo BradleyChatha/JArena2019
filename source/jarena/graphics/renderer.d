@@ -372,13 +372,13 @@ final class RendererResources
     static struct TextureHandle
     {
         private RendererResources _resources;
-        private CompoundTexture   _texture;
+        private MutableTexture    _texture;
         
         const(RectangleI) area;
 
         void bind()
         {
-            glBindTexture(GL_TEXTURE_2D, this._texture.textureID);
+            this._texture.use();
         }
 
         bool opEquals(const ref TextureHandle other)
@@ -395,7 +395,7 @@ final class RendererResources
     
     private
     {
-        CompoundTexture[] _textures;
+        MutableTexture[] _textures;
     }
 
     /++
@@ -411,7 +411,11 @@ final class RendererResources
          + ++/
         TextureHandle finaliseTexture(ref uint texID)
         {
-            scope(exit) glDeleteTextures(1, &texID);
+            scope(exit)
+            {
+                glDeleteTextures(1, &texID);
+                texID = 0;
+            }
             
             RectangleI area;
             foreach(compound; this._textures)
@@ -423,13 +427,12 @@ final class RendererResources
             }
 
             // No avaliable textures could stitch it, so make a new one.
-            auto texture = new CompoundTexture(uvec2(2048, 2048));
+            auto texture = new MutableTexture(uvec2(2048, 2048));
             this._textures ~= texture;
 
             if(!texture.stitch(texID, area))
                 assert(false, "The texture is probably too large, or there's a bug.");
 
-            texID = 0;
             return TextureHandle(this, texture, area);
         }
 
@@ -472,7 +475,7 @@ final class RendererResources
                 import std.conv : to;
 
                 trace("Getting pixel data from OpenGL");
-                glBindTexture(GL_TEXTURE_2D, compound.textureID);
+                compound.use();
                 glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, cast(void*)buffer.ptr);
                 checkGLError();
 
@@ -498,93 +501,5 @@ final class RendererResources
                 FreeImage_Save(FIF_PNG, image, fileName.ptr);
             }
         }
-    }
-}
-
-private class CompoundTexture
-{
-    uint textureID;
-    const(uvec2) size;
-    uint nextY; // For now, we just stack them on top of eachother, and pretend the X-axis doesn't exist.
-                // TODO: Come up with/research packing algorithms.
-                // IMPORTANT: Normally OpenGL goes from the bottom-left, but our code makes coordinates work from the top-left.
-
-    this(uvec2 size)
-    {
-        // Find the max size of a texture.
-        //auto size = uvec2();
-        //glGetIntegerv(GL_MAX_TEXTURE_SIZE, cast(int*)&size.data[0]);
-        //size.data[1] = size.data[0];
-        this.size = size;
-
-        // Then generate the texture.
-        glGenTextures(1, &this.textureID);
-        glBindTexture(GL_TEXTURE_2D, this.textureID);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, null);
-        checkGLError();
-    }
-
-    ~this()
-    {
-        if(textureID > 0)
-            glDeleteTextures(1, &this.textureID);
-    }
-
-    /// Returns: Whether it was able to stitch the texture on or not.
-    bool stitch(uint texID, ref RectangleI area)
-    {
-        import std.experimental.logger;
-        tracef("Attempting to stitch texture %s", texID);
-        
-        glBindTexture(GL_TEXTURE_2D, texID);
-        
-        ivec2 size;
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH,  &size.data[0]);
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &size.data[1]);
-        tracef("The texture has a size of %s", size);
-
-        if(size.y + this.nextY >= this.size.y) // Not enough space vertically.
-        {
-            trace("There is not enough room for the texture");
-            return false;
-        }
-        debug infof("[DEBUG] nextY = %s", nextY);
-
-        // I don't gain much by using the GC here.
-        import core.stdc.stdlib : malloc, free;
-        auto totalBytes = (size.y * size.x) * 4;
-        auto bytes      = (cast(ubyte*)malloc(totalBytes))[0..totalBytes];
-        scope(exit) free(bytes.ptr);
-        debug infof("[DEBUG] totalBytes = %s", totalBytes);
-
-        trace("Getting pixels...");
-        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, cast(void*)bytes.ptr);
-        checkGLError();
-
-        trace("Transferring pixels...");
-        glBindTexture(GL_TEXTURE_2D, this.textureID);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-        glTexSubImage2D(
-            GL_TEXTURE_2D,
-            0,
-            0, // xoffset
-            (this.size.y - nextY) - size.y, // yoffset, with some maths so we can work from the top-left
-            size.x,
-            size.y,
-            GL_RGBA,
-            GL_UNSIGNED_BYTE,
-            cast(void*)bytes.ptr
-        );
-        checkGLError();
-
-        area = RectangleI(0, nextY, size);
-        trace("Texture was stiched to area %s", area);
-
-        this.nextY += size.y;
-        return true;
     }
 }

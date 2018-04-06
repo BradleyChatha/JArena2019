@@ -45,6 +45,143 @@ abstract class TextureBase
 }
 
 /++
+ +
+ + ++/
+class MutableTexture : TextureBase
+{
+    private
+    {
+        uint _textureID;
+        const(uvec2) _size;
+        uint xOffset;
+        uint nextY; // IMPORTANT: Normally OpenGL goes from the bottom-left, but our code makes coordinates work from the top-left.
+        uint largestY; // Stores the Y axis of the largest thing stitched on. Gets reset anytime the nextY value is moved.
+    }
+
+    public
+    {
+        this(const uvec2 size)
+        {
+            this._size = size;
+
+            // Generate the texture.
+            glGenTextures(1, &this._textureID);
+            glBindTexture(GL_TEXTURE_2D, this._textureID);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, null);
+            checkGLError();
+        }
+
+        ~this()
+        {
+            if(_textureID > 0)
+                glDeleteTextures(1, &this._textureID);
+        }
+
+        override void use()
+        {
+            glBindTexture(GL_TEXTURE_2D, this._textureID);
+        }
+
+        @safe @nogc
+        override const(uvec2) size() nothrow const
+        {
+            return this._size;
+        }
+
+        bool stitch(GLenum ColourFormat)(const ubyte[] pixels, const ivec2 size, out RectangleI area)
+        {
+            import std.experimental.logger;
+            infof("Stitching pixel array. Format = %s", ColourFormat);
+
+            enum ColourInfo = getInfoFor!ColourFormat;
+
+            // Error checking
+            fatalf((pixels.length % ColourInfo.bytesPerPixel) != 0,
+                "The given pixel array needs to be a multiple of %s. It's length is %s.",
+                ColourInfo.bytesPerPixel, pixels.length
+            );
+
+            // Calculate how many bytes there are per row, and in total, then make sure it matches up with the array given.
+            auto bytesPerRow    = (ColourInfo.bytesPerPixel * size.x);
+            auto expectedBytes  = (size.y * bytesPerRow);
+            fatalf(pixels.length != expectedBytes,
+                "The given pixel array needs to have a length of %s, to match the given size of %s. It's length is %s",
+                expectedBytes, size, pixels.length
+            );
+
+            // Move the nextY value down if we've reached the edge of the texture.
+            if(size.x + this.xOffset >= this._size.x)
+            {
+                this.xOffset  = 0;
+                this.nextY   += this.largestY;
+                this.largestY = 0;
+            }
+
+            // Using our current algorithm, once we reach the bottom of the texture, there's no room.
+            if(size.y + this.nextY >= this._size.y)
+            {
+                info("There is not enough room for the texture");
+                return false;
+            }
+
+            // Transfer the pixels over
+            this.use();
+            glTexSubImage2D(
+                GL_TEXTURE_2D,
+                0,
+                xOffset,
+                (this.size.y - nextY) - size.y, // yoffset, with some maths so we can work from the top-left
+                size.x,
+                size.y,
+                ColourInfo.bufferType,
+                GL_UNSIGNED_BYTE,
+                cast(void*)pixels.ptr
+            );
+            checkGLError();
+
+            // Increase the X-offset (The y-offset increase is handled above)
+            area = RectangleI(this.xOffset, this.nextY, size);
+            
+            if(size.y > this.largestY)
+                this.largestY = size.y;
+            this.xOffset += size.x;
+
+            return true;
+        }
+
+        /// Returns: Whether it was able to stitch the texture on or not.
+        bool stitch(uint texID, out RectangleI area)
+        {
+            import std.experimental.logger;
+            tracef("Attempting to stitch texture with ID of %s", texID);
+            
+            // Figure out the size
+            ivec2 size;
+            glBindTexture(GL_TEXTURE_2D, texID);
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH,  &size.data[0]);
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &size.data[1]);
+            tracef("The texture has a size of %s", size);
+
+            // Allocate enough memory to load it from the GPU
+            import core.stdc.stdlib : malloc, free;
+            auto totalBytes = (size.y * size.x) * 4; // OpenGL will convert the texture's data to RGBA for us.
+            auto bytes      = (cast(ubyte*)malloc(totalBytes))[0..totalBytes];
+            scope(exit) free(bytes.ptr);
+
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, cast(void*)bytes.ptr);
+            checkGLError();
+
+            // Perform the stitch.
+            return this.stitch!GL_RGBA8(bytes, size, area);
+        }
+    }
+}
+
+/++
  + 
  + ++/
 class Texture : TextureBase

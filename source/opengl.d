@@ -63,3 +63,21 @@ void checkGLError(int line = __LINE__, string file = __FILE__,
     if(next.code != GL_NO_ERROR)
         errorf!(line, file, funcName, prettyFuncName, moduleName)("[Code:%s | Msg:'%s']", next.code, next.message);
 }
+
+struct PixelInfo
+{
+    uint bytesPerPixel;
+    uint bufferType;
+}
+
+PixelInfo getInfoFor(GLenum ColourFormat)()
+{
+    // I want a custom error message, which is why I'm not using a contract.
+    static assert(ColourFormat == GL_RGBA8, 
+                "The given ColourFormat is unsupported.\n"~
+                "Supported types: GL_RGBA8");
+
+    // Configure certain data depending on the colour format.
+    static if(ColourFormat == GL_RGBA8) return PixelInfo(4, GL_RGBA);
+    else static assert(false);
+}
