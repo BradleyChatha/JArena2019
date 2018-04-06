@@ -224,6 +224,7 @@ class Text : ITransformable
             float largestHeight = 0;
             auto charSize = vec2(0);
             bool wasNewline = false;
+            this._transformed.length = 0;
             this._verts.length = 0;
             foreach(ch; text)
             {
@@ -276,8 +277,10 @@ class Text : ITransformable
                 pos.x = pos.x + cast(float)(glyph.advance.x >> 6); // >> 6 is to convert it into pixels.
                 pos.y = pos.y + cast(float)(glyph.advance.y >> 6);
             }
+
             foreach(ref vert; this._verts)
                 vert.position += vec2(0, largestHeight);
+            this._transformed.length = this._verts.length;
 
             if(wasNewline)
                 this._size = vec2(largestX + charSize.x, largestY + charSize.y);
@@ -290,7 +293,6 @@ class Text : ITransformable
         Vertex[] verts() nothrow
         {
             // TODO: A dirty flag so we don't recalculate this every frame.
-            this._transformed.length = this._verts.length;
             this._transformed[0..$]  = this._verts[0..$];
             this._transform.transformVerts(this._transformed);
 

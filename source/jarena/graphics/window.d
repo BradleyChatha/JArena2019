@@ -127,7 +127,7 @@ final class Window
         /++
          + Creates the window.
          + ++/
-        this(string title, uvec2 size, uint fps = 60)
+        this(string title, uvec2 size)
         {
             import std.string : toStringz;
 

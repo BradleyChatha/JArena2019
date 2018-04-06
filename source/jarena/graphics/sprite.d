@@ -184,6 +184,9 @@ class MutableTexture : TextureBase
         void dump(string id)
         {
             import derelict.freeimage.freeimage;
+            import std.file : exists, mkdirRecurse;
+            if(!TEXTURE_DUMP_DIRECTORY.exists)
+                mkdirRecurse(TEXTURE_DUMP_DIRECTORY);
 
             trace("Allocating FreeImage buffer");
             auto size  = this.size;

@@ -229,12 +229,8 @@ final class Renderer
                     previousCam    = bucket.camera;
                 }
 
-                // Setting their length to 0 lets me reuse the memory without angering the GC
-                this._quadBuffer.verts.length = 0;
-                this._quadBuffer.indicies.length = 0;
-
-                this._quadBuffer.verts ~= bucket.verts;
-                this._quadBuffer.indicies ~= bucket.indicies;
+                this._quadBuffer.verts = bucket.verts;
+                this._quadBuffer.indicies = bucket.indicies;
                 
                 this._quadBuffer.update();
                 debug checkGLError();
