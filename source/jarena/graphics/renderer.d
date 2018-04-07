@@ -299,6 +299,9 @@ final class Renderer
         /++
          + Draws a rectangle to the screen.
          +
+         + Notes:
+         +  This is a less efficient, but more convinient way of drawing a `RectangleShape` to the screen.
+         +
          + Params:
          +  position        = The position of the rectangle.
          +  size            = The size of the rectangle.
@@ -313,14 +316,27 @@ final class Renderer
             this._rect.borderColour = borderColour;
             this._rect.borderSize   = borderThickness;
 
+            this.drawRectShape(this._rect);
+        }
+
+        /++
+         + Draws a `RectangleShape` to the screen.
+         +
+         + Params:
+         +  shape = The shape to draw.
+         + ++/
+        void drawRectShape(RectangleShape shape)
+        {
+            assert(shape !is null);
+
             // Draw the rectangle's filling
-            this.drawQuad(null, this._rect.verts, this._colourShader);
+            this.drawQuad(null, shape.verts, this._colourShader);
 
             // Draw the border.
-            this.drawQuad(null, this._rect.borderLeftVerts,   this._colourShader);
-            this.drawQuad(null, this._rect.borderRightVerts,  this._colourShader);
-            this.drawQuad(null, this._rect.borderTopVerts,    this._colourShader);
-            this.drawQuad(null, this._rect.borderBottomVerts, this._colourShader);
+            this.drawQuad(null, shape.borderLeftVerts,   this._colourShader);
+            this.drawQuad(null, shape.borderRightVerts,  this._colourShader);
+            this.drawQuad(null, shape.borderTopVerts,    this._colourShader);
+            this.drawQuad(null, shape.borderBottomVerts, this._colourShader);
         }
 
         /// Draws a `Sprite` to the screen.

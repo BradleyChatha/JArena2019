@@ -18,7 +18,6 @@ const DEBUG_FONT_SIZE           = 10;
 const DEBUG_TEXT_COLOUR         = Colours.rockSalt;
 const DEBUG_CONTAINER_COLOUR    = Colour(0, 0, 0, 128);
 const DEBUG_CONTAINER_POSITION  = vec2(1);
-const DEBUG_CONTAINER_Y_PADDING = 0; // Used to try and combat SFML's inaccurate Y-axis readings for fonts.
 
 final class Engine
 {
@@ -96,7 +95,6 @@ final class Engine
                                                         this._fps.frameCount, 
                                                         this._fps.elapsedTime.total!"msecs",
                                                         getMemInfo().usedRAM / (1024 * 1024)));
-                this._debugGui.size = this._debugGui.size + vec2(0, DEBUG_CONTAINER_Y_PADDING);
             });
             this.events.subscribe(Window.Event.Close, (_,__) => this._window.close());
             this.events.subscribe(Window.Event.Resized, (_, m)
@@ -113,7 +111,7 @@ final class Engine
             // Debug stuff
             debug this._config.showDebugText = true;
             if(this._config.showDebugText.get(false))
-                this._timers.every(1.msecs, (){this.events.mailCommand(Event.UpdateFPSDisplay);});
+                this._timers.every(1.seconds, (){this.events.mailCommand(Event.UpdateFPSDisplay);});
         }
 
         ///

@@ -85,6 +85,7 @@ class SimpleTextButton : SimpleButton
         const SFML_TEXT_OFFSET_X = 0;
         const SFML_TEXT_OFFSET_Y = 0;
         Text _text;
+        RectangleShape _rect;
 
         void centerText()
         {
@@ -113,6 +114,9 @@ class SimpleTextButton : SimpleButton
         {
             assert(text !is null);
             this._text = text;
+            this._rect = new RectangleShape();
+            this._rect.borderSize = 1;
+            this._rect.borderColour = Colour.black;
 
             super(func, position, size, colour, mouseOverColour, clickColour);
         }
@@ -153,13 +157,20 @@ class SimpleTextButton : SimpleButton
 
     override
     {
+        protected void onColourChanged(Colour old, Colour newCol)
+        {
+            this._rect.colour = newCol;
+        }
+
         protected void onPositionChanged(vec2 oldPos, vec2 newPos)
         {
+            this._rect.position = newPos;
             this.updateLayout();
         }
         
         protected void onSizeChanged(vec2 oldSize, vec2 newSize)
         {
+            this._rect.size = newSize;
             this.updateLayout();
         }
         
@@ -170,7 +181,7 @@ class SimpleTextButton : SimpleButton
 
         public void onRender(Window window)
         {
-            window.renderer.drawRect(super.position, super.size, super.colour);
+            window.renderer.drawRectShape(this._rect);
             window.renderer.drawText(this._text);
         }
     }

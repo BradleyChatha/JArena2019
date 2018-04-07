@@ -30,10 +30,11 @@ final class StackContainer : Container
 
     private
     {
-        const float _padding = 4; // TODO: Make this changeable.
-        UIElement[] _children;
-        Direction   _direction;
-        AutoSize    _shouldResize = AutoSize.yes;
+        const float     _padding = 4; // TODO: Make this changeable.
+        UIElement[]     _children;
+        Direction       _direction;
+        AutoSize        _shouldResize = AutoSize.yes;
+        RectangleShape  _rect;
 
         void sortPositions()
         {
@@ -91,8 +92,11 @@ final class StackContainer : Container
         ///
         this(Direction direction = Direction.Vertical, Colour colour = Colour.transparent)
         {
-            this._direction = direction;
-            super.colour = colour;
+            this._rect              = new RectangleShape();
+            this._rect.borderSize   = 1;
+            this._rect.borderColour = Colour.black;
+            this._direction         = direction;
+            super.colour            = colour;
         }
 
         ///
@@ -140,8 +144,6 @@ final class StackContainer : Container
     override
     {
         protected void onNewParent(UIElement newParent, UIElement oldParent){}
-        protected void onSizeChanged(vec2 oldSize, vec2 newSize){}
-        protected void onColourChanged(Colour oldColour, Colour newColour){}
         protected void onChildStateChanged(UIElement child, StateChange change)
         {
             this.sortPositions();
@@ -162,7 +164,18 @@ final class StackContainer : Container
         
         protected void onPositionChanged(vec2 oldPos, vec2 newPos)
         {
+            this._rect.position = newPos;
             this.sortPositions();
+        }
+
+        protected void onSizeChanged(vec2 oldSize, vec2 newSize)
+        {
+            this._rect.size = newSize;
+        }
+
+        protected void onColourChanged(Colour oldColour, Colour newColour)
+        {
+            this._rect.colour = newColour;
         }
 
         public void onUpdate(InputManager input, Duration deltaTime)
@@ -174,7 +187,7 @@ final class StackContainer : Container
         public void onRender(Window window)
         {
             if(super.colour != Colour.transparent)
-                window.renderer.drawRect(super.position, super.size, super.colour);
+                window.renderer.drawRectShape(this._rect);
 
             foreach(child; this.children)
                 child.onRender(window);
