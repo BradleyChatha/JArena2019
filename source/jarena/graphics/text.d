@@ -130,6 +130,7 @@ class Text : ITransformable
         Buffer!Vertex _transformed;
         vec2          _size;
         Colour        _colour;
+        bool          _dirtyVerts;
 
         @trusted
         this(Font font, vec2 position, uint charSize, Colour colour)
@@ -167,6 +168,7 @@ class Text : ITransformable
         {
             this._transform.translation = pos;
             this._transform.markDirty();
+            this._dirtyVerts = true;
         }
         
         ///
@@ -204,6 +206,9 @@ class Text : ITransformable
             foreach(ref vert; this._verts[0..$])
                 vert.colour = col;
 
+            foreach(ref vert; this._transformed[0..$])
+                vert.colour = col;
+
             this._colour = col;
         }    
 
@@ -228,6 +233,7 @@ class Text : ITransformable
             bool wasNewline = false;
             this._transformed.length = 0;
             this._verts.length = 0;
+            this._text = text;
             foreach(ch; text)
             {
                 import std.math : abs;
@@ -283,6 +289,7 @@ class Text : ITransformable
             foreach(ref vert; this._verts[0..$])
                 vert.position += vec2(0, largestHeight);
             this._transformed.length = this._verts.length;
+            this._dirtyVerts = true;
 
             if(wasNewline)
                 this._size = vec2(largestX + charSize.x, largestY + charSize.y);
@@ -294,9 +301,12 @@ class Text : ITransformable
         @property @safe //@nogc
         Vertex[] verts() nothrow
         {
-            // TODO: A dirty flag so we don't recalculate this every frame.
-            this._transformed[0..$]  = this._verts[0..$];
-            this._transform.transformVerts(this._transformed[0..$]);
+            if(this._dirtyVerts)
+            {
+                this._transformed[0..$]  = this._verts[0..$];
+                this._transform.transformVerts(this._transformed[0..$]);
+                this._dirtyVerts = false;
+            }
 
             return this._transformed[0..$];
         }
