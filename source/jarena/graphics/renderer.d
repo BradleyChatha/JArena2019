@@ -28,6 +28,7 @@ final class Camera
         Transform _view;
         vec2      _size;
         mat4      _ortho;
+        mat4      _viewInverted;
 
         @trusted
         void updateProjection() nothrow
@@ -38,7 +39,7 @@ final class Camera
         }
     }
 
-    public
+    public final
     {
         /++
          + 
@@ -146,6 +147,15 @@ final class Camera
         {
             //sfView_setViewport(this.handle, port.toSF!sfFloatRect);
         }
+
+        @property @trusted
+        mat4 viewMatrix()
+        {
+            if(this._view.isDirty)
+                this._viewInverted = this._view.matrix.invert; // Note: ".matrix" updates it from being dirty.
+
+            return this._viewInverted;
+        }
     }
 }
 
@@ -194,7 +204,7 @@ final class Renderer
         Buffer!uint   _indexBuffer;
     }
 
-    public
+    public final
     {
         this(Window window)
         {
@@ -381,7 +391,7 @@ final class Renderer
         // When 'sprite' has a different texture or shader than the last one, a new bucket is created
         // Even there is a bucket that already has 'sprite''s texture and shader, it won't be added into that bucket unless it's the latest one
         // This preserves draw order, while also being a slight optimisation.
-        auto camera = CameraInfo(this.camera._view.matrix.invert, this.camera._ortho);
+        auto camera = CameraInfo(this.camera.viewMatrix, this.camera._ortho);
         if(this._buckets.length == 0 
         || (this._buckets[$-1].texture != texture)
         || this._buckets[$-1].shader != shader

@@ -12,7 +12,7 @@ private
  + A type that specialises in acting like a normal built-in D array, with the benefit
  + of that it will attempt to always reuse memory.
  + ++/
-class Buffer(T)
+final class Buffer(T)
 if(isType!T)
 {
     private
@@ -21,7 +21,7 @@ if(isType!T)
         T[] _slice;  // A *Slice* to the _buffer. This should *never* be appended to.
     }
 
-    public
+    public final
     {
         @safe
         this(size_t initialCapacity = 128)

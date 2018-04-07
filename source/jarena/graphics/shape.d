@@ -7,7 +7,7 @@ private
 
 class RectangleShape
 {
-    private
+    private final
     {
         Transform    _transform;
         uint         _borderSize;
@@ -41,7 +41,7 @@ class RectangleShape
         }
     }
 
-    public
+    public final
     {
         ///
         @safe
@@ -112,6 +112,9 @@ class RectangleShape
         @property @safe @nogc
         void borderSize(uint siz) nothrow
         {
+            if(this._borderSize == siz)
+                return;
+
             this._borderSize = siz;
             this.recalcBorderVerts();
         }

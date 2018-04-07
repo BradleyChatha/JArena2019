@@ -39,8 +39,9 @@ struct Transform
         @safe @nogc
         Vertex[] transformVerts(return Vertex[] verts) nothrow
         {
+            auto matrix = this.matrix;
             foreach(ref vert; verts)
-                vert.position = vec2(this.matrix * vec4(vert.position, 0, 1.0));
+                vert.position = vec2(matrix * vec4(vert.position, 0, 1.0));
 
             return verts;
         }
@@ -68,6 +69,12 @@ struct Transform
         void markDirty() nothrow pure
         {
             this._dirty = true;
+        }
+
+        @property @safe @nogc
+        bool isDirty() nothrow const pure
+        {
+            return this._dirty;
         }
         
         /++
