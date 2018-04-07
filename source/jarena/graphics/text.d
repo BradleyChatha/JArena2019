@@ -126,8 +126,8 @@ class Text : ITransformable
         const(char)[] _text;
         Transform     _transform;
         uint          _charSize;
-        Vertex[]      _verts;
-        Vertex[]      _transformed;
+        Buffer!Vertex _verts;
+        Buffer!Vertex _transformed;
         vec2          _size;
         Colour        _colour;
 
@@ -135,6 +135,8 @@ class Text : ITransformable
         this(Font font, vec2 position, uint charSize, Colour colour)
         {
             assert(font !is null);
+            this._transformed = new Buffer!Vertex();
+            this._verts   = new Buffer!Vertex();
             this._font    = font;
             this.charSize = charSize;
             this.colour   = colour;
@@ -199,7 +201,7 @@ class Text : ITransformable
         @property @trusted @nogc
         void colour(Colour col) nothrow
         {
-            foreach(ref vert; this._verts)
+            foreach(ref vert; this._verts[0..$])
                 vert.colour = col;
 
             this._colour = col;
@@ -278,7 +280,7 @@ class Text : ITransformable
                 pos.y = pos.y + cast(float)(glyph.advance.y >> 6);
             }
 
-            foreach(ref vert; this._verts)
+            foreach(ref vert; this._verts[0..$])
                 vert.position += vec2(0, largestHeight);
             this._transformed.length = this._verts.length;
 
@@ -294,9 +296,9 @@ class Text : ITransformable
         {
             // TODO: A dirty flag so we don't recalculate this every frame.
             this._transformed[0..$]  = this._verts[0..$];
-            this._transform.transformVerts(this._transformed);
+            this._transform.transformVerts(this._transformed[0..$]);
 
-            return this._transformed;
+            return this._transformed[0..$];
         }
         
         /// Internal/debug use only

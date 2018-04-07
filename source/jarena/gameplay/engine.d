@@ -113,7 +113,7 @@ final class Engine
             // Debug stuff
             debug this._config.showDebugText = true;
             if(this._config.showDebugText.get(false))
-                this._timers.every(1.seconds, (){this.events.mailCommand(Event.UpdateFPSDisplay);});
+                this._timers.every(1.msecs, (){this.events.mailCommand(Event.UpdateFPSDisplay);});
         }
 
         ///
@@ -126,7 +126,7 @@ final class Engine
             if(this._input.isKeyDown(Scancode.ESCAPE))
                 this._window.close();
 
-            this._window.renderer.clear(Colour(0, 0, 0, 255));
+            this._window.renderer.clear();
             this._timers.onUpdate(this._fps.elapsedTime);
             this._scenes.onUpdate(this._window, this._fps.elapsedTime);
 

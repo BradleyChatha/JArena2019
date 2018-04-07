@@ -139,7 +139,7 @@ class GLTest : Scene
             this.sprite2 = new Sprite(super.manager.cache.get!SpriteAtlas("Explosion Atlas").texture);
             InitInfo.renderResources.dumpTextures();
 
-            auto dummy = new Text(super.manager.cache.get!Font("Crackdown"), "hey guuurl", vec2(0), 48);
+            auto dummy = new Text(super.manager.cache.get!Font("Crackdown"), "hey guuurl", vec2(0), 128);
             (cast(MutableTexture)dummy.texture).dump("font");
 
             assert(this.sprite.texture == this.sprite2.texture,

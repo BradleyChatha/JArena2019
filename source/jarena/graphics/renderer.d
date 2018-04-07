@@ -154,6 +154,12 @@ final class Renderer
 {
     private
     {
+        struct Slice
+        {
+            size_t start;
+            size_t end;
+        }
+
         // Since we want to use the info in the current camera *at the time that verticies are submitted*
         // we have to store it in a struct before the actual rendering, otherwise the camera info may be incorrect.
         struct CameraInfo
@@ -167,20 +173,25 @@ final class Renderer
         {
             TextureBase texture;
             Shader      shader;
-            CameraInfo  camera; // To make cameras work how I want, this is needed.
-            Vertex[]    verts;
-            uint[]      indicies;
+            CameraInfo  camera;   // To make cameras work how I want, this is needed.
+            Slice       verts;    // Slice into _vertBuffer
         }
         
         Window              _window;
         Camera              _camera;
         RendererResources   _resources;
-        RenderBucket[]      _buckets;
-        VertexBuffer        _quadBuffer;
+        Buffer!RenderBucket _buckets;
         Shader              _textureShader;
         Shader              _colourShader;
         Shader              _textShader;
         RectangleShape      _rect;
+
+        // Despite having very similar names, they're used for different purposes.
+        // VertexBuffer is used to store the data that is uploaded to the GPU
+        // Buffer!Vertex stores all verticies registered for rendering, which may or may not be rendered right away.
+        VertexBuffer  _quadBuffer;
+        Buffer!Vertex _vertBuffer;
+        Buffer!uint   _indexBuffer;
     }
 
     public
@@ -188,13 +199,16 @@ final class Renderer
         this(Window window)
         {
             this._window             = window;
+            this._buckets            = new Buffer!RenderBucket();
+            this._vertBuffer         = new Buffer!Vertex();
+            this._indexBuffer        = new Buffer!uint();
             this._resources          = new RendererResources();
             this._textureShader      = new Shader(defaultVertexShader, texturedFragmentShader);
             this._colourShader       = new Shader(defaultVertexShader, colouredFragmentShader);
             this._textShader         = new Shader(defaultVertexShader, textFragmentShader);
             InitInfo.renderResources = this._resources;
             this._rect               = new RectangleShape();
-            
+
             this._quadBuffer.setup();
         }
 
@@ -217,7 +231,8 @@ final class Renderer
         {            
             Shader previousShader;
             CameraInfo previousCam;
-            foreach(bucket; this._buckets)
+
+            foreach(bucket; this._buckets[0..$])
             {
                 // Change the shader/camera data
                 if(bucket.shader != previousShader || bucket.camera != previousCam)
@@ -229,8 +244,26 @@ final class Renderer
                     previousCam    = bucket.camera;
                 }
 
-                this._quadBuffer.verts = bucket.verts;
-                this._quadBuffer.indicies = bucket.indicies;
+                // Create the new indicies
+                assert((bucket.verts.end - bucket.verts.start) % 4 == 0);
+                auto quadCount = (bucket.verts.end - bucket.verts.start) / 4;
+                auto previous  = uint.max; // We add 1 right after, so uint.max becomes 0
+                uint[6] temp;
+                this._indexBuffer.length = 0;
+                foreach(i; 0..quadCount)
+                {
+                    temp = 
+                    [
+                        previous+1, previous+2, previous+3,
+                        previous+2, previous+3, previous+4
+                    ];
+                    previous += 4;
+                    this._indexBuffer ~= temp;
+                }
+
+                // Update the VBO with the new data
+                this._quadBuffer.verts    = this._vertBuffer[bucket.verts.start..bucket.verts.end];
+                this._quadBuffer.indicies = this._indexBuffer[0..$];
                 
                 this._quadBuffer.update();
                 debug checkGLError();
@@ -248,6 +281,8 @@ final class Renderer
             }
 
             this._buckets.length = 0;
+            this._vertBuffer.length = 0;
+            this._indexBuffer.length = 0;
             SDL_GL_SwapWindow(this._window.handle);
         }
 
@@ -338,6 +373,10 @@ final class Renderer
     // Long functions go at the bottom
     private void drawQuad(TextureBase texture, Vertex[4] verts, Shader shader)
     {
+        // Add in the verts
+        auto vertSlice  = Slice(this._vertBuffer.length, this._vertBuffer.length + 4);
+        this._vertBuffer ~= verts[];
+
         // All sprites that have the same texture and shader are batched together into a single bucket
         // When 'sprite' has a different texture or shader than the last one, a new bucket is created
         // Even there is a bucket that already has 'sprite''s texture and shader, it won't be added into that bucket unless it's the latest one
@@ -347,15 +386,14 @@ final class Renderer
         || (this._buckets[$-1].texture != texture)
         || this._buckets[$-1].shader != shader
         || this._buckets[$-1].camera != camera)
-            this._buckets ~= RenderBucket(texture, shader, camera, []~verts[], [0, 1, 2, 1, 2, 3]);
+        {
+            this._buckets ~= RenderBucket(texture, shader, camera, vertSlice);
+        }
         else
         {
-            auto firstVert = this._buckets[$-1].indicies[$-1];
-            this._buckets[$-1].verts    ~= verts[];
-            this._buckets[$-1].indicies ~= [firstVert+1, firstVert+2, firstVert+3, 
-                                            firstVert+2, firstVert+3, firstVert+4];
-
-            assert(this._buckets[$-1].indicies[$-1] < this._buckets[$-1].verts.length);
+            // If we get here, then we can just replace the end with the vertSlice
+            assert(vertSlice.start == this._buckets[$-1].verts.end);
+            this._buckets[$-1].verts.end = vertSlice.end;
         }
 
         // TODO:
