@@ -63,10 +63,13 @@ void checkGLError(int line = __LINE__, string file = __FILE__,
         string prettyFuncName = __PRETTY_FUNCTION__,
         string moduleName = __MODULE__)()
 {
-    import std.experimental.logger;
-    auto next = nextGLError();
-    if(next.code != GL_NO_ERROR)
-        errorf!(line, file, funcName, prettyFuncName, moduleName)("[Code:%s | Msg:'%s']", next.code, next.message);
+    debug
+    {
+        import std.experimental.logger;
+        auto next = nextGLError();
+        if(next.code != GL_NO_ERROR)
+            fatalf!(line, file, funcName, prettyFuncName, moduleName)("[Code:%s | Msg:'%s']", next.code, next.message);
+    }
 }
 
 struct PixelInfo

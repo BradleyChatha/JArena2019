@@ -23,6 +23,7 @@ class Shader
     private
     {
         uint _handle;
+        int[string] _locationCache;
     }
 
     public
@@ -133,14 +134,19 @@ class Shader
         {
             import std.experimental.logger;
 
+            auto ptr = (cast(string)uniName) in this._locationCache; // For a simple comparison, acting like it's immutable shouldn't be harmful
+            if(ptr !is null)
+                return *ptr;
+
             assert(uniName.length < 64);
             char[64] buffer;
             buffer[0..uniName.length] = uniName;
             buffer[uniName.length]    = '\0';
 
             auto loc = glGetUniformLocation(this.handle, buffer.ptr);
-            errorf(loc == -1, "Unable to find uniform named '%s'", uniName);
+            fatalf(loc == -1, "Unable to find uniform named '%s'", uniName);
 
+            this._locationCache[uniName.idup] = loc;
             return loc;
         }
 
