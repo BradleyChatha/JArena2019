@@ -144,7 +144,7 @@ class Text : ITransformable
         }
     }
 
-    public
+    public final
     {
         ///
         @trusted

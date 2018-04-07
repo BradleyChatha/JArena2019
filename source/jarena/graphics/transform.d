@@ -71,6 +71,7 @@ struct Transform
             this._dirty = true;
         }
 
+        pragma(inline, true)
         @property @safe @nogc
         bool isDirty() nothrow const pure
         {

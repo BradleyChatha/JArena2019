@@ -372,6 +372,7 @@ class Sprite : ITransformable
         Texture    _texture;
         RectangleI _textureRect;
         Vertex[4]  _verts; // [0]TopLeft|[1]TopRight|[2]BotLeft|[3]BotRight
+        Vertex[4]  _transformed;
     }
 
     public
@@ -443,6 +444,8 @@ class Sprite : ITransformable
             this._verts[1].position = posRect.topRight;
             this._verts[2].position = posRect.botLeft;
             this._verts[3].position = posRect.botRight;
+
+            this._transform.markDirty();
         }
 
         ///
@@ -504,12 +507,15 @@ class Sprite : ITransformable
         /// Also: We peform the model transform on the CPU, so we don't have to pass the data to the GPU
         ///       which would (in my beginner mind) make batching impossible.
         @property @safe @nogc
-        Vertex[4] verts() nothrow
+        final Vertex[4] verts() nothrow
         {
-            Vertex[4] toReturn = this._verts;
-            this._transform.transformVerts(toReturn[]);
+            if(this._transform.isDirty)
+            {
+                this._transformed = this._verts;
+                this._transform.transformVerts(this._transformed[]);
+            }
 
-            return toReturn;
+            return this._transformed;
         }
     }
 }

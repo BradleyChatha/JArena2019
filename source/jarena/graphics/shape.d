@@ -14,6 +14,7 @@ class RectangleShape
         Vertex[4]    _verts; // [0]TopLeft|[1]TopRight|[2]BotLeft|[3]BotRight
         Vertex[4*4]  _borderVerts; // [Per corner][0]TopLeft|[1]TopRight|[2]BotLeft|[3]BotRight
                                    // [0..4] = Top Left Corner|[4..8]TopRight|[8..12]BotLeft|[12..16]BotRight
+        Vertex[4*5]  _transformed; // [Final4] = _verts. [First16] = _borderVerts
 
         @safe @nogc
         void recalcBorderVerts() nothrow
@@ -38,6 +39,8 @@ class RectangleShape
                 this._borderVerts[index+2].position = vec2(-borderSize, 0) + offset;
                 this._borderVerts[index+3].position = offset;
             }
+
+            this._transform.markDirty();
         }
     }
 
@@ -168,13 +171,18 @@ class RectangleShape
         /// NOTE: These verts will have the model transform already applied
         /// Also: We peform the model transform on the CPU, so we don't have to pass the data to the GPU
         ///       which would (in my beginner mind) make batching impossible.
+        /// Also: When rendering the shape, $(B Call this function first) as this is the only function that
+        ///       will transform the verts if the transform is dirty.
         @property @safe @nogc
         Vertex[4] verts() nothrow
         {
-            Vertex[4] toReturn = this._verts;
-            this._transform.transformVerts(toReturn[]);
-
-            return toReturn;
+            if(this._transform.isDirty)
+            {
+                this._transformed[$-4..$] = this._verts[0..4];
+                this._transformed[0..$-4] = this._borderVerts[0..$];
+                this._transform.transformVerts(this._transformed);
+            }
+            return this._transformed[$-4..$];
         }
 
         /// ditto
@@ -183,12 +191,11 @@ class RectangleShape
         {
             Vertex[4] toReturn = 
             [
-                this._borderVerts[0..4][0],
-                this._borderVerts[0..4][1],
-                this._borderVerts[8..12][2],
-                this._borderVerts[8..12][3]
+                this._transformed[0..4][0],
+                this._transformed[0..4][1],
+                this._transformed[8..12][2],
+                this._transformed[8..12][3]
             ];
-            this._transform.transformVerts(toReturn[]);
 
             return toReturn;
         }
@@ -199,12 +206,11 @@ class RectangleShape
         {
             Vertex[4] toReturn = 
             [
-                this._borderVerts[8..12][0],
-                this._borderVerts[8..12][2],
-                this._borderVerts[12..16][1],
-                this._borderVerts[12..16][3]
+                this._transformed[8..12][0],
+                this._transformed[8..12][2],
+                this._transformed[12..16][1],
+                this._transformed[12..16][3]
             ];
-            this._transform.transformVerts(toReturn[]);
 
             return toReturn;
         }
@@ -215,12 +221,11 @@ class RectangleShape
         {
             Vertex[4] toReturn = 
             [
-                this._borderVerts[4..8][0],
-                this._borderVerts[4..8][1],
-                this._borderVerts[12..16][2],
-                this._borderVerts[12..16][3]
+                this._transformed[4..8][0],
+                this._transformed[4..8][1],
+                this._transformed[12..16][2],
+                this._transformed[12..16][3]
             ];
-            this._transform.transformVerts(toReturn[]);
 
             return toReturn;
         }
@@ -231,12 +236,11 @@ class RectangleShape
         {
             Vertex[4] toReturn = 
             [
-                this._borderVerts[0..4][0],
-                this._borderVerts[0..4][2],
-                this._borderVerts[4..8][1],
-                this._borderVerts[4..8][3]
+                this._transformed[0..4][0],
+                this._transformed[0..4][2],
+                this._transformed[4..8][1],
+                this._transformed[4..8][3]
             ];
-            this._transform.transformVerts(toReturn[]);
 
             return toReturn;
         }
