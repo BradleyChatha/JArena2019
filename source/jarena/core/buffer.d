@@ -24,7 +24,7 @@ if(isType!T)
     public
     {
         @safe
-        this(size_t initialCapacity = 256)
+        this(size_t initialCapacity = 128)
         {
             this._buffer.length = initialCapacity;
         }
@@ -95,4 +95,3 @@ if(isType!T)
         }
     }
 }
-alias __DUMMY = Buffer!int;
