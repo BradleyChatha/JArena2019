@@ -165,6 +165,9 @@ class Text : ITransformable
         @property @safe @nogc
         void position(vec2 pos) nothrow
         {
+            if(ivec2(pos) == ivec2(this.position))
+                return;
+
             this._transform.translation = pos;
             this._transform.markDirty();
         }
@@ -287,6 +290,7 @@ class Text : ITransformable
             foreach(ref vert; this._verts[0..$])
                 vert.position += vec2(0, largestHeight);
             this._transformed.length = this._verts.length;
+            this._transform.markDirty();
 
             if(wasNewline)
                 this._size = vec2(largestX + charSize.x, largestY + charSize.y);
