@@ -36,6 +36,7 @@ final class Engine
         Timers       _timers;
         Config       _config;
         uvec2*       _windowSizePtr;
+        Duration     _frameTime;
 
         // Debug stuff
         char[512]       _debugBuffer;
@@ -75,6 +76,7 @@ final class Engine
             this._debugGui      = new StackContainer(DEBUG_CONTAINER_POSITION, StackContainer.Direction.Horizontal, DEBUG_CONTAINER_COLOUR);
             this._debugGui.addChild(this._debugText);
             this._debugCamera   = new Camera(RectangleF(0, 0, vec2(this._window.size)));
+            this._frameTime     = (1000 / this._config.targetFPS.get(WINDOW_DEFAULT_FPS)).msecs;
             
             // Setup init info
             InitInfo.windowSize = this._window.size;
@@ -142,9 +144,19 @@ final class Engine
         ///
         void doLoop()
         {
+            import core.thread : Thread;
+
+            MonoTime start;
+            MonoTime end;
             while(!this._window.shouldClose)
             {
+                start = MonoTime.currTime;
                 this.onUpdate();
+                end = MonoTime.currTime;
+
+                auto taken = (end - start);
+                if(taken < this._frameTime)
+                    Thread.sleep(this._frameTime - taken);
             }
         }
 
