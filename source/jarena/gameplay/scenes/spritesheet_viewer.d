@@ -1,3 +1,4 @@
+/// Contains a scene used to view all cached sprite atlases.
 module jarena.gameplay.scenes.spriteatlas_viewer;
 
 private

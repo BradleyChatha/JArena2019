@@ -7,9 +7,11 @@ private
     import std.typecons : Flag;
 
     import jarena.core, jarena.graphics, jarena.gameplay.gui;
+
+    const TOGGLE_EDITOR_KEY = Scancode.F12;
 }
 
-const TOGGLE_EDITOR_KEY = Scancode.F12;
+/// Passed to `Scene.register`
 alias AutoRender = Flag!"render";
 
 /// A UDA to attach onto a `Scene` to provide it's name
@@ -665,7 +667,7 @@ abstract class GameObject
          +  Unlike a `Scene`, game objects that inherit from `IPostBox` aren't automatically subscribed/unsubscribed
          +  to the main event `PostOffice`, so this must be done manually during onRegister and onUnregister.
          +
-         +  This is because, a `Scene` may provide it's own/differente `PostOffices`, so having GameObjects auto subscribe to the
+         +  This is because, a `Scene` may provide it's own/different `PostOffices`, so having GameObjects auto-subscribe to the
          +  main event office might be undesirable.
          +
          + Params:

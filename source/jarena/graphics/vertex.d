@@ -1,3 +1,6 @@
+/++
+ + Contains the definition of a JArena vertex, as well as a VertexBuffer.
+ + ++/
 module jarena.graphics.vertex;
 
 private
@@ -7,10 +10,16 @@ private
     import opengl;
 }
 
+/// Defines a vertex.
 struct Vertex
 {
+    /// The position (in pixels for most cases, from the top-left)
     vec2   position;
+
+    /// The texture position (in pixels for most cases, from the top-left)
     vec2   uv;
+
+    /// The colour
     Colour colour; // Internally: ubyte[4]
 
     /++
@@ -33,17 +42,51 @@ struct Vertex
     }
 }
 
+/++
+ + The kind of primitive type that the verticies in a buffer store.
+ +
+ + Notes:
+ +  The values of this enum are meant to be passed to functions such as
+ +  `glDrawElements` and `glDrawArrays`.
+ + ++/
 enum BufferDataType : GLenum
 {
+    /// Every 3 verticies represents a single triangle.
     Triangles = GL_TRIANGLES
 }
 
+/++
+ + Defines how often the data in a buffer changes.
+ +
+ + Notes:
+ +  While it's unlikely to be used directly outside of buffers, these values are meant
+ +  for use with functions such as `glBufferData`.
+ + ++/
 enum BufferDrawType : GLenum
 {
+    /// The data doesn't change often.
     Static  = GL_STATIC_DRAW,
+
+    /// The data will probably change every frame/very often.
     Dynamic = GL_DYNAMIC_DRAW
 }
 
+/++
+ + A wrapper around an OpenGL VAO/VBO/EBO combo.
+ +
+ + Usage:
+ +  First, call `VertexBuffer.setup` before the first usage of a buffer.
+ +
+ +  Second, set what your verticies are in `VertexBuffer.verts`.
+ +
+ +  Third, set the indicies in `VertexBuffer.indicies`.
+ +
+ +  Fourth, call `VertexBuffer.update` to update the VBO with the data in `VertexBuffer.verts`,
+ +  and to update the EBO with the indicies in `VertexBuffer.indicies`.
+ +
+ +  Finally, bind the `VertexBuffer.vao` (or whichever is needed for the certain case) and
+ +  call something like `glDrawElements`. Alternatively, use `Renderer.drawBuffer`.
+ + ++/
 struct VertexBuffer
 {
     private
@@ -55,7 +98,7 @@ struct VertexBuffer
         BufferDrawType _drawType;
 
         @nogc
-        private void free() nothrow
+        void free() nothrow
         {
             glDeleteVertexArrays(1, &this._vao);
             glDeleteBuffers(1, &this._vbo);
@@ -65,9 +108,11 @@ struct VertexBuffer
     
     public
     {
+        /// The verticies contained in this buffer.
         Vertex[] verts;
-        uint[]  indicies;
-        alias verts this;
+
+        /// The indicies contained in this buffer.
+        uint[]   indicies;
 
         /// This type cannot be copied, use `ref` or put it on the heap if needed.
         @disable
@@ -80,10 +125,13 @@ struct VertexBuffer
         }
 
         /++
-         + Updates the buffer's VBO to reflect the current data in `verts` and 'indicies'.
+         + Updates the buffer's VBO and EBO to reflect the current data in `verts` and 'indicies'.
          +
          + Notes:
-         +  This function $(B must) be called for any changes made to `verts` and `indicies` to become visible.
+         +  This function $(B must) be called for any changes made to `verts` and `indicies` to become visible
+         +  on the GPU side of things.
+         +
+         +  The buffers are left bound afterwards.
          + ++/
         @nogc
         void update() nothrow
@@ -127,30 +175,35 @@ struct VertexBuffer
             glBindBuffer(GL_ARRAY_BUFFER, 0);
         }
 
+        /// Returns: The name of this buffer's VAO
         @property @safe @nogc
         uint vao() nothrow const
         {
             return this._vao;
         }
 
+        /// Returns: The name of this buffer's VBO
         @property @safe @nogc
         uint vbo() nothrow const
         {
             return this._vbo;
         }
 
+        /// Returns: The name of this buffer's EBO
         @property @safe @nogc
         uint ebo() nothrow const
         {
             return this._ebo;
         }
 
+        /// Returns: The `BufferDataType` of this buffer.
         @property @safe @nogc
         BufferDataType dataType() nothrow const
         {
             return this._dataType;
         }
 
+        /// Returns: The `BufferDrawType` of this buffer.
         @property @safe @nogc
         BufferDrawType drawType() nothrow const
         {

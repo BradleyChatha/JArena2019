@@ -1,3 +1,4 @@
+/// Contains a `Container` which has the ability to modify other `UIElement`s that it contains.
 module jarena.gameplay.gui.editor;
 
 private

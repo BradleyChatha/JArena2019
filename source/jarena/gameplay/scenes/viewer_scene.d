@@ -1,3 +1,4 @@
+/// Contains a base scene which can be used to easily create things like `AnimationViewerScene`.
 module jarena.gameplay.scenes.viewer_scene;
 
 private
@@ -9,6 +10,7 @@ private
     const TEXT_CHAR_SIZE        = 18;
     const TEXT_COLOUR           = Colours.bianca;
     const CAMERA_SPEED          = 200.0f; // Pixels/s
+    const INST_PANEL_Y_PADDING  = 2;
 }
 
 /++
@@ -61,7 +63,7 @@ abstract class ViewerScene : Scene
             instLabel.updateTextASCII(this.instructions ~ extraInstructions);
             
             this._instructionPanel.autoSize = StackContainer.AutoSize.no;
-            this._instructionPanel.size     = vec2(InitInfo.windowSize.x, this._instructionPanel.size.y);
+            this._instructionPanel.size     = vec2(InitInfo.windowSize.x, this._instructionPanel.size.y + INST_PANEL_Y_PADDING);
             this._instructionPanel.position = vec2(0, InitInfo.windowSize.y - this._instructionPanel.size.y);
         }
 

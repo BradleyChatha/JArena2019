@@ -1,3 +1,6 @@
+/++
+ + Contains code relating to rendering different kinds of shapes.
+ + ++/
 module jarena.graphics.shape;
 
 private
@@ -5,7 +8,8 @@ private
     import jarena.core, jarena.graphics;
 }
 
-class RectangleShape
+/// Describes a rectangle (or square) which can be rendered to the screen.
+class RectangleShape : ITransformable
 {
     private final
     {
@@ -46,7 +50,12 @@ class RectangleShape
 
     public final
     {
-        ///
+        /++
+         + Creates a new RectangleShape.
+         +
+         + Params:
+         +  area = The area that makes up the rectangle.
+         + ++/
         @safe
         this(RectangleF area = RectangleF(0,0,0,0))
         {
@@ -61,7 +70,12 @@ class RectangleShape
             this.area = area;
         }
 
-        ///
+        /++
+         + Moves the rectangle by a certain offset.
+         +
+         + Params:
+         +  offset = The offset to move by.
+         + ++/
         @safe @nogc
         void move(vec2 offset) nothrow
         {
@@ -69,14 +83,22 @@ class RectangleShape
             this._transform.markDirty();
         }
 
-        ///
+        /++
+         + Returns:
+         +  The position of this object.
+         + ++/
         @property @safe @nogc
         const(vec2) position() nothrow const
         {
             return this._transform.translation;
         }
 
-        ///
+        /++
+         + Sets the position of the transformable object.
+         +
+         + Params:
+         +  pos = The position to set the object at.
+         + ++/
         @property @safe @nogc
         void position(vec2 pos) nothrow
         {
@@ -84,14 +106,19 @@ class RectangleShape
             this._transform.markDirty();
         }
 
-        ///
+        /// Returns: The size of this rectangle.
         @property @safe @nogc
         const(vec2) size() nothrow const
         {
             return this._verts[3].position;
         }
 
-        ///
+        /++
+         + Sets the size of this rectangle.
+         +
+         + Params:
+         +  siz = The new size.
+         + ++/
         @property @safe @nogc
         void size(vec2 siz) nothrow
         {
@@ -104,14 +131,19 @@ class RectangleShape
             this.recalcBorderVerts();
         }
 
-        ///
+        /// Returns: The size of this rectangle's border.
         @property @safe @nogc
         uint borderSize() nothrow const
         {
             return this._borderSize;
         }
 
-        ///
+        /++
+         + Sets the size of this rectangle's border.
+         +
+         + Params:
+         +  siz = The new size;
+         + ++/
         @property @safe @nogc
         void borderSize(uint siz) nothrow
         {
@@ -122,14 +154,19 @@ class RectangleShape
             this.recalcBorderVerts();
         }
 
-        ///
+        /// Return: A `RectangleF` describing the area of this rectangle (not including borders)
         @property @safe @nogc
         const(RectangleF) area() nothrow const
         {
             return RectangleF(this.position, this.size);
         }
 
-        ///
+        /++
+         + Sets the position and size of this rectangle to match the given area.
+         +
+         + Params:
+         +  rect = The area to use.
+         + ++/
         @property @safe @nogc
         void area(RectangleF rect) nothrow
         {
@@ -137,14 +174,19 @@ class RectangleShape
             this.size     = rect.size;
         }
 
-        ///
+        /// Returns: The colour of this rectangle (the filling, not the borders)
         @property @safe @nogc
         const(Colour) colour() nothrow const
         {
             return this._verts[0].colour;
         }
 
-        ///
+        /++
+         + Sets the colour of this rectangle (the filling, not the borders)
+         +
+         + Params:
+         +  col = The new colour.
+         + ++/
         @property @safe @nogc
         void colour(Colour col) nothrow
         {
@@ -152,14 +194,19 @@ class RectangleShape
                 vert.colour = col;
         }
 
-        ///
+        /// Returns: The colour of this rectangle's border.
         @property @safe @nogc
         const(Colour) borderColour() nothrow const
         {
             return this._borderVerts[0].colour;
         }
 
-        ///
+        /++
+         + Sets the colour of this rectangle's border.
+         +
+         + Params:
+         +  col = The new colour.
+         + ++/
         @property @safe @nogc
         void borderColour(Colour col) nothrow
         {

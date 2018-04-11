@@ -6,6 +6,8 @@ void main()
 {
     sharedLog = new ConsoleLogger(LogLevel.all);
 
+    // The pre-compiled DLL for FreeType is missing some optional symbols we don't care about
+    // So this is to tell Derelict that we're fine with missing these select symbols.
     DerelictFT.missingSymbolCallback = (symbol)
     {
         import derelict.util.exception;
@@ -19,22 +21,24 @@ void main()
             return ShouldThrow.Yes;
     };
 
+    /// Load all of the derelict libraries.
     DerelictSDL2.load();
     DerelictFI.load();
     DerelictFT.load();
 
+    // Initialise the libraries.
     import std.exception : enforce;
     enforce(SDL_Init(SDL_INIT_EVERYTHING) == 0, "SDL was not able to initialise everything.");
     FreeImage_Initialise();
     
+    // Prepare all of the data loaders.
     SdlangLoader.setup();
     
+    // Setup the engine.
     auto engine = new Engine();
     engine.onInit();
 
-    engine.window.renderer.useWireframe = false;
-
-    engine.scenes.register(new GLTest());
+    // Register all the scenes, swap to the main one, then start the main game loop.
     engine.scenes.register(new Test());
     engine.scenes.register(new MenuScene());
     engine.scenes.register(new AnimationViewerScene(engine.scenes.cache.getCache!AnimationInfo));

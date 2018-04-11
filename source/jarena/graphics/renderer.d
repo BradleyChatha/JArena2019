@@ -1,3 +1,4 @@
+/// Contains code related to the main rendering process.
 module jarena.graphics.renderer;
 
 private
@@ -15,12 +16,10 @@ private
  +
  + Helpful_Read:
  +  https://www.sfml-dev.org/tutorials/2.4/graphics-view.php
- +
- + Notes:
- +  
  + ++/
 final class Camera
 {
+    /// If this is passed as the camera's view area, then it will select a default area for itself.
     static const DEFAULT_CAMERA_RECT = RectangleF(float.nan, float.nan, float.nan, float.nan);
     
     private
@@ -42,9 +41,13 @@ final class Camera
     public final
     {
         /++
-         + 
+         + Creates a new Camera with a given view area.
+         +
+         + Params:
+         +  rect = The view area to use.
          + ++/
-        this(RectangleF rect = DEFAULT_CAMERA_RECT)
+        @safe
+        this(RectangleF rect = DEFAULT_CAMERA_RECT) nothrow
         {
             if(rect == DEFAULT_CAMERA_RECT)
                 rect = RectangleF(0, 0, vec2(InitInfo.windowSize));
@@ -52,7 +55,12 @@ final class Camera
             this.reset(rect);
         }
 
-        ///
+        /++
+         + Moves the camera by a certain offset.
+         +
+         + Params:
+         +  offset = The offset to move by.
+         + ++/
         @safe @nogc
         void move(vec2 offset) nothrow pure
         {
@@ -118,14 +126,19 @@ final class Camera
             this.rotation = degrees.angle;
         }
 
-        ///
+        /// Returns: The size of the camera's viewing area.
         @property @safe @nogc
         const(vec2) size() nothrow const
         {
             return this._size;
         }
 
-        ///
+        /++
+         + Sets the size of the camera's viewing area.
+         +
+         + Params:
+         +  siz = The new size.
+         + ++/
         @property @safe
         void size(vec2 siz) nothrow
         {
@@ -148,6 +161,9 @@ final class Camera
             //sfView_setViewport(this.handle, port.toSF!sfFloatRect);
         }
 
+        /++
+         + Returns: A matrix suitable for the 'View' matrix within an MVP triplet.
+         + ++/
         @property @trusted
         mat4 viewMatrix()
         {
@@ -159,7 +175,33 @@ final class Camera
     }
 }
 
-///
+/++
+ + Contains code for rendering things to the screen.
+ +
+ + Notes:
+ +  Unless specified otherwise, all draw functions (such as `drawSprite` and `drawRect`) produce commands
+ +  for the renderer, which won't be executed until `Renderer.displayChanges` is called.
+ +
+ +  The renderer performs automatic batching of verticies if the following conditions are met -
+ +  
+ +  1. All verticies make use of the same `TextureBase`.
+ +  2. All verticies make use of the same `Shader`.
+ +  3. The state of `Renderer.camera` hasn't changed since the last call to a draw function.
+ +
+ +  This means, for example, that 20 calls to `drawRect`, without any changes to the camera, will
+ +  produce a single command that batches them all into one single draw call.
+ +
+ +  As another example, imagine 6 sprites are passed to `drawSprite`. Sprite 1 and 2 use Texture X, 
+ +  sprite 3 and 4 use Texture Y, and finally sprite 5 and 6 also use Texture X. For this example we will assume
+ +  that Texture X and Texture Y are not equal.
+ +
+ +  Each sprite is passed in order, so sprite 1 then 2 then 3, etc. are passed.
+ +
+ +  Sprite 1 and 2 are batched together, since they use the same texture, but when Sprite 3 is passed,
+ +  because it has a different texture, it won't be batched with the other two sprites and will instead be batched
+ +  with sprite 4. When sprite 5 and 6 are passed, even though they use the same texture as Sprite 1 and 2, because
+ +  of the 'gap' created by Sprite 1 and 2, it means Sprite 5 and 6 are batched seperately from them, in order to preserve draw order.
+ + ++/
 final class Renderer
 {
     private
@@ -206,6 +248,7 @@ final class Renderer
 
     public final
     {
+        /// Setup the renderer.
         this(Window window)
         {
             this._window             = window;
@@ -228,7 +271,12 @@ final class Renderer
                 //sfRectangleShape_destroy(this._rect);
         }
 
-        /// Clears the screen
+        /++
+         + Clears the screen to a certain colour.
+         +
+         + Params:
+         +  clearColour = The colour to set the screen to.
+         + ++/
         void clear(Colour clearColour = Colour.white)
         {
             float[4] clear = clearColour.asGLColour;
@@ -381,22 +429,22 @@ final class Renderer
         }
 
         /// Returns: The current `Camera` being used.
-        @property
-        Camera camera()
+        @property @safe @nogc
+        inout(Camera) camera() nothrow inout pure
         {
             return this._camera;
         }
 
         /// Sets the current `Camera` to use.
-        @property
-        void camera(Camera cam)
+        @property @safe @nogc
+        void camera(Camera cam) nothrow
         {
             assert(cam !is null);
             this._camera = cam;
         }
     }
 
-    // Long functions go at the bottom
+    // Long private functions go at the bottom
     private void drawQuad(TextureBase texture, Vertex[4] verts, Shader shader)
     {
         // Add in the verts
@@ -409,7 +457,7 @@ final class Renderer
         // This preserves draw order, while also being a slight optimisation.
         auto camera = CameraInfo(this.camera.viewMatrix, this.camera._ortho);
         if(this._buckets.length == 0 
-        || (this._buckets[$-1].texture != texture)
+        ||(this._buckets[$-1].texture != texture)
         || this._buckets[$-1].shader != shader
         || this._buckets[$-1].camera != camera)
         {
@@ -421,16 +469,6 @@ final class Renderer
             assert(vertSlice.start == this._buckets[$-1].verts.end);
             this._buckets[$-1].verts.end = vertSlice.end;
         }
-
-        // TODO:
-        //   If the GC becomes an issue, with the constant array allocations then
-        //   keep an array of Vertex[]s that is then given to newly made buckets.
-        //
-        //   Modify the length of the slices so that the previous memory is still
-        //   allocated, but can be used like normal, avoiding _some_ (not all) GC allocations.
-        //
-        //   This also means that if the game runs for a bit, eventually no/very little
-        //   GC allocations should take place, since everything will have all the memory it needs then.
     }
 }
 

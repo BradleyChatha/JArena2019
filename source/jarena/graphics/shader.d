@@ -1,3 +1,4 @@
+/// Contains everything related to shaders, including pre-defined shaders.
 module jarena.graphics.shader;
 
 private

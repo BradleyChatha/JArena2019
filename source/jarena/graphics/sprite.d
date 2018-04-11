@@ -1,4 +1,6 @@
-///
+/++
+ + Contains code related to Sprites and Textures.
+ + ++/
 module jarena.graphics.sprite;
 
 private
@@ -47,7 +49,9 @@ abstract class TextureBase
 }
 
 /++
+ + A texture (that lives on the GPU) which can be modified.
  +
+ + The main feature of this class is it's `MutableTexture.stitch` function.
  + ++/
 class MutableTexture : TextureBase
 {
@@ -55,19 +59,27 @@ class MutableTexture : TextureBase
     {
         uint _textureID;
         const(uvec2) _size;
-        uint xOffset;
-        uint nextY; // IMPORTANT: Normally OpenGL goes from the bottom-left, but our code makes coordinates work from the top-left.
+        uint xOffset;  // TODO: Condense xOffset and nextY into `vec2 offset;`
+        uint nextY;    // The Y axis of the next texture to stitch.
         uint largestY; // Stores the Y axis of the largest thing stitched on. Gets reset anytime the nextY value is moved.
     }
 
     public
     {
+        /++
+         + Creates a new mutable texture with a specific size.
+         +
+         + Notes:
+         +  Currently, specifying a size that is bigger than the GPU supports is undefined behaviour (probably a crash).
+         + ++/
+        @trusted
         this(const uvec2 size)
         {
             this._size = size;
 
             // Generate the texture.
             glGenTextures(1, &this._textureID);
+            assert(this._textureID > 0, "The texture couldn't be made");
             glBindTexture(GL_TEXTURE_2D, this._textureID);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_REPEAT);
@@ -83,17 +95,47 @@ class MutableTexture : TextureBase
                 glDeleteTextures(1, &this._textureID);
         }
 
+        /++
+         + Binds this texture as the active texture.
+         +
+         + Mostly only for internal use.
+         + ++/
         override void use()
         {
             glBindTexture(GL_TEXTURE_2D, this._textureID);
         }
 
+        /// Returns: The size of the entire texture.
         @safe @nogc
         override const(uvec2) size() nothrow const
         {
             return this._size;
         }
 
+        /++
+         + Stitches an array of pixels into the texture.
+         +
+         + Algorithm:
+         +  Textures are placed from left to right, tightly packed between eachother on the X axis (no gaps).
+         +
+         +  The height of the biggest texture is kept track of, this will be referred to as 'H'.
+         +
+         +  Whenever a texture would be stitched off to the right side of the texture (because there's not enough space)
+         +  then we 'move down' the Y axis by 'H'. 'H' is then set to 0, and the process repeats itself.
+         +
+         +  It is far from perfect, but it is suitable for now.
+         +
+         + Params:
+         +  ColourFormat = Any colour format that is supported by `opengl.getInfoFor`.
+         +                 Specifies the format of the data contained in `pixels`.
+         +  size         = The size of the image contained in `pixels`.
+         +  area         = This will be set to the area of the texture that `pixels` was stitched onto.
+         +
+         + Returns:
+         +  `true` if the stitch was successful.
+         +
+         +  `false` if there isn't enough room to stitch the texture.
+         + ++/
         bool stitch(GLenum ColourFormat)(const ubyte[] pixels, const ivec2 size, out RectangleI area)
         {
             import std.experimental.logger;
@@ -155,7 +197,19 @@ class MutableTexture : TextureBase
             return true;
         }
 
-        /// Returns: Whether it was able to stitch the texture on or not.
+        /++
+         + Stitches a texture into this texture.
+         +
+         + Algorithm:
+         +  Fetch the pixel data for `texID` in RGBA format.
+         +
+         +  Call `MutableTexture.stitch`(GLenum)(ubyte[], ivec2, out RectangleI) to perform the actual stitching.
+         +
+         + Returns:
+         +  `true` if the stitch was successful.
+         +
+         +  `false` if there isn't enough room to stitch the texture.
+         + ++/
         bool stitch(uint texID, out RectangleI area)
         {
             import std.experimental.logger;
@@ -181,6 +235,17 @@ class MutableTexture : TextureBase
             return this.stitch!GL_RGBA8(bytes, size, area);
         }
 
+        /++
+         + Dumps the pixel data of this texture into a file.
+         +
+         + Notes:
+         +  The directory that the file is outputted in is defined by `TEXTURE_DUMP_DIRECTORY`,
+         +  which is a private constant variable, so the source will have to be changed to change
+         +  the output directory.
+         +
+         + Params:
+         +  id = The name to give the file.
+         + ++/
         void dump(string id)
         {
             import derelict.freeimage.freeimage;
@@ -188,13 +253,13 @@ class MutableTexture : TextureBase
             if(!TEXTURE_DUMP_DIRECTORY.exists)
                 mkdirRecurse(TEXTURE_DUMP_DIRECTORY);
 
-            trace("Allocating FreeImage buffer");
+            info("Allocating FreeImage buffer");
             auto size  = this.size;
             auto image = FreeImage_Allocate(size.x, size.y, 32);
             scope(exit) FreeImage_Unload(image);
             
             // I don't gain much by using the GC here.
-            trace("Allocating pixel buffer");
+            info("Allocating pixel buffer");
             import core.stdc.stdlib : malloc, free;
             auto totalBytes = (size.y * size.x) * Colour.sizeof;
             auto buffer     = (cast(ubyte*)malloc(totalBytes))[0..totalBytes];
@@ -203,7 +268,7 @@ class MutableTexture : TextureBase
                 if(buffer.ptr !is null)
                     free(buffer.ptr);
             }
-            tracef("Buffer size in bytes: %s", buffer.length);
+            infof("Buffer size in bytes: %s", buffer.length);
 
             if(buffer.ptr is null)
             {
@@ -211,7 +276,7 @@ class MutableTexture : TextureBase
                 return;
             }
 
-            trace("Getting pixel data from OpenGL");
+            info("Getting pixel data from OpenGL");
             this.use();
             glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, cast(void*)buffer.ptr);
             checkGLError();
@@ -234,14 +299,25 @@ class MutableTexture : TextureBase
             }
             
             auto fileName = TEXTURE_DUMP_DIRECTORY~(id~".png\0");
-            tracef("Writing to file '%s'", fileName);
+            infof("Writing to file '%s'", fileName);
             FreeImage_Save(FIF_PNG, image, fileName.ptr);
         }
     }
 }
 
 /++
- + 
+ + Contains a texture.
+ +
+ + Notes:
+ +  In most cases, you will want this class for texturing.
+ +
+ +  This class will call into the game's renderer to stitch it's loaded data into
+ +  one of it's mega `MutableTextures`, which is then what is actually used for rendering.
+ +
+ +  This allows for many textures to be batched into a single one, meaning that any sprites using this texture,
+ +  can also be batched together with sprites using other textures that happen to point to the same mega texture.
+ +
+ +  Aka. things are faster (probably).
  + ++/
 class Texture : TextureBase
 {
@@ -259,15 +335,15 @@ class Texture : TextureBase
 
     public
     {
-        ///
+        /++
+         + Creates a new texture from the given path.
+         +
+         + Params:
+         +  filePath = The path to the texture to load.
+         + ++/
         @trusted
         this(string filePath)
         {
-            import std.file      : exists;
-            import std.exception : enforce;
-            import std.format    : format;
-            import std.string    : toStringz;
-
             tracef("Loading texture at path '%s'", filePath);
             auto texID   = this.loadImage(filePath);
             this._handle = InitInfo.renderResources.finaliseTexture(texID);
@@ -284,6 +360,12 @@ class Texture : TextureBase
             this._handle.bind();
         }
 
+        /++
+         + When comparing two `Texture`s for equality, what actually happens is that
+         + a comparison between the underlying, mega `MutableTexture` is performed.
+         +
+         + This $(B may) be undesirable behaviour, but it's an unfortunate tradeoff.
+         + ++/
         override bool opEquals(Object o)
         {
             auto tex = cast(Texture)o;
@@ -295,7 +377,7 @@ class Texture : TextureBase
             return (this._handle == tex._handle);
         }
 
-        ///
+        /// Returns: The size of this texture.
         @property @trusted @nogc
         override const(uvec2) size() nothrow const
         {
@@ -363,7 +445,10 @@ class Texture : TextureBase
     }
 }
 
-///
+/++
+ + Defines a sprite, which is technically just a `Texture` that has a `Transform`,
+ + alongside some other goodies.
+ + ++/
 class Sprite : ITransformable
 {
     private
@@ -377,9 +462,14 @@ class Sprite : ITransformable
 
     public
     {
-        ///
-        @safe
-        this(Texture texture)
+        /++
+         + Creates a new sprite, using a given texture.
+         +
+         + Params:
+         +  texture = The `Texture` to use.
+         + ++/
+        @safe @nogc
+        this(Texture texture) nothrow
         {
             assert(texture !is null);
             this._verts = 
@@ -394,7 +484,12 @@ class Sprite : ITransformable
             this.textureRect = RectangleI(0, 0, ivec2(texture.size));
         }
 
-        ///
+        /++
+         + Moves the sprite by a certain offset.
+         +
+         + Params:
+         +  offset = The offset to move by.
+         + ++/
         @safe @nogc
         void move(vec2 offset) nothrow
         {
@@ -402,14 +497,22 @@ class Sprite : ITransformable
             this._transform.markDirty();
         }
 
-        ///
+        /++
+         + Returns:
+         +  The position of this object.
+         + ++/
         @property @safe @nogc
         const(vec2) position() nothrow const
         {
             return this._transform.translation;
         }
 
-        ///
+        /++
+         + Sets the position of the transformable object.
+         +
+         + Params:
+         +  pos = The position to set the object at.
+         + ++/
         @property @safe @nogc
         void position(vec2 pos) nothrow
         {
@@ -417,14 +520,22 @@ class Sprite : ITransformable
             this._transform.markDirty();
         }
 
-        ///
+        /++
+         + Returns:
+         +  The area of the sprite's texture which is being rendered.
+         + ++/
         @property @safe @nogc
         const(RectangleI) textureRect() nothrow const
         {
             return this._textureRect;
         }
 
-        ///
+        /++
+         + Sets the area within the sprite's texture which is used for rendering.
+         +
+         + Notes:
+         +  This will also affect the size of the sprite on screen, as well as the `Sprite.bounds` function.
+         + ++/
         @property @safe @nogc
         void textureRect(RectangleI rect) nothrow
         {
@@ -448,30 +559,43 @@ class Sprite : ITransformable
             this._transform.markDirty();
         }
 
-        ///
+        /// Returns: The texture for this sprite.
         @property @safe @nogc
         inout(Texture) texture() nothrow inout
         {
             return this._texture;
         }
 
-        ///
+        /++
+         + Sets the texture for this sprite.
+         +
+         + Notes:
+         +  This will set the sprite's `Sprite.textureRect` to `(0,0,textureSizeX,textureSizeY)`
+         +
+         + Params:
+         +  texture = The texture to use.
+         + ++/
         @property @safe @nogc
         void texture(Texture texture) nothrow
         {
-            assert(texture !is null);
+            assert(texture !is null, "The given texture was null.");
             this._texture = texture;
             this.textureRect = RectangleI(0, 0, ivec2(texture.size));
         }
 
-        ///
+        /// Returns: The colour of this sprite.
         @property @safe @nogc
         const(Colour) colour() nothrow const
         {
             return this._verts[0].colour;
         }
 
-        ///
+        /++
+         + Sets the colour of this sprite.
+         +
+         + Params:
+         +  col = The colour to use.
+         + ++/
         @property @safe @nogc
         void colour(Colour col) nothrow
         {
@@ -499,7 +623,7 @@ class Sprite : ITransformable
         RectangleF bounds() nothrow
         {
             auto rect = this.textureRect;
-            return RectangleF(this.position, vec2(rect.size.x, rect.size.y));
+            return RectangleF(this.position, vec2(rect.size));
         }
 
         /// Internal use only.
@@ -520,7 +644,10 @@ class Sprite : ITransformable
     }
 }
 
-///
+/++
+ + Contains information about a sprite atlas, which is a single texture containing
+ + many different sprites, and/or many different sprite sheets.
+ + ++/
 class SpriteAtlas
 {
     /// Contains information about a sprite sheet
@@ -546,6 +673,8 @@ class SpriteAtlas
         }
 
         /++
+         + Gets the frame rect for a certain frame.
+         +
          + Params:
          +  column = The column of the frame.
          +  row    = The row of the frame.
@@ -565,7 +694,18 @@ class SpriteAtlas
             return this.frames[(this.columns * row) + column];
         }
 
-        ///
+        /++
+         + Creates a new `Sprite` who's texture is set to the texture of the underlying `SpriteAtlas`, and
+         + who's texture rect is set to the frame rect of a certain frame.
+         +
+         + Params:
+         +  column   = The column of the frame to use.
+         +  row      = The row of the frame to use.
+         +  position = The position to set the sprite at.
+         +
+         + Returns:
+         +  The newly made `Sprite`.
+         + ++/
         @safe
         Sprite makeSprite(uint column, uint row, vec2 position = vec2(0))
         {
@@ -576,7 +716,18 @@ class SpriteAtlas
             return sprite;
         }
 
-        ///
+        /++
+         + Changes the texture rect of the given `sprite` to the frame
+         + rect of a certain frame.
+         +
+         + Params:
+         +  sprite = The `Sprite` to modify.
+         +  column = The column of the frame to use.
+         +  row    = The row of the frame to use.
+         +
+         + Returns:
+         +  `sprite`
+         + ++/
         @safe
         Sprite changeSprite(return Sprite sprite, uint column, uint row)
         {
@@ -611,14 +762,22 @@ class SpriteAtlas
 
     public
     {
-        ///
+        /++
+         + Creates a new SpriteAtlas using the given texture.
+         + ++/
         this(Texture texture)
         {
             assert(texture !is null);
             this._texture = texture;
         }
 
-        ///
+        /++
+         + Registers a sprite.
+         +
+         + Params:
+         +  spriteName = The name of the sprite.
+         +  frame      = The area of the texture that makes up the sprite.
+         + ++/
         @safe
         void register(string spriteName, RectangleI frame)
         {
@@ -698,7 +857,7 @@ class SpriteAtlas
             this._spriteSheets[sheetName] = sheet;
         }
 
-        ///
+        /// Returns: A sprite `Sheet` that was previously registered.
         @safe
         Sheet getSpriteSheet(string sheetName)
         {
@@ -708,7 +867,7 @@ class SpriteAtlas
             return this._spriteSheets[sheetName];
         }
 
-        ///
+        /// Returns: The rectangle for a sprite that was previously registered.
         @safe
         RectangleI getSpriteRect(string spriteName)
         {
@@ -718,7 +877,17 @@ class SpriteAtlas
             return this._sprites[spriteName];
         }
 
-        ///
+        /++
+         + Creates a new sprite, who's texture is set to the texture of this atlas,
+         + and who's texture rect is set to whatever `SpriteAtlas.getSpriteRect(spriteName)` returns.
+         +
+         + Params:
+         +  spriteName = The name of the sprite to use.
+         +  position   = The position to give the sprite.
+         +
+         + Returns:
+         +  The newly made `Sprite`.
+         + ++/
         @safe
         Sprite makeSprite(string spriteName, vec2 position = vec2(0, 0))
         {
@@ -729,7 +898,17 @@ class SpriteAtlas
             return sprite;
         }
 
-        ///
+        /++
+         + Changes the texture rect of the given `sprite` to the sprite frame called
+         + `spriteName`
+         +
+         + Params:
+         +  sprite     = The `Sprite` to modify.
+         +  spriteName = The name of the sprite frame to use.
+         +
+         + Returns:
+         +  `sprite`
+         + ++/
         @safe
         Sprite changeSprite(return Sprite sprite, string spriteName)
         {
@@ -737,21 +916,21 @@ class SpriteAtlas
             return sprite;
         }
         
-        ///
+        /// Returns: The texture of this atlas.
         @property @safe @nogc
         inout(Texture) texture() nothrow inout
         {
             return this._texture;
         }
 
-        ///
+        /// Returns: A range going over the names of all registered sprites, in no particular order.
         @property @safe @nogc
         auto bySpriteKeys() nothrow inout
         {
             return this._sprites.byKey;
         }
 
-        ///
+        /// Returns: A range going over the names of all registered sprite sheets, in no particular order.
         @property @safe @nogc
         auto bySpriteSheetKeys() nothrow inout
         {

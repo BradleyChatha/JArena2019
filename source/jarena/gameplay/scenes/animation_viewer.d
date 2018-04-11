@@ -1,3 +1,4 @@
+/// Contains a scene that can view all of the cached animations in the game.
 module jarena.gameplay.scenes.animation_viewer;
 
 private

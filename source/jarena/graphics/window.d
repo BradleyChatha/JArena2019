@@ -1,4 +1,7 @@
-///
+/++
+ + Contains a class representing the game's window (using SDL). Also contains
+ + enums and a class relating to input handling.
+ + ++/
 module jarena.graphics.window;
 
 private
@@ -126,6 +129,10 @@ final class Window
     {
         /++
          + Creates the window.
+         +
+         + Params:
+         +  title = The window's title.
+         +  size  = The size of the window.
          + ++/
         this(string title, uvec2 size)
         {
@@ -159,7 +166,7 @@ final class Window
             trace("Reloading OpenGL");
             DerelictGL3.reload();
 
-            SDL_GL_SetSwapInterval(0);        // Vsync
+            SDL_GL_SetSwapInterval(0);        // Vsync. TODO: Make this a function.
             glViewport(0, 0, size.x, size.y); // Use the entire window to render
             glEnable(GL_BLEND);               // Enable blending
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -250,6 +257,7 @@ final class Window
                         office.mail(this._mouseMail);
                         break;
 
+                    // Window events, unfortunately, are nested within the main event object.
                     case SDL_WINDOWEVENT:
                         switch(e.window.event) with(SDL_WindowEventID)
                         {
@@ -259,13 +267,11 @@ final class Window
                                 office.mail(this._upositionMail);
                                 break;
 
-                            default:
-                                break;
+                            default: break;
                         }
                         break;
 
-                    default:
-                        break;
+                    default: break;
                 }
             }
         }
@@ -295,7 +301,7 @@ final class Window
         inout(Renderer) renderer() nothrow inout
         out(r)
         {
-            assert(r !is null);
+            assert(r !is null, "The Renderer is somehow null.");
         }
         do
         {
@@ -312,7 +318,10 @@ final class Window
             return uvec2(value);
         }
 
-         @property @safe @nogc
+        /// Returns:
+        ///  The handle for this window. 
+        ///  $(B Only for internal use, add a function if it's missing instead of using the handle directly.)
+        @property @safe @nogc
         inout(SDL_Window*) handle() nothrow inout
         {
             assert(this._handle !is null);
@@ -321,7 +330,7 @@ final class Window
     }
 }
 
-///
+/// Represents a button on a mouse.
 enum MouseButton : ubyte
 {
     None = 0,
@@ -336,11 +345,15 @@ enum MouseButton : ubyte
     Middle = 1 << 2
 }
 
-///
+/++
+ + A class that will handle taking the input events from the `Window`, and provides an
+ + interface to access the data from the input.
+ + ++/
 final class InputManager
 {
     private
     {
+        // Self note: `Scancode` is literally just `SDL_Scancode` but with the values renamed.
         enum KEY_COUNT = SDL_Scancode.SDL_NUM_SCANCODES;
         
         enum FuncKeyMask : ubyte
@@ -365,7 +378,7 @@ final class InputManager
         }
 
         KeyState[KEY_COUNT]  _keyStates; // Keys are indexed by scan code
-        Scancode[]           _tapped;    // Any ScanCodes in this array were tapped down this frame.
+        Buffer!Scancode      _tapped;    // Any ScanCodes in this array were tapped down this frame.
         MouseState           _mouse;
         FuncKeyMask          _funcKeyMask;
 
@@ -377,6 +390,7 @@ final class InputManager
             SDL_KeyboardEvent key = mail.value;
             //assert(keyCode < this._keyStates.length); //Caps lock is enough to crash it...
 
+            // Handle the special function keys.
             this._funcKeyMask  = FuncKeyMask.None;
             this._funcKeyMask |= (key.keysym.mod & KMOD_SHIFT) ? FuncKeyMask.Shift   : 0;
             this._funcKeyMask |= (key.keysym.mod & KMOD_CTRL)  ? FuncKeyMask.Control : 0;
@@ -388,7 +402,7 @@ final class InputManager
             auto state        = &this._keyStates[key.keysym.scancode];
             state.wasRepeated = (state.isDown && key.repeat);
             state.isDown      = (m.type == Window.Event.KeyDown);
-            state.wasTapped   = state.isDown;
+            state.wasTapped   = state.isDown; // This will be set to false in `onUpdate` if it's set to true.
 
             if(state.wasTapped)
                 this._tapped ~= cast(Scancode)key.keysym.scancode; // Scancode is just SDL_Scancode, so this is safe.
@@ -416,12 +430,27 @@ final class InputManager
 
     public
     {
-        ///
+        /++
+         + Setup the InputManager.
+         +
+         + Events:
+         +  `Window.Event.KeyDown` & `Window.Event.KeyUp`
+         + 
+         +  `Window.Event.MouseMoved`
+         +
+         +  `Window.Event.MouseButtonPressed` & `Window.Event.MouseButtonReleased`
+         +
+         + Params:
+         +  office = The `PostOffice` to listen to events for.
+         +           This office should be fed events from the `Window` for this class to work properly.
+         + ++/
         this(PostOffice office)
         {
             assert(office !is null);
 
-            this._tapped.reserve(this._keyStates.length);
+            // This slightly confusing code is used to pre-allocate the space for a `Buffer`.
+            this._tapped.length = this._keyStates.length;
+            this._tapped.length = 0;
 
             office.subscribe(Window.Event.KeyDown,              &this.onKeyEvent);
             office.subscribe(Window.Event.KeyUp,                &this.onKeyEvent);
@@ -433,13 +462,13 @@ final class InputManager
         /// $(B Important: This function should be called _before_ the window processes it's events, or at the very end of a frame's update)
         void onUpdate()
         {
-            foreach(keyCode; this._tapped)
+            foreach(keyCode; this._tapped[0..$])
                 this._keyStates[keyCode].wasTapped = false;
 
             this._tapped.length = 0;
         }
 
-        ///
+        /// Returns: `true` if `key` is currently being pressed down.
         @safe @nogc
         bool isKeyDown(Scancode key) nothrow const
         {
@@ -470,28 +499,28 @@ final class InputManager
             return this._keyStates[key].wasRepeated;
         }
 
-        ///
+        /// Returns: Whether SHIFT is pressed down.
         @safe @nogc
         bool isShiftDown() nothrow const
         {
             return (this._funcKeyMask & FuncKeyMask.Shift) > 0;
         }
 
-        ///
+        /// Returns: Whether CTRL is pressed down.
         @safe @nogc
         bool isControlDown() nothrow const
         {
             return (this._funcKeyMask & FuncKeyMask.Control) > 0;
         }
 
-        ///
+        /// Returns: Whether ALT is pressed down.
         @safe @nogc
         bool isAltDown() nothrow const
         {
             return (this._funcKeyMask & FuncKeyMask.Alt) > 0;
         }
 
-        ///
+        /// Returns: Whether the `button` is currently being pressed down.
         @safe @nogc
         bool isMouseButtonDown(MouseButton button) nothrow const
         {

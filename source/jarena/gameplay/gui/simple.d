@@ -6,6 +6,7 @@ private
     import jarena.core, jarena.gameplay, jarena.graphics;
 }
 
+/// The base calss for all buttons.
 abstract class SimpleButton : Button
 {
     private
@@ -18,7 +19,15 @@ abstract class SimpleButton : Button
 
     public
     {
-        ///
+        /++
+         + Params:
+         +  func            = The function to call when the button is clicked. Allowed to be null.
+         +  position        = The position of the button.
+         +  size            = The size of the button.
+         +  colour          = The colour of the button.
+         +  mouseOverColour = The colour of the button when the mouse is over it.
+         +  clickColour     = The colour of the button when the mouse is clicking it.
+         + ++/
         this(OnClickFunc func, 
              vec2 position,
              vec2 size,
@@ -39,14 +48,6 @@ abstract class SimpleButton : Button
 
     override
     {
-        protected void onNewParent(UIElement newParent, UIElement oldParent){}
-        protected void onChildStateChanged(UIElement child, StateChange change){}
-        protected void onAddChild(UIElement child){}
-        protected void onRemoveChild(UIElement child){}
-        protected void onColourChanged(Colour oldColour, Colour newColour){}
-        protected void onPositionChanged(vec2 oldPos, vec2 newPos){}
-        protected void onSizeChanged(vec2 oldSize, vec2 newSize){}
-        
         public void onUpdate(InputManager input, Duration deltaTime)
         {
             auto thisRect = RectangleF(super.position, super.size);
@@ -76,6 +77,7 @@ abstract class SimpleButton : Button
     }
 }
 
+/// A `SimpleButton` that is simply made up of a rectangle with text in the center.
 class SimpleTextButton : SimpleButton
 {
     private
@@ -103,7 +105,15 @@ class SimpleTextButton : SimpleButton
 
     public
     {
-        ///
+        /++
+         + Params:
+         +  func            = The function to call when the button is clicked. Allowed to be null.
+         +  position        = The position of the button.
+         +  size            = The size of the button.
+         +  colour          = The colour of the button.
+         +  mouseOverColour = The colour of the button when the mouse is over it.
+         +  clickColour     = The colour of the button when the mouse is clicking it.
+         + ++/
         this(Text text,
              OnClickFunc func       = null, 
              vec2 position          = vec2(0),
@@ -121,7 +131,13 @@ class SimpleTextButton : SimpleButton
             super(func, position, size, colour, mouseOverColour, clickColour);
         }
 
-        ///
+        /++
+         + Params:
+         +  func            = The function to call when the button is clicked. Allowed to be null.
+         +  position        = The position of the button.
+         +  size            = The size of the button.
+         +  colour          = The colour of the button.
+         + ++/
         this(Text           text,
              OnClickFunc    func,
              vec2           position,
@@ -157,6 +173,11 @@ class SimpleTextButton : SimpleButton
 
     override
     {
+        protected void onNewParent(UIElement newParent, UIElement oldParent){}
+        protected void onChildStateChanged(UIElement child, StateChange change){}
+        protected void onAddChild(UIElement child){}
+        protected void onRemoveChild(UIElement child){}
+
         protected void onColourChanged(Colour old, Colour newCol)
         {
             this._rect.colour = newCol;

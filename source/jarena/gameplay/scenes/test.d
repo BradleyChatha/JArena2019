@@ -1,3 +1,4 @@
+/// Contains a test scene.
 module jarena.gameplay.scenes.test;
 import std.stdio;
 import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jarena.gameplay.gui, jarena.gameplay.scenes;
@@ -117,65 +118,6 @@ class Test : Scene, IPostBox
         {
             super.renderScene(window);
             super.renderUI(window);
-        }
-    }
-}
-
-@SceneName("GLTest")
-class GLTest : Scene
-{
-    private
-    {
-        Sprite sprite;
-        Sprite sprite2;
-        Sprite[1] stressTest;
-    }
-    
-    public override
-    {
-        void onInit()
-        {
-            this.sprite  = new Sprite(super.manager.cache.get!SpriteAtlas("Test Atlas").texture);
-            this.sprite2 = new Sprite(super.manager.cache.get!SpriteAtlas("Explosion Atlas").texture);
-            InitInfo.renderResources.dumpTextures();
-
-            auto dummy = new Text(super.manager.cache.get!Font("Crackdown"), "hey guuurl", vec2(0), 128);
-            (cast(MutableTexture)dummy.texture).dump("font");
-
-            assert(this.sprite.texture == this.sprite2.texture,
-                   "While both sprites technically have two different Texture objects, their handles should point to the"~
-                   "same compound texture.");
-
-            this.sprite.move(vec2(0, 200));
-
-            foreach(i; 0..stressTest.length)
-                this.stressTest[i] = new Sprite(super.manager.cache.get!SpriteAtlas("Explosion Atlas").texture);
-        }
-
-        void onSwap(PostOffice office)
-        {
-        }
-
-        void onUnswap(PostOffice office)
-        {
-        }
-
-        void onUpdate(Duration deltaTime, InputManager input)
-        {
-            if(input.isKeyDown(Scancode.W))
-                this.stressTest[0].move(vec2(0, 100 * deltaTime.asSeconds));
-        }
-
-        void onRender(Window window)
-        {
-            window.renderer.drawSprite(this.sprite);
-            window.renderer.drawSprite(this.sprite2);
-
-            foreach(i; 0..1) // Like stressTest, use this to semi-accurately test how well the renderer holds up.
-                window.renderer.drawRect(vec2(100, 400), vec2(50, 100), Colours.azure, Colours.amazon);
-
-            foreach(sprite; this.stressTest)
-                window.renderer.drawSprite(sprite);
         }
     }
 }

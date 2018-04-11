@@ -1,5 +1,5 @@
 /++
- + 
+ + Contains a class that is specialised in reusing it's memory.
  + ++/
 module jarena.core.buffer;
 
@@ -21,6 +21,7 @@ if(isType!T)
         T[] _slice;  // A *Slice* to the _buffer. This should *never* be appended to.
     }
 
+    pragma(inline, true)
     public final
     {
         @safe

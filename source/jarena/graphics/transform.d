@@ -1,3 +1,6 @@
+/++
+ + Contains anything related to transformations.
+ + ++/
 module jarena.graphics.transform;
 
 private
@@ -6,18 +9,36 @@ private
     import opengl;
 }
 
+/// The common interface for any object that can be transformed.
 interface ITransformable
 {
     public
     {
+        /++
+         + Sets the position of the transformable object.
+         +
+         + Params:
+         +  pos = The position to set the object at.
+         + ++/
         @property @safe @nogc
         void position(vec2 pos) nothrow;
 
+        /++
+         + Returns:
+         +  The position of this object.
+         + ++/
         @property @safe @nogc
         const(vec2) position() const nothrow;
     }
 }
 
+/++
+ + An abstraction built on top of a 4x4 `Matrix` to make it easy to 
+ + create a transformation matrix, such as the ones used for Model, View, and Projection transforms.
+ +
+ + Notes:
+ +  Please make sure to look at `Transform.markDirty`, as it can save you from 'strange' bugs.
+ + ++/
 struct Transform
 {
     private
@@ -30,12 +51,25 @@ struct Transform
 
     public
     {
+        /// 
         this(mat4 matrix)
         {
             this._matrix = matrix;
         }
 
-        // Helper function to make verticies easier to transform
+        /++
+         + Transforms the $(B positions) of each `Vertex` in the given array, in place.
+         +
+         + Notes:
+         +  This function calls `Transform.matrix`, so the matrix will be updated
+         +  if it's dirty.
+         +
+         + Params:
+         +  verts = The verticies to transform.
+         +
+         + Returns:
+         +  `verts`
+         + ++/
         @safe @nogc
         Vertex[] transformVerts(return Vertex[] verts) nothrow
         {
@@ -48,7 +82,7 @@ struct Transform
         
         /++
          + Notes:
-         +  Can basically imagine as the position.
+         +  Can basically imagine this as the position.
          +
          + Returns:
          +  The translation of this transformation.
@@ -65,12 +99,14 @@ struct Transform
          + Any setter functions will do this automatically, but functions such as `translation`[get]
          + can be used to modify the transform without the dirty flag being set.
          + ++/
+        pragma(inline, true)
         @safe @nogc
         void markDirty() nothrow pure
         {
             this._dirty = true;
         }
 
+        /// Returns: Whether the matrix is dirty, and needs to be updated.
         pragma(inline, true)
         @property @safe @nogc
         bool isDirty() nothrow const pure
@@ -80,15 +116,15 @@ struct Transform
         
         /++
          + Notes:
-         +  Even though a ref is returned, it's recommended to _not_ modify the matrix.
-         +
-         +  The ref is just so there aren't a bunch of floats constantly being copied around.
+         +  If the matrix has been marked as being dirty (see `Transform.markDirty`) then the
+         +  underlying matrix is recreated using the transform's current data. If the matrix isn't
+         +  marked as dirty, then it will not be recreated and is simply returned as-is.
          +
          + Returns:
          +  A matrix containing all of the transformations specified by this struct.
          + ++/
         @property @safe @nogc
-        ref mat4 matrix() nothrow
+        mat4 matrix() nothrow
         {
             if(this._dirty)
             {
