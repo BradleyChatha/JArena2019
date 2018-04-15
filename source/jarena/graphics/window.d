@@ -138,8 +138,7 @@ final class Window
         {
             import std.string : toStringz;
 
-            trace("Initial OpenGL load...");
-            DerelictGL3.load();
+            GL.preContextLoad();
             
             tracef("Creating Window called '%s' with size of %s", title, size);
             this._handle = SDL_CreateWindow(title.toStringz,
@@ -151,26 +150,14 @@ final class Window
                                            );
             checkSDLError();
 
-            tracef("Configuring to use a core OpenGL%s context with a double buffer.", OPENGL_VERSION);
-            SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_CONTEXT_PROFILE_MASK,  SDL_GLprofile.SDL_GL_CONTEXT_PROFILE_CORE);
-            SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_CONTEXT_MAJOR_VERSION, OPENGL_VERSION.x);
-            SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_CONTEXT_MINOR_VERSION, OPENGL_VERSION.y);
-            SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_DOUBLEBUFFER,          1);
-            SDL_GL_SetAttribute(SDL_GLattr.SDL_GL_DEPTH_SIZE,            24);
-            checkSDLError();
-
-            trace("Creating OpenGL context");
-            this._context = SDL_GL_CreateContext(this.handle);
-            checkSDLError();
-
-            trace("Reloading OpenGL");
-            DerelictGL3.reload();
+            GL.createContextSDL(this.handle);
+            GL.postContextLoad();
 
             SDL_GL_SetSwapInterval(0);        // Vsync. TODO: Make this a function.
-            glViewport(0, 0, size.x, size.y); // Use the entire window to render
+            glViewport(0, 0, size.x, size.y); // Use the entire window to render. TODO: Get around to putting this functionality into Camera
             glEnable(GL_BLEND);               // Enable blending
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            checkGLError();
+            GL.checkForError();
             
             trace("Creating Renderer");
             this._renderer = new Renderer(this);
@@ -449,6 +436,7 @@ final class InputManager
             assert(office !is null);
 
             // This slightly confusing code is used to pre-allocate the space for a `Buffer`.
+            this._tapped        = new Buffer!Scancode();
             this._tapped.length = this._keyStates.length;
             this._tapped.length = 0;
 

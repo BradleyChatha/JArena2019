@@ -86,7 +86,7 @@ class MutableTexture : TextureBase
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, null);
-            checkGLError();
+            GL.checkForError();
         }
 
         ~this()
@@ -126,7 +126,7 @@ class MutableTexture : TextureBase
          +  It is far from perfect, but it is suitable for now.
          +
          + Params:
-         +  ColourFormat = Any colour format that is supported by `opengl.getInfoFor`.
+         +  ColourFormat = Any colour format that is supported by `opengl.GL.getInfoFor`.
          +                 Specifies the format of the data contained in `pixels`.
          +  size         = The size of the image contained in `pixels`.
          +  area         = This will be set to the area of the texture that `pixels` was stitched onto.
@@ -141,7 +141,7 @@ class MutableTexture : TextureBase
             import std.experimental.logger;
             infof("Stitching pixel array. Format = %s", ColourFormat);
 
-            enum ColourInfo = getInfoFor!ColourFormat;
+            enum ColourInfo = GL.getInfoFor!ColourFormat;
 
             // Error checking
             fatalf((pixels.length % ColourInfo.bytesPerPixel) != 0,
@@ -185,7 +185,7 @@ class MutableTexture : TextureBase
                 GL_UNSIGNED_BYTE,
                 cast(void*)pixels.ptr
             );
-            checkGLError();
+            GL.checkForError();
 
             // Increase the X-offset (The y-offset increase is handled above)
             area = RectangleI(this.xOffset, this.nextY, size);
@@ -229,7 +229,7 @@ class MutableTexture : TextureBase
             scope(exit) free(bytes.ptr);
 
             glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, cast(void*)bytes.ptr);
-            checkGLError();
+            GL.checkForError();
 
             // Perform the stitch.
             return this.stitch!GL_RGBA8(bytes, size, area);
@@ -279,7 +279,7 @@ class MutableTexture : TextureBase
             info("Getting pixel data from OpenGL");
             this.use();
             glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, cast(void*)buffer.ptr);
-            checkGLError();
+            GL.checkForError();
 
             RGBQUAD quad;
             uint x, y;
@@ -438,7 +438,7 @@ class Texture : TextureBase
             GL_UNSIGNED_BYTE,
             pixels
         );
-        checkGLError();
+        GL.checkForError();
 
         FreeImage_Unload(image);
         return texID;

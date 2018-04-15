@@ -324,7 +324,7 @@ final class Renderer
                 this._quadBuffer.indicies = this._indexBuffer[0..$];
                 
                 this._quadBuffer.update();
-                debug checkGLError();
+                debug GL.checkForError();
 
                 // Textureless renders can be used for things like shapes
                 if(bucket.texture !is null)

@@ -68,6 +68,7 @@ final class Engine
                 
             // Setup variables
             // The window also sets up the OpenGL context.
+            import std.stdio;
             this._window        = new Window(WINDOW_NAME, this._config.windowSize.get(WINDOW_DEFAULT_SIZE));
             this._eventOffice   = new PostOffice();
             this._input         = new InputManager(this._eventOffice);
@@ -141,7 +142,7 @@ final class Engine
             
             this._window.renderer.displayChanges();
             checkSDLError();
-            checkGLError();
+            GL.checkForError();
         }
 
         ///
