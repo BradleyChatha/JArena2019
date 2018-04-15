@@ -123,18 +123,21 @@ final class ConsoleLogger : Logger
             import std.uni       : toUpper;
             import std.stdio     : writefln;
 
-            writefln("[%s](%s$%s:%s)<%s> -> %s",
-                     this.formatSysTime(entry.timestamp),
-                     entry.file.substitute!("source/",  "", 
-                                            "source\\", "",
-                                            ".d",       "",
-                                            "/",        ".",
-                                            "\\",       "."),
-                     entry.funcName.split(".")[$-1],
-                     entry.line,
-                     entry.logLevel.to!string.map!toUpper,
-                     entry.msg
-                    );
+            synchronized(this)
+            {
+                writefln("[%s](%s$%s:%s)<%s> -> %s",
+                        this.formatSysTime(entry.timestamp),
+                        entry.file.substitute!("source/",  "", 
+                                                "source\\", "",
+                                                ".d",       "",
+                                                "/",        ".",
+                                                "\\",       "."),
+                        entry.funcName.split(".")[$-1],
+                        entry.line,
+                        entry.logLevel.to!string.map!toUpper,
+                        entry.msg
+                        );
+            }
         }
     }
 }

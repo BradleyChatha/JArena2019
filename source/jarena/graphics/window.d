@@ -152,6 +152,7 @@ final class Window
 
             GL.createContextSDL(this.handle);
             GL.postContextLoad();
+            debug GL.debugLogEnable();
 
             SDL_GL_SetSwapInterval(0);        // Vsync. TODO: Make this a function.
             glViewport(0, 0, size.x, size.y); // Use the entire window to render. TODO: Get around to putting this functionality into Camera

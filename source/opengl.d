@@ -7,18 +7,23 @@ private
 {
     import std.typecons : Flag;
     import jarena.core.maths : uvec2;
+
+    import derelict.opengl.extensions.khr;
 }
 public 
 {
-    import derelict.opengl, derelict.opengl.versions.gl2x;
+    import derelict.opengl;
 }
+
+mixin glFreeFuncs!(GL.VERSION);
 
 /// For some reason... these _sometimes_ can be seen but _sometimes_ can't??
 enum
 {
     GL_TRIANGLES    = 0x0004,
     GL_STATIC_DRAW  = 0x88E4,
-    GL_DYNAMIC_DRAW = 0x88E8
+    GL_DYNAMIC_DRAW = 0x88E8,
+    GL_CONTEXT_LOST = 0x0507
 }
 
 /// Contains information about an OpenGL error.
@@ -55,7 +60,7 @@ abstract static class GL
     import derelict.sdl2.sdl;
 
     /// The version of OpenGL we're targeting.
-    enum VERSION = GLVersion.gl33;
+    enum VERSION = GLVersion.gl43;
 
     /// The major number of the OpenGL version.
     enum VERSION_MAJOR = (cast(int)VERSION) / 10;
@@ -65,6 +70,7 @@ abstract static class GL
 
     alias DebugContext = Flag!"debug";
     alias DoubleBuffer = Flag!"doubleBuffer";
+    alias Blacklist    = Flag!"enabled";
 
     private static final
     {
@@ -92,6 +98,14 @@ abstract static class GL
 
         /++
          + Creates a new context for an SDL window.
+         +
+         + Params:
+         +  window          = The handle for the SDL window.
+         +  isDebugContext  = If `DebugContext.yes`, then the context is created with the debug flag set.
+         +  useDoubleBuffer = If `DoubleBuffer.yes`, then double buffering is used.
+         +
+         + Returns:
+         +  The created context.
          + ++/
         @trusted
         SDL_GLContext createContextSDL(SDL_Window* window, 
@@ -128,11 +142,39 @@ abstract static class GL
             DerelictGL3.reload();
 
             info("Checking that the correct version was loaded");
-            if(DerelictGL3.loadedVersion < GL.VERSION)
+            if(DerelictGL3.contextVersion < GL.VERSION)
             {
-                throw new Error(format("Derelict was unable to load OpenGL version %s.%s",
-                                        GL.VERSION_MAJOR, GL.VERSION_MINOR));
+                throw new Error(format("Derelict was unable to load OpenGL version %s.%s . Loaded = %s",
+                                        GL.VERSION_MAJOR, GL.VERSION_MINOR, DerelictGL3.contextVersion));
             }
+        }
+
+        /// Enables OpenGL debug logging.
+        void debugLogEnable()
+        {
+            trace("Enabling the OpenGL debug log.");
+
+            if(GL.VERSION < GLVersion.gl43 || !DerelictGL3.isExtensionLoaded(KHR_debug))
+            {
+                warning("The current version of OpenGL doesn't support the 'KHR_debug' extension");
+                return;
+            }
+
+            glEnable(GL_DEBUG_OUTPUT);
+            glDebugMessageCallback(&GL.debugLogFunction, null);
+            //GL.debugLogFilter(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_ERROR, GL_DONT_CARE, Blacklist.no);
+
+            uint id = 131185;
+            glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 1, &id, 0);
+
+            GL.checkForError();
+        }
+
+        /// Sets the filter for OpenGL's logger. https://www.khronos.org/opengl/wiki/Debug_Output#Logging
+        void debugLogFilter(GLenum source, GLenum type, GLenum severity, Blacklist blacklist = Blacklist.no)
+        {
+            infof("Setting log filter to (S:%s | T:%s | SEV:%s | BLACKLIST:%s)", source, type, severity, blacklist);
+            glDebugMessageControl(source, type, severity, 0, null, blacklist ? 0 : 1);
         }
 
         /++
@@ -206,6 +248,79 @@ abstract static class GL
                  static if(ColourFormat == GL_RGBA8)    return PixelInfo(4, GL_RGBA);
             else static if(ColourFormat == GL_RED)      return PixelInfo(1, GL_RED);
             else static assert(false);
+        }
+    }
+
+    // Debug log functions
+    private static final
+    {
+        string debugSourceToString(GLenum source) nothrow
+        {
+            switch(source)
+            {
+                case GL_DEBUG_SOURCE_API:              return "API";
+                case GL_DEBUG_SOURCE_WINDOW_SYSTEM:    return "WIN-SYS";
+                case GL_DEBUG_SOURCE_SHADER_COMPILER:  return "SHADER";
+                case GL_DEBUG_SOURCE_THIRD_PARTY:      return "3rdPARTY";
+                case GL_DEBUG_SOURCE_APPLICATION:      return "USER";
+                case GL_DEBUG_SOURCE_OTHER:            return "OTHER";
+                default:                               return "UNKNOWN";
+            }
+        }
+
+        string debugTypeToString(GLenum type) nothrow
+        {
+            switch(type)
+            {
+                case GL_DEBUG_TYPE_ERROR:               return "ERROR";
+                case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: return "DEPRECATION";
+                case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  return "UB";
+                case GL_DEBUG_TYPE_PORTABILITY:         return "PORTABILITY";
+                case GL_DEBUG_TYPE_PERFORMANCE:         return "PERF";
+                case GL_DEBUG_TYPE_MARKER:              return "MARKER";
+                case GL_DEBUG_TYPE_PUSH_GROUP:          return "PUSH";
+                case GL_DEBUG_TYPE_POP_GROUP:           return "POP";
+                case GL_DEBUG_TYPE_OTHER:               return "OTHER";
+                default:                                return "UNKNOWN";
+            }
+        }
+
+        LogLevel debugSeverityToLogLevel(GLenum severity) nothrow
+        {
+            switch(severity)
+            {
+                case GL_DEBUG_SEVERITY_HIGH:   return LogLevel.fatal;
+                case GL_DEBUG_SEVERITY_MEDIUM: return LogLevel.warning;
+
+                case GL_DEBUG_SEVERITY_LOW:
+                case GL_DEBUG_SEVERITY_NOTIFICATION:
+                    return LogLevel.info;
+
+                default: return LogLevel.trace;
+            }
+        }
+
+        extern(System) void debugLogFunction(GLenum source,
+                                             GLenum type,
+                                             uint id,
+                                             GLenum severity,
+                                             GLsizei length,
+                                             const char* message,
+                                             const void* userParam
+                                            ) nothrow
+        {
+            import std.format    : format;
+            import std.exception : assumeWontThrow;
+
+            auto sourceStr  = GL.debugSourceToString(source);
+            auto typeStr    = GL.debugTypeToString(type);
+            auto logLevel   = GL.debugSeverityToLogLevel(severity);
+            auto messageStr = message[0..length];
+
+            log(logLevel,
+              format("<From:%s Type:%s ID:%s> %s",
+                     sourceStr, typeStr, id, messageStr).assumeWontThrow
+            ).assumeWontThrow;
         }
     }
 }
