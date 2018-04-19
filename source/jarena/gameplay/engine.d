@@ -148,20 +148,8 @@ final class Engine
         ///
         void doLoop()
         {
-            import core.thread : Thread;
-
-            MonoTime start;
-            MonoTime end;
             while(!this._window.shouldClose)
-            {
-                start = MonoTime.currTime;
                 this.onUpdate();
-                end = MonoTime.currTime;
-
-                auto taken = (end - start);
-                if(taken < this._frameTime)
-                    Thread.sleep(this._frameTime - taken);
-            }
         }
 
         ///

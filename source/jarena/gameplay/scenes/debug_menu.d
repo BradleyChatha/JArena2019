@@ -1,30 +1,34 @@
-/// Contains the main menu for the game.
-module jarena.gameplay.scenes.menu;
+module jarena.gameplay.scenes.debug_menu;
+
 
 private
 {
-    import std.typetuple;
     import jarena.core, jarena.gameplay, jarena.graphics, jarena.gameplay.scenes;
-
-    const TEXT_SIZE = 18;
-    const TEXT_COLOUR = Colours.rockSalt;
-    const BUTTON_SIZE = vec2(80, 40);
-    const BUTTON_COLOUR = Colours.azure;
-    const MENU_POSITION = vec2(5, 20);
-    const MENU_COLOUR = Colours.amazon;
 }
 
-@SceneName("Menu")
-final class MenuScene : Scene
+@SceneName("Debug Menu")
+final class DebugMenuScene : Scene
 {
+    enum MENU_POSITION  = vec2(5, 20);
+    enum MENU_COLOUR    = Colours.amazon;
+    enum MENU_TEXT_SIZE = 18;
+
     private
     {
-        alias SCENES = TypeTuple!(Test,
-                                  DebugMenuScene,
-                                  AnimationViewerScene, 
-                                  SpriteAtlasViewerScene);
-
         StackContainer _list;
+
+        void onDumpTextures(Button _)
+        {
+            InitInfo.renderResources.dumpTextures();
+        }
+
+        void onDumpFonts(Button _)
+        {
+            import std.conv : to;
+            uint count = 0;
+            foreach(font; super.manager.cache.getCache!Font.byValue)
+                (cast(Font)font).dumpAllTextures("Font"~count++.to!string);
+        }
     }
 
     public override
@@ -36,16 +40,17 @@ final class MenuScene : Scene
             super.gui.addChild(this._list);
 
             auto font = super.manager.cache.get!Font("Calibri");
-            foreach(item; SCENES)
+            void addButton(string text, Button.OnClickFunc handler)
             {
                 this._list.addChild(new SimpleTextButton(
-                    new Text(font, SceneName.getFrom!item, vec2(), TEXT_SIZE, TEXT_COLOUR),
-                    btn => super.manager.swap!item,
-                    vec2(0),
-                    BUTTON_SIZE,
-                    BUTTON_COLOUR
+                    new Text(font, text, vec2(0), MENU_TEXT_SIZE),
+                    handler
                 )).fitToText();
             }
+
+            addButton("Dump all Textures", &this.onDumpTextures);
+            addButton("Dump all Fonts", &this.onDumpFonts);
+            addButton("Go back", _ => super.manager.swap!MenuScene);
         }
 
         void onSwap(PostOffice office)

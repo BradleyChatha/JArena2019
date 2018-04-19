@@ -41,6 +41,7 @@ void main()
     // Register all the scenes, swap to the main one, then start the main game loop.
     engine.scenes.register(new Test());
     engine.scenes.register(new MenuScene());
+    engine.scenes.register(new DebugMenuScene());
     engine.scenes.register(new AnimationViewerScene(engine.scenes.cache.getCache!AnimationInfo));
     engine.scenes.register(new SpriteAtlasViewerScene(engine.scenes.cache.getCache!SpriteAtlas));
     engine.scenes.swap!MenuScene;

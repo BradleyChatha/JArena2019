@@ -143,6 +143,18 @@ class Font
             );
         }
 
+        /++
+         + Dumps all of the texture atlases currently being used by this font.
+         +
+         + Only for debug use.
+         + ++/
+        void dumpAllTextures(string name)
+        {
+            import std.format : format;
+            foreach(charSize, set; this._sets)
+                set.texture.dump(format("%s_%s", name, charSize));
+        }
+
         ~this()
         {
             FT_Done_Face(this._font);
