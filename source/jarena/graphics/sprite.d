@@ -556,16 +556,20 @@ class Sprite : ITransformable
             this._verts[2].position = posRect.botLeft;
             this._verts[3].position = posRect.botRight;
 
-            auto xPosition = this._verts[0].uv.x;
-            auto yPosition = this._verts[0].uv.y;
-            auto width = this._verts[1].uv.x - xPosition;
-            auto height = this._verts[2].uv.y - yPosition;
-
-            if(xPosition < topLeft.x || // Left hand side of the texture 
-               yPosition < topLeft.y || // Top of the texture
-               xPosition + width > topLeft.x + textureArea.size.x || // Right hand side of the texture
-               yPosition + height > topLeft.y + textureArea.size.y) // Bottom of the texture
-                assert(false);
+            // Make sure that the rectangle doesn't leak out from the alloted area.
+            // (Contributed by Dan the Man)
+            // The area(inside of the mega texture) that is being used.
+            auto area = RectangleF(this._verts[0].uv.x,
+                                   this._verts[0].uv.y,
+                                   this._verts[1].uv.x - this._verts[0].uv.x,
+                                   this._verts[2].uv.y - this._verts[0].uv.y);
+            if(area.position.x < topLeft.x // Left
+            || area.position.y < topLeft.y // Top
+            || area.topRight.x > topLeft.x + textureArea.size.x  // Right 
+            || area.botLeft.y  > topLeft.y + textureArea.size.y) // Bottom
+            {
+                assert(false, "A texture rect has leaked out of it's given area of the mega texture.");
+            }
 
             this._transform.markDirty();
         }

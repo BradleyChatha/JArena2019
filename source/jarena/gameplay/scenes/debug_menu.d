@@ -27,7 +27,7 @@ final class DebugMenuScene : Scene
             import std.conv : to;
             uint count = 0;
             foreach(font; super.manager.cache.getCache!Font.byValue)
-                (cast(Font)font).dumpAllTextures("Font"~count++.to!string);
+                (cast(Font)font).dumpAllTextures("Font"~count++.to!string); // Casting away const here, but it _should_ be safe to do so in this case.
         }
     }
 
