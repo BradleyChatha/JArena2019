@@ -556,6 +556,17 @@ class Sprite : ITransformable
             this._verts[2].position = posRect.botLeft;
             this._verts[3].position = posRect.botRight;
 
+            auto xPosition = this._verts[0].uv.x;
+            auto yPosition = this._verts[0].uv.y;
+            auto width = this._verts[1].uv.x - xPosition;
+            auto height = this._verts[2].uv.y - yPosition;
+
+            if(xPosition < topLeft.x || // Left hand side of the texture 
+               yPosition < topLeft.y || // Top of the texture
+               xPosition + width > topLeft.x + textureArea.size.x || // Right hand side of the texture
+               yPosition + height > topLeft.y + textureArea.size.y) // Bottom of the texture
+                assert(false);
+
             this._transform.markDirty();
         }
 
