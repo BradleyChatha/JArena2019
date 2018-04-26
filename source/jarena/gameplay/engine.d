@@ -126,11 +126,11 @@ final class Engine
             this._timers.onUpdate(this._fps.elapsedTime);
             this._scenes.onUpdate(this._window, this._fps.elapsedTime);
 
-            auto old = this.window.renderer.camera;
-            this.window.renderer.camera = this._debugCamera; // So the debug UI doesn't fly off the screen.
+            auto old = this._window.renderer.camera;
+            this._window.renderer.camera = this._debugCamera; // So the debug UI doesn't fly off the screen.
             this._debugGui.onUpdate(this.input, this._fps.elapsedTime);
-            this._debugGui.onRender(this.window);
-            this.window.renderer.camera = old;
+            this._debugGui.onRender(this._window);
+            this._window.renderer.camera = old;
             
             this._window.renderer.displayChanges();
             checkSDLError();
@@ -142,13 +142,6 @@ final class Engine
         {
             while(!this._window.shouldClose)
                 this.onUpdate();
-        }
-
-        ///
-        @property @safe @nogc
-        inout(Window) window() nothrow inout
-        {
-            return this._window;
         }
 
         ///
