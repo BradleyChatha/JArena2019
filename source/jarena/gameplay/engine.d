@@ -38,7 +38,6 @@ final class Engine
         SceneManager _scenes;
         Timers       _timers;
         Config       _config;
-        uvec2*       _windowSizePtr;
         Duration     _frameTime;
 
         // Debug stuff
@@ -83,8 +82,8 @@ final class Engine
             this._frameTime     = (1000 / this._config.targetFPS.get(WINDOW_DEFAULT_FPS)).msecs;
             
             // Setup init info
-            InitInfo.windowSize = this._window.size;
-            this._windowSizePtr = InitInfo.windowSize_ptr; // Reminder: Only one pointer is given out before an assert fails, so this is safe.
+            Systems.window = this._window;
+            Systems.finalise();
 
             // Make sure the post office types are valid
             // (_ALL_ events that are to be used with this office should be reserved here
@@ -103,13 +102,6 @@ final class Engine
                                                         getMemInfo().usedRAM / (1024 * 1024)));
             });
             this.events.subscribe(Window.Event.Close, (_,__) => this._window.close());
-            this.events.subscribe(Window.Event.Resized, (_, m)
-            {
-                auto mail = cast(ValueMail!uvec2)m;
-                assert(mail !is null);
-
-                *this._windowSizePtr = mail.value;
-            });
 
             // Load in assets
             SdlangLoader.parseFile(ENGINE_DATA_PATH, this.scenes.cache);

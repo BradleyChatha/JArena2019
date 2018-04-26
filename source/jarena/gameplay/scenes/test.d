@@ -18,7 +18,7 @@ class Test : Scene, IPostBox
     {
         void onInit()
         {
-            writeln("Window Size: ", InitInfo.windowSize);
+            writeln("Window Size: ", Systems.window.size);
 
             //atlas = new SpriteAtlas(new Texture("Atlas.png"));
             //atlas.register("Tahn", RectangleI(512, 0, 32, 32));

@@ -50,7 +50,7 @@ final class Camera
         this(RectangleF rect = DEFAULT_CAMERA_RECT) nothrow
         {
             if(rect == DEFAULT_CAMERA_RECT)
-                rect = RectangleF(0, 0, vec2(InitInfo.windowSize));
+                rect = RectangleF(0, 0, vec2(Systems.window.size));
 
             this.reset(rect);
         }
@@ -251,16 +251,16 @@ final class Renderer
         /// Setup the renderer.
         this(Window window)
         {
-            this._window             = window;
-            this._buckets            = new Buffer!RenderBucket();
-            this._vertBuffer         = new Buffer!Vertex();
-            this._indexBuffer        = new Buffer!uint();
-            this._resources          = new RendererResources();
-            this._textureShader      = new Shader(defaultVertexShader, texturedFragmentShader);
-            this._colourShader       = new Shader(defaultVertexShader, colouredFragmentShader);
-            this._textShader         = new Shader(defaultVertexShader, textFragmentShader);
-            InitInfo.renderResources = this._resources;
-            this._rect               = new RectangleShape();
+            this._window            = window;
+            this._buckets           = new Buffer!RenderBucket();
+            this._vertBuffer        = new Buffer!Vertex();
+            this._indexBuffer       = new Buffer!uint();
+            this._resources         = new RendererResources();
+            this._textureShader     = new Shader(defaultVertexShader, texturedFragmentShader);
+            this._colourShader      = new Shader(defaultVertexShader, colouredFragmentShader);
+            this._textShader        = new Shader(defaultVertexShader, textFragmentShader);
+            Systems.renderResources = this._resources;
+            this._rect              = new RectangleShape();
 
             this._quadBuffer.setup();
         }

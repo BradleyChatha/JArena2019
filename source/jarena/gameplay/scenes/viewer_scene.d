@@ -63,8 +63,8 @@ abstract class ViewerScene : Scene
             instLabel.updateTextASCII(this.instructions ~ extraInstructions);
             
             this._instructionPanel.autoSize = StackContainer.AutoSize.no;
-            this._instructionPanel.size     = vec2(InitInfo.windowSize.x, this._instructionPanel.size.y + INST_PANEL_Y_PADDING);
-            this._instructionPanel.position = vec2(0, InitInfo.windowSize.y - this._instructionPanel.size.y);
+            this._instructionPanel.size     = vec2(Systems.window.size.x, this._instructionPanel.size.y + INST_PANEL_Y_PADDING);
+            this._instructionPanel.position = vec2(0, Systems.window.size.y - this._instructionPanel.size.y);
         }
 
         override void onUpdate(Duration deltaTime, InputManager input)
@@ -85,7 +85,7 @@ abstract class ViewerScene : Scene
                 super.camera.move(vec2(0, CAMERA_SPEED) * dtSecs);
 
             if(input.wasKeyTapped(Scancode.R))
-                super.camera.reset(RectangleF(0, 0, vec2(InitInfo.windowSize)));
+                super.camera.reset(RectangleF(0, 0, vec2(Systems.window.size)));
         }
 
         override void onRender(Window window)

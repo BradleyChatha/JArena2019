@@ -346,7 +346,7 @@ class Texture : TextureBase
         {
             tracef("Loading texture at path '%s'", filePath);
             auto texID   = this.loadImage(filePath);
-            this._handle = InitInfo.renderResources.finaliseTexture(texID);
+            this._handle = Systems.renderResources.finaliseTexture(texID);
             this.handle(); // For the null assert check
         }
 

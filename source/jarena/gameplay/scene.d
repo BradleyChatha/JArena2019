@@ -120,7 +120,7 @@ abstract class Scene
         // Needed for any setup that needs to access the scene manager.
         void _onInit()
         {
-            auto cameraRect         = RectangleF(0, 0, vec2(InitInfo.windowSize));
+            auto cameraRect         = RectangleF(0, 0, vec2(Systems.window.size));
             this._proxyEventOffice  = new PostOffice();
             this._gui               = new EditorContainer(this._proxyEventOffice, this.manager.cache);
             this._guiCamera         = new Camera(cameraRect);

@@ -71,7 +71,7 @@ final class EditorContainer : FreeFormContainer
             label.updateTextASCII(instructions);
 
             // Right-align the instruction panel.
-            this._instructionPanel.position = vec2(cast(float)InitInfo.windowSize.x - (label.size.x + INSTRUCTION_X_PAD), INSTRUCTION_Y);
+            this._instructionPanel.position = vec2(cast(float)Systems.window.size.x - (label.size.x + INSTRUCTION_X_PAD), INSTRUCTION_Y);
         }
 
         @property

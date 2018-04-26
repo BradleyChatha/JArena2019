@@ -100,7 +100,7 @@ final class SpriteAtlasViewerScene : ViewerScene
                 this._sprite.textureRect = frame.frameRect;
             }
 
-            this._sprite.position = (vec2(InitInfo.windowSize) / vec2(2)) -
+            this._sprite.position = (vec2(Systems.window.size) / vec2(2)) -
                                     (this._sprite.bounds.size  / vec2(2));
 
             this._labelAtlasData.updateTextASCII(format(

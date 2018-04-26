@@ -34,8 +34,8 @@ final class AnimationViewerScene : ViewerScene
             }
 
             this._sprite.animation = next;
-            this._sprite.position  = vec2((InitInfo.windowSize.x / 2) - (this._sprite.bounds.size.x / 2),
-                                          (InitInfo.windowSize.y / 2) - (this._sprite.bounds.size.y / 2));
+            this._sprite.position  = vec2((Systems.window.size.x / 2) - (this._sprite.bounds.size.x / 2),
+                                          (Systems.window.size.y / 2) - (this._sprite.bounds.size.y / 2));
 
             this._labelAnimData.updateTextASCII(
                 format("Animation Name: %s\n"~

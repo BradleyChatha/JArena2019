@@ -19,7 +19,7 @@ final class DebugMenuScene : Scene
 
         void onDumpTextures(Button _)
         {
-            InitInfo.renderResources.dumpTextures();
+            Systems.renderResources.dumpTextures();
         }
 
         void onDumpFonts(Button _)

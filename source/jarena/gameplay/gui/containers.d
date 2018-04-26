@@ -349,7 +349,7 @@ final class GridContainer : Container
         {
             this.position = position;
             this.size     = (size == vec2(float.nan, float.nan))
-                            ? vec2(InitInfo.windowSize)
+                            ? vec2(Systems.window.size)
                             : size;
         }
         

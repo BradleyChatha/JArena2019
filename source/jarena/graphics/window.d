@@ -299,10 +299,10 @@ final class Window
         /// Returns:
         ///  The size of the window
         @property @trusted @nogc
-        uvec2 size() nothrow
+        const(uvec2) size() nothrow const
         {
             ivec2 value;
-            SDL_GetWindowSize(this.handle, &value.data[0], &value.data[1]);
+            SDL_GetWindowSize(cast(SDL_Window*)this.handle, &value.data[0], &value.data[1]);
             return uvec2(value);
         }
 
