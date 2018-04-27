@@ -141,3 +141,43 @@ final class ConsoleLogger : Logger
         }
     }
 }
+
+///
+void enforceAndLogf(int line              = __LINE__, 
+                    string file           = __FILE__,
+                    string funcName       = __FUNCTION__,
+                    string prettyFuncName = __PRETTY_FUNCTION__,
+                    string moduleName     = __MODULE__,
+                    Args...)
+                   (
+                       bool condition,
+                       const(char)[] formatStr,
+                       Args args
+                   )
+{
+    if(!condition)
+    {
+        import std.format : format;
+        auto str = format(formatStr, args);
+        errorf(str);
+        throw new Exception(str);
+    }
+}
+
+///
+void enforceAndLogf(int line              = __LINE__, 
+                    string file           = __FILE__,
+                    string funcName       = __FUNCTION__,
+                    string prettyFuncName = __PRETTY_FUNCTION__,
+                    string moduleName     = __MODULE__,
+                    Args...)
+                   (
+                       const(char)[] formatStr,
+                       Args args
+                   )
+{
+    import std.format : format;
+    auto str = format(formatStr, args);
+    errorf(str);
+    throw new Exception(str);
+}

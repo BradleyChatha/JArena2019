@@ -1,5 +1,5 @@
 import std.stdio, std.experimental.logger;
-import derelict.sdl2.sdl, derelict.freeimage.freeimage, derelict.freetype;
+import derelict.sdl2.sdl, derelict.freeimage.freeimage, derelict.freetype, derelict.sdl2.mixer;
 import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jarena.gameplay.gui, jarena.gameplay.scenes;
 
 void main()
@@ -23,13 +23,21 @@ void main()
 
     /// Load all of the derelict libraries.
     DerelictSDL2.load();
+    DerelictSDL2Mixer.load();
     DerelictFI.load();
     DerelictFT.load();
 
     // Initialise the libraries.
     import std.exception : enforce;
     enforce(SDL_Init(SDL_INIT_EVERYTHING) == 0, "SDL was not able to initialise everything.");
+    Mix_Init(0);
+    checkSDLError();
     FreeImage_Initialise();
+
+    Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 2048);
+    Mix_SetError("\0".ptr); // Mixer throws an error... but it seems you can safely ignore it.
+    checkSDLError();
+    scope(exit) Mix_CloseAudio();
     
     // Prepare all of the data loaders.
     SdlangLoader.setup();

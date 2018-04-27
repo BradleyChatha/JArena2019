@@ -7,7 +7,7 @@ private
     import std.typetuple : AliasSeq;
     import derelict.sdl2.sdl;
     import codebuilder;
-    import jarena.core, jarena.data, jarena.gameplay, jarena.graphics;
+    import jarena.audio, jarena.core, jarena.data, jarena.gameplay, jarena.graphics;
 }
 
 private struct Property
@@ -60,7 +60,8 @@ final class Systems
         // ==============
         alias Properties = AliasSeq!(
             _window,
-            _renderResources
+            _renderResources,
+            _audio
         );
 
         @Property("window")
@@ -72,6 +73,9 @@ final class Systems
                           "jarena.graphics.sprite",
                           "jarena.gameplay.scenes.debug_menu")
         RendererResources _renderResources;
+
+        @Property("audio")
+        AudioManager _audio;
     }
 
     public static final

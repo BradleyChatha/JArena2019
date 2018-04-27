@@ -4,7 +4,7 @@ private
 {
     import std.experimental.logger;
     import std.typecons;
-    import jarena.core, jarena.graphics, jarena.gameplay, jarena.data;
+    import jarena.audio, jarena.core, jarena.graphics, jarena.gameplay, jarena.data;
     import opengl;
 
     const ENGINE_CONFIG_PATH        = "data/engineConf.sdl";
@@ -39,6 +39,7 @@ final class Engine
         Timers       _timers;
         Config       _config;
         Duration     _frameTime;
+        AudioManager _audio;
 
         // Debug stuff
         char[512]       _debugBuffer;
@@ -80,9 +81,11 @@ final class Engine
             this._debugGui.addChild(this._debugText);
             this._debugCamera   = new Camera(RectangleF(0, 0, vec2(this._window.size)));
             this._frameTime     = (1000 / this._config.targetFPS.get(WINDOW_DEFAULT_FPS)).msecs;
+            this._audio         = new AudioManager();
             
             // Setup init info
             Systems.window = this._window;
+            Systems.audio  = this._audio;
             Systems.finalise();
 
             // Make sure the post office types are valid
