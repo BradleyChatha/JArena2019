@@ -41,7 +41,7 @@ final class DebugMenuScene : Scene
             super.gui.addChild(this._list);
 
             this._bding = new Sample("data/coin pickup.wav");
-            this._audio = Systems.audio.makeGroup("Test", 10);
+            this._audio = Systems.audio.makeGroup("Test", 1);
 
             auto font = super.manager.cache.get!Font("Calibri");
             void addButton(string text, Button.OnClickFunc handler)
@@ -54,8 +54,8 @@ final class DebugMenuScene : Scene
             
             addButton("Dump all Textures", &this.onDumpTextures);
             addButton("Dump all Fonts", &this.onDumpFonts);
-            addButton("Go back", _ => super.manager.swap!MenuScene);
             addButton("Sound Test", (_){this._audio.play(this._bding);});
+            addButton("Go back", _ => super.manager.swap!MenuScene);
         }
 
         void onSwap(PostOffice office)

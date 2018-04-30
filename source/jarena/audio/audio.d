@@ -8,6 +8,8 @@ private
     import jarena.core;
 }
 
+public import std.typecons : Yes, No;
+
 /++
  + Contains an audio sample.
  + ++/
@@ -187,7 +189,7 @@ final class ChannelGroup
     public final
     {
         // TODO: Extend this a bunch
-        bool play(Sample sample)
+        bool play(Sample sample, Flag!"useOldest" overwriteOldest = Yes.useOldest)
         {
             assert(sample !is null);
 
@@ -197,8 +199,18 @@ final class ChannelGroup
                 Mix_PlayChannel(channel.id, sample.handle, 0);
                 return true;
             }
-            else
-                return false;
+
+            // No unused channel was found so use the oldest-accessed channel that's currently playing.
+            auto oldest = this.oldestUsed;
+            if(overwriteOldest && oldest.id >= 0)
+            {
+                Mix_ExpireChannel(oldest.id, 0);
+                Mix_PlayChannel(oldest.id, sample.handle, 0);
+                return true;
+            }
+
+            // No unsused channels, and no oldest channels (aka, the group is empty)
+            return false;
         }
 
         ///
@@ -206,6 +218,13 @@ final class ChannelGroup
         const(Channel) nextUnused() nothrow const
         {
             return Channel(Mix_GroupAvailable(this._groupId));
+        }
+
+        ///
+        @nogc
+        const(Channel) oldestUsed() nothrow const
+        {
+            return Channel(Mix_GroupOldest(this._groupId));
         }
     }
 }
