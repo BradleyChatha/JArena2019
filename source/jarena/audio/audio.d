@@ -1,3 +1,6 @@
+/// Contains the core classes relating to using the audio system.
+///
+/// Publically imports `std.typecons.Yes` and `std.typecons.No` as some of the functions make use of `std.typecons.Flag`
 module jarena.audio.audio;
 
 private
