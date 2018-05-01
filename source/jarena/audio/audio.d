@@ -68,6 +68,11 @@ final class Sound
                 fatalf("FMOD was unable to create the sound: %s", FMOD_ErrorString(result));
         }
 
+        ~this()
+        {
+            FMOD_Sound_Release(this.handle);
+        }
+
         @property @nogc
         Duration length() nothrow
         {
