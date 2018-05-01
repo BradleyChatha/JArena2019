@@ -11,6 +11,7 @@ dependency "derelict-gl3" version="~>2.0.0-beta.6"   // For rendering
 dependency "derelict-sdl2" version="~>3.1.0-alpha.3" // For windowing
 dependency "derelict-fi" version="~>3.0.0-beta.1"    // For image loading
 dependency "derelict-ft" version="~>2.0.0-beta.4"    // For text loading.
+dependency "derelict-fmod" version="~>4.1.1"         // For audio
 
 configuration "default" {
     targetType "executable"

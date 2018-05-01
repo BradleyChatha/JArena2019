@@ -128,6 +128,7 @@ final class Engine
             this._window.renderer.clear();
             this._timers.onUpdate(this._fps.elapsedTime);
             this._scenes.onUpdate(this._window, this._fps.elapsedTime);
+            this._audio.onUpdate();
 
             auto old = this._window.renderer.camera;
             this._window.renderer.camera = this._debugCamera; // So the debug UI doesn't fly off the screen.
