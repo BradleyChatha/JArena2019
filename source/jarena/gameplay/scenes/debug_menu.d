@@ -15,7 +15,8 @@ final class DebugMenuScene : Scene
     private
     {
         StackContainer _list;
-        Sample _bding;
+        Sound _bding;
+        Sound _music;
 
         void onDumpTextures(Button _)
         {
@@ -39,7 +40,8 @@ final class DebugMenuScene : Scene
             this._list.colour = MENU_COLOUR;
             super.gui.addChild(this._list);
 
-            this._bding = new Sample("data/coin pickup.wav");
+            this._bding = new Sound("data/audio/sfx/coin pickup.wav");
+            this._music = new Sound("data/audio/music/Curtain Call.mp3");
 
             auto font = super.manager.cache.get!Font("Calibri");
             void addButton(string text, Button.OnClickFunc handler)
@@ -53,6 +55,7 @@ final class DebugMenuScene : Scene
             addButton("Dump all Textures", &this.onDumpTextures);
             addButton("Dump all Fonts", &this.onDumpFonts);
             addButton("Sound Test", (_){Systems.audio.play(this._bding);});
+            addButton("Music Test", (_){Systems.audio.play(this._music);});
             addButton("Go back", _ => super.manager.swap!MenuScene);
         }
 

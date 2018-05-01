@@ -22,7 +22,7 @@ struct Channel
     private FMOD_CHANNEL* handle;
 }
 
-final class Sample
+final class Sound
 {
     private final
     {
@@ -38,14 +38,18 @@ final class Sample
 
     public final
     {
-        this(const char[] filePath)
+        this(const char[] filePath, Flag!"streaming" streaming = No.streaming)
         {
-            import std.string : toStringz;
+            import std.exception : enforce;
+            import std.file      : exists;
+            import std.string    : toStringz;
 
             infof("Loading in sound from '%s'", filePath);
-
+            enforce(filePath.exists, "Unable to load file as it does not exist.");
+            
             auto manager = Systems.audio; // There is no need (And no support) for multiple audio managers.
-            auto result = FMOD_System_CreateSound(manager.fmodHandle, filePath.toStringz, FMOD_DEFAULT, null, &this._handle);
+            auto flags   = (streaming) ? FMOD_CREATESTREAM : FMOD_DEFAULT;
+            auto result  = FMOD_System_CreateSound(manager.fmodHandle, filePath.toStringz, flags, null, &this._handle);
             if(result != FMOD_OK)
                 fatalf("FMOD was unable to create the sound: %s", FMOD_ErrorString(result));
         }
@@ -87,7 +91,7 @@ final class AudioManager
             FMOD_System_Release(this.fmodHandle);
         }
 
-        Channel play(Sample sample)
+        Channel play(Sound sample)
         {
             assert(sample !is null);
             
