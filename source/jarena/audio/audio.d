@@ -16,6 +16,7 @@ private
 }
 
 public import std.typecons : Yes, No;
+public import std.datetime : Duration, msecs;
 
 /++
  +
@@ -65,6 +66,15 @@ final class Sound
             auto result  = FMOD_System_CreateSound(manager.fmodHandle, filePath.toStringz, flags, null, &this._handle);
             if(result != FMOD_OK)
                 fatalf("FMOD was unable to create the sound: %s", FMOD_ErrorString(result));
+        }
+
+        @property @nogc
+        Duration length() nothrow
+        {
+            uint len;
+            FMOD_Sound_GetLength(this.handle, &len, FMOD_TIMEUNIT_MS);
+
+            return len.msecs;
         }
     }
 }
