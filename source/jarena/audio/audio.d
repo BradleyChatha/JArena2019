@@ -17,11 +17,24 @@ private
 
 public import std.typecons : Yes, No;
 
+/++
+ +
+ + ++/
 struct Channel
 {
     private FMOD_CHANNEL* handle;
 }
 
+/++
+ + Contains a sound.
+ +
+ + There are two types of sounds, 'normal', and 'streaming' sounds.
+ +
+ + Normal sounds have their entire audio data loaded into memory.
+ +
+ + Streaming sounds have their audio data streamed from the disk in chunks.
+ + There is also a limitation that only a single streaming sound can be played at one time.
+ + ++/
 final class Sound
 {
     private final
