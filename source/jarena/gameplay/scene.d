@@ -6,7 +6,7 @@ private
     import std.experimental.logger;
     import std.typecons : Flag;
 
-    import jarena.core, jarena.graphics, jarena.gameplay.gui;
+    import jarena.audio, jarena.core, jarena.graphics, jarena.gameplay.gui;
 
     const TOGGLE_EDITOR_KEY = Scancode.F12;
 }
@@ -462,7 +462,7 @@ abstract class Scene
 /// Manages multiple `Scene`s and is required for certain utility functions that a `Scene` provides.
 class SceneManager
 {
-    alias SceneMultiCache = MultiCache!(Texture, SpriteAtlas, AnimationInfo, Font);
+    alias SceneMultiCache = MultiCache!(Texture, SpriteAtlas, AnimationInfo, Font, Sound);
 
     private
     {

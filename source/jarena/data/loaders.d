@@ -5,7 +5,7 @@ private
 {
     import std.traits, std.experimental.logger;
     import sdlang;
-    import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.serialise;
+    import jarena.audio, jarena.core, jarena.graphics, jarena.gameplay, jarena.data.serialise;
 
     /// Let's face it, SceneMultiCache is the only cache that's actually going to be used with the loaders.
     /// So we may as well just keep in sync with that.
@@ -619,8 +619,9 @@ private final class DataFileSDL : LoaderExtension!Tag
     {
         struct FileInfo
         {
-            string path;    // Path to the file.
-            string name;    // Some tags allow you to specify the name to cache the file as.
+            string path;            // Path to the file.
+            string name;            // Some tags allow you to specify the name to cache the file as.
+            string[string] params;  // Additional parameters.
         }
 
         
@@ -628,6 +629,15 @@ private final class DataFileSDL : LoaderExtension!Tag
         FileInfo[] getFileInfo(Tag tag)
         {
             FileInfo[] files;
+
+            void getParams(ref FileInfo fi, Tag tag)
+            {
+                foreach(attrib; tag.attributes)
+                {
+                    fi.params[attrib.name] = attrib.value.get!string;
+                }
+            }
+
             switch(tag.name)
             {
                 case "file":
@@ -635,6 +645,7 @@ private final class DataFileSDL : LoaderExtension!Tag
                          path = super.resolvePath(path);
 
                     files ~= FileInfo(path);
+                    getParams(files[$-1], tag);
                     break;
 
                 case "namedFile":
@@ -646,6 +657,7 @@ private final class DataFileSDL : LoaderExtension!Tag
                          path = super.resolvePath(path);
 
                     files ~= FileInfo(path, values[0].get!string);
+                    getParams(files[$-1], tag);
                     break;
 
                 default:
@@ -687,6 +699,17 @@ private final class DataFileSDL : LoaderExtension!Tag
             {
                 super.log("Loading font from '%s'", fi.path);
                 caches.add(fi.name, new Font(fi.path));
+            });
+        }
+
+        @ForTag("sounds")
+        void handleAudio(Tag tag, LoaderCache caches)
+        {
+            this.handleFiles(tag, (fi)
+            {
+                super.log("Loading sound from '%s'", fi.path);
+                auto shouldStream = fi.params.get("stream", null);
+                caches.add(fi.name, new Sound(fi.path, cast(Flag!"streaming")(shouldStream == "yes")));
             });
         }
     }

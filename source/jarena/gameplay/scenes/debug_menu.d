@@ -40,10 +40,9 @@ final class DebugMenuScene : Scene
             this._list.colour = MENU_COLOUR;
             super.gui.addChild(this._list);
 
-            this._bding = new Sound("data/audio/sfx/coin pickup.wav");
-            this._music = new Sound("data/audio/music/Curtain Call.mp3");
-
-            auto font = super.manager.cache.get!Font("Calibri");
+            this._bding = super.manager.cache.get!Sound("Bding");
+            this._music = super.manager.cache.get!Sound("Debug Music");
+            auto font   = super.manager.cache.get!Font("Calibri");
             void addButton(string text, Button.OnClickFunc handler)
             {
                 this._list.addChild(new SimpleTextButton(

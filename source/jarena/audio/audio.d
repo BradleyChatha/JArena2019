@@ -44,7 +44,7 @@ final class Sound
             import std.file      : exists;
             import std.string    : toStringz;
 
-            infof("Loading in sound from '%s'", filePath);
+            infof("Loading in %ssound from '%s'", (streaming) ? "streaming " : "", filePath);
             enforce(filePath.exists, "Unable to load file as it does not exist.");
             
             auto manager = Systems.audio; // There is no need (And no support) for multiple audio managers.
