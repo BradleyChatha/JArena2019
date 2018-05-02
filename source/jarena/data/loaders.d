@@ -23,12 +23,6 @@ private
         string name;
     }
 
-    /// sdlang, xml, json, etc.
-    struct FileType
-    {
-        string name;
-    }
-
     /// Notes: Mandatory tags must be processed first.
     struct Mandatory{}
 
@@ -61,17 +55,13 @@ private
  +  TagType  = The tag type passed to `LoaderExtension` that `T` should be able to handle.
  +  fileType = The @FileType that `T` should specify it's able to handle.
  + ++/
-template EnforceLoaderExtensionFor(T, TagType, string fileType)
+template EnforceLoaderExtensionFor(T, TagType)
 {
     enum TName = T.stringof;
     
     static assert(is(T : LoaderExtension!TagType), "The type "~TName~" doesn't inherit from " ~ LoaderExtension!TagType.stringof);
     static assert(hasUDA!(T, Group),               "The type "~TName~" is missing @Group");
     static assert(hasUDA!(T, Type),                "The type "~TName~" is missing @Type");
-    static assert(hasUDA!(T, FileType),            "The type "~TName~" is missing @FileType");
-
-    enum FTypeName = getUDAs!(T, FileType)[0].name;
-    static assert(FTypeName == fileType, "The type "~TName~" has a FileType of '"~FTypeName~"' instead of '"~fileType~"'");
 
     enum EnforceLoaderExtensionFor = true;
 }
@@ -93,7 +83,7 @@ class SdlangLoader
     alias ExtensionT = LoaderExtension!Tag;
 
     // Validate that the extensions are correctly formed.
-    enum IsExtension(T) = EnforceLoaderExtensionFor!(T, Tag, "sdlang");
+    enum IsExtension(T) = EnforceLoaderExtensionFor!(T, Tag);
     static assert(allSatisfy!(IsExtension, Extensions));
 
     private static
@@ -524,7 +514,6 @@ private mixin template ExtensionBoilerplate(TagType)
 
 @Group("SpriteAtlas")
 @Type("atlas")
-@FileType("sdlang")
 private final class SpriteAtlasSDL : LoaderExtension!Tag
 {
     static assert(canCache!(LoaderCache, SpriteAtlas), "LoaderCache can't store SpriteAtlases");
@@ -607,7 +596,6 @@ private final class SpriteAtlasSDL : LoaderExtension!Tag
 
 @Group("Animation")
 @Type("spriteSheet")
-@FileType("sdlang")
 private final class AnimationSpriteSheetSDL : LoaderExtension!Tag
 {
     static assert(canCache!(LoaderCache, AnimationInfo), "LoaderCache can't store Animations");
@@ -683,7 +671,6 @@ private final class AnimationSpriteSheetSDL : LoaderExtension!Tag
 
 @Group("Data")
 @Type("file")
-@FileType("sdlang")
 private final class DataFileSDL : LoaderExtension!Tag
 {
     static assert(canCache!(LoaderCache, Font), "LoaderCache can't store Fonts");
@@ -792,7 +779,6 @@ private final class DataFileSDL : LoaderExtension!Tag
 
 @Group("Data")
 @Type("list")
-@FileType("sdlang")
 private final class DataListSDL : LoaderExtension!Tag
 {
     mixin ExtensionBoilerplate!Tag;
