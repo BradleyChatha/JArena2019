@@ -139,7 +139,6 @@ class MutableTexture : TextureBase
         bool stitch(GLenum ColourFormat)(const ubyte[] pixels, const ivec2 size, out RectangleI area)
         {
             import std.experimental.logger;
-            infof("Stitching pixel array. Format = %s", ColourFormat);
 
             enum ColourInfo = GL.getInfoFor!ColourFormat;
 

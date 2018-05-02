@@ -3,7 +3,7 @@ module jarena.data.loaders;
 
 private
 {
-    import std.traits, std.experimental.logger;
+    import std.traits, std.experimental.logger, std.typecons;
     import sdlang;
     import jarena.audio, jarena.core, jarena.graphics, jarena.gameplay, jarena.data.serialise;
 
@@ -285,41 +285,116 @@ private abstract class LoaderExtension(TagType)
                                      : buildNormalizedPath(dirName(this._filePath), path);
         }
 
-        // Tries to load `atlasName` from cache.
-        //      If it fails, and isPath is true.
-        //          Use `atlasName` as a path, and load a .sdl file from it.
-        //          Look for a 'name' tag in the loaded file, and re-call this function using it as the `atlasName`.
-        //      Otherwise, return null.
-        SpriteAtlas loadCachedAtlas(LoaderCache atlases, string atlasName, bool isPath = true)
+        /++
+         + This function is used to resolve reference paths and then retrieves them from the loader's cache.
+         +
+         + Algorithm:
+         +  First, if `isRelative` is `Yes.isRelative`, then assume that `path` is relative to the file being loaded, and resolve it to an absolute path.
+         +  (Using `resolvePath`)
+         +
+         +  Second, check to see if this path is already present in `caches` (for type `T`), and if it is, then return
+         +  the cached value. Otherwise continue.
+         +
+         +  Third, parse the file at `path` (if it exists) as an SDLang file, and look for a tag called 'name'.
+         +  If the tag doesn't exist, or doesn't contain a string as a value, then return null.
+         +  If the file couldn't be parsed as an SDLang file or doesn't exist, return null.
+         +  If the tag does exist, then see if the value of the 'name' tag is cached. If it is, return the cached value,
+         +  otherwise, return null.
+         +
+         + Notes:
+         +  The convention for using a reference tag inside of an SDLang file is as such
+         +  '[name_of_asset_type]Ref'. For example, animations use an 'atlasRef' tag to provide a reference
+         +  to the path of which atlas contains the animation frames.
+         +
+         +  For now, this function is hard coded to only work for SDLang files.
+         +
+         +  $(B This function does not load in the asset at the given path, it simply retrieves it from the cache)
+         +
+         +  In most cases, assets aren't cached via their path, but by using the 'name' tag within the asset's file.
+         +
+         +  Since I feel the use of this function has a large potential for headaches and "bugs", it will litter
+         +  the log with detail of everything it's doing to provide an easy way to see what's going "wrong".
+         +
+         + Params:
+         +  caches      = The cache of the loader being used.
+         +  path        = The path of the file to get the cached value of.
+         +  isRelative  = If `Yes.isRelative`, then the `path` given is relative to the file being loaded.
+         +                Otherwise, `No.isRelative` implies it is an absolute path already.
+         +
+         + Returns:
+         +  Either the cached value, or `null`.
+         + ++/
+        T loadReferencePath(T)(LoaderCache caches, string path, Flag!"isRelative" isRelative = Yes.isRelative)
         {
-            assert(atlases !is null);
-            
-            auto cachedAtlas = atlases.get!SpriteAtlas(atlasName, null);
-            if(cachedAtlas !is null)
+            import std.file : exists;
+            assert(caches !is null);
+
+            // Step #1
+            if(isRelative)
             {
-                this.log("Atlas with key of '%s' is cached, returning...", atlasName);
-                return cachedAtlas;
+                this.log("Resolving path '%s'", path);
+                path = this.resolvePath(path);
+            }
+            this.log("Using path '%s'", path);
+
+            // Step #2
+            auto cached = caches.get!T(path, null);
+            if(cached !is null)
+            {
+                this.log("The asset was cached already, returning cached value");
+                return cached;
+            }
+            this.log("The asset hasn't been cached via it's path, attempting to load the path as an SDLang file.");
+
+            // Step #3
+            if(!path.exists)
+            {
+                this.log("The path doesn't point to an existing file, returning null.");
+                return null;
             }
 
-            if(isPath)
+            Tag tag;
+            try tag = parseFile(path);
+            catch(SDLangException ex)
             {
-                this.log("No atlas was cached with the key of '%s', but it is flagged as being a path, attempting to read a name from it to try again.", atlasName);
-                auto tag = parseFile(atlasName);
-                auto name = tag.getTagValue!string("name");
-
-                if(name !is null)
-                {
-                    this.log("A name tag was found, attempting to reload the atlas using the name.");
-                    return loadCachedAtlas(atlases, name, false);
-                }
-                else
-                    this.log("No name tag was found...");
+                this.log("Unable to load the file as an SDLang file, returning null.\nError: %s", ex.msg);
+                return null;
             }
 
-            super.log("No atlas was cached with the key of '%s', creating a new one...", atlasName);
+            this.log("The file was parsed successfully, checking for a 'name' tag now.");
+            auto nameTag = tag.getTag("name");
+            if(nameTag is null)
+            {
+                this.log("The file does not contain a 'name' tag, cannot continue, returning null.");
+                return null;
+            }
+
+            this.log("Name tag found, checking to see if it contains a string value, and then performing a cache check.");
+            if(nameTag.values.length == 0)
+            {
+                this.log("The name tag contains no values, returning null.");
+                return null;
+            }
+
+            auto nameValue = nameTag.values[0];
+            if(nameValue.peek!string is null)
+            {
+                this.log("The value of the name tag isn't a string, returning null.");
+                return null;
+            }
+
+            auto name = nameValue.get!string;
+            this.log("Checking the cache for '%s'", name);
+
+            cached = caches.get!T(name, null);
+            if(cached !is null)
+            {
+                this.log("The name was found, returning cached value.");
+                return cached;
+            }
+            this.log("The name wasn't found, returning null.");
             return null;
         }
-
         
         ///
         @property
@@ -566,12 +641,12 @@ private final class AnimationSpriteSheetSDL : LoaderExtension!Tag
         @Mandatory
         void handleAtlasRef(Tag tag, LoaderCache caches)
         {
-            auto path  = super.resolvePath(tag.expectValue!string);
-            auto atlas = super.loadCachedAtlas(caches, path);
+            auto path  = this.resolvePath(tag.expectValue!string);
+            auto atlas = super.loadReferencePath!SpriteAtlas(caches, path, No.isRelative);
             if(atlas is null)
             {
                 SdlangLoader.parseFile(path, caches);
-                atlas = super.loadCachedAtlas(caches, path);
+                atlas = super.loadReferencePath!SpriteAtlas(caches, path, No.isRelative);
                 assert(atlas !is null, "An exception should've been thrown if the atlas hasn't loaded by this point");
             }
 

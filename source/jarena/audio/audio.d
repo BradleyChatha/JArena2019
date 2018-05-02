@@ -114,11 +114,6 @@ final class AudioManager
                 fatalf("FMOD_System_Init failed: %s", FMOD_ErrorString(result));
         }
 
-        ~this()
-        {
-            FMOD_System_Release(this.fmodHandle);
-        }
-
         Channel play(Sound sample)
         {
             assert(sample !is null);
