@@ -11,10 +11,10 @@ atlases {
 
 fonts {
     namedFile "Crackdown" "Fonts/crackdown.ttf"
-    namedFile "Calibri" "Fonts/calibri.ttf"
+    namedFile "Calibri"   "Fonts/calibri.ttf"
 }
 
 sounds {
-    namedFile "Bding" "Audio/SFX/coin pickup.wav"
+    namedFile "Bding"       "Audio/SFX/coin pickup.wav"
     namedFile "Debug Music" "Audio/Music/Curtain Call.mp3" stream="yes"
 }
