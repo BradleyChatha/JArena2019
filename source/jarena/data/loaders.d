@@ -647,7 +647,7 @@ private final class AnimationSpriteSheetSDL : LoaderExtension!Tag
             {
                 SdlangLoader.parseFile(path, caches);
                 atlas = super.loadReferencePath!SpriteAtlas(caches, path, No.isRelative);
-                assert(atlas !is null, "An exception should've been thrown if the atlas hasn't loaded by this point");
+                super.enforcef(atlas !is null, "Unable to load the animation, as the atlas it's referencing could not be loaded.");
             }
 
             this._atlas = atlas;
