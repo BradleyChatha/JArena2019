@@ -21,5 +21,6 @@ trace.html
 profilegc.log
 bin/*.dll
 bin/data/debug/compound/
+bin/*.log
 dcd.log
 ui.log
