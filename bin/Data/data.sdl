@@ -5,8 +5,9 @@ animations {
 }
 
 atlases {
-    file "Atlases/test atlas.sdl"
-	file "Atlases/explosion.sdl"
+    //file "Atlases/test atlas.sdl"
+    //file "Atlases/explosion.sdl"
+    glob "Atlases/*.sdl"
 }
 
 fonts {

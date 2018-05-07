@@ -700,6 +700,7 @@ private final class DataFileSDL : LoaderExtension!Tag
                 }
             }
 
+            // Reminder: All paths must either be absolute, or are assumed to be relative to the data file itself.
             switch(tag.name)
             {
                 case "file":
@@ -720,6 +721,21 @@ private final class DataFileSDL : LoaderExtension!Tag
 
                     files ~= FileInfo(path, values[0].get!string);
                     getParams(files[$-1], tag);
+                    break;
+
+                case "glob":
+                    import std.file : dirEntries, SpanMode;
+                    import std.path : dirName;
+
+                    auto baseDir = dirName(this._filePath);
+                    auto glob    = tag.expectValue!string;
+                    foreach(entry; dirEntries(baseDir, glob, SpanMode.breadth))
+                    {
+                        FileInfo fi;
+                        getParams(fi, tag);
+                        fi.path = entry.name;
+                        files ~= fi;
+                    }
                     break;
 
                 default:
