@@ -154,7 +154,7 @@ final class Systems
                 code.putf("assert(!Systems._finalised, \"Attempted to set the value of '%s' after the data has been finalised.\");", 
                           propName);
                 code.putf("assert((\"%s\" in Systems._setFlags) is null, \"Attempted to set the value of '%s' more than once.\");",
-                           propName, propName);
+                          propName, propName);
 
                 code.putf("Systems._setFlags[\"%s\"] = true;", propName);
                 code.putf("Systems.%s = cast(%s)value;", varName, typeof(Prop).stringof); // Cast away const. I know it's bad but it's needed ;(
