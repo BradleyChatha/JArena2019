@@ -448,7 +448,7 @@ final class Renderer
     private void drawQuad(TextureBase texture, Vertex[4] verts, Shader shader)
     {
         // Add in the verts
-        auto vertSlice  = Slice(this._vertBuffer.length, this._vertBuffer.length + 4);
+        auto vertSlice = Slice(this._vertBuffer.length, this._vertBuffer.length + 4);
         this._vertBuffer ~= verts[];
 
         // All sprites that have the same texture and shader are batched together into a single bucket
