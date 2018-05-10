@@ -227,16 +227,23 @@ class Text : ITransformable
         /++
          + Sets the position of the transformable object.
          +
+         + Notes:
+         +  Whenever the position of text isn't an integer, it generally has a few
+         +  rendering issues, so this function will call `std.math.round` on the position
+         +  automatically. Note that this also effects the return value of `Text.position`[getter]
+         +
          + Params:
          +  pos = The position to set the object at.
          + ++/
         @property @safe @nogc
         void position(vec2 pos) nothrow
         {
+            import std.math : round;
+
             if(ivec2(pos) == ivec2(this.position))
                 return;
 
-            this._transform.translation = pos;
+            this._transform.translation = vec2(pos.x.round, pos.y.round);
             this._transform.markDirty();
         }
         
