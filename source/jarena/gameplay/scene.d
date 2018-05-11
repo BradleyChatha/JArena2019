@@ -495,35 +495,45 @@ class SceneManager
             this._sharedCache = (cache is null) ? new SceneMultiCache() : cache;
             this._input = (input is null) ? new InputManager(eventOffice) : input;
         }
+		
+		/// Registers a `Scene` using it's `@SceneName` UDA.
+		/// See_Also: The other overload of this function.
+		void register(S : Scene)(S scene)
+		{
+			this.register(SceneName.getFrom!S, scene);
+		}
 
         /++
-         + Registers a `Scene`.
+         + Registers a `Scene` with a custom name.
          +
          + Notes:
          +  If the scene inheirts `IPostBox` then the `SceneManager` will automatically handle subscribing and unsubscribing it.
          +
+		 +  This function will ignore the Scene's @SceneName UDA, please see the other overload of this function for that.
+		 +  This overload is generally advised for when a Scene object is created and registered multiple times
+		 +  (e.g. You may have a single class that is used to represent a level, but each level has their own object of that class.)
+		 +
          + Params:
+		 +  name  = The name to give the scene.
          +  scene = The scene to register. 
          + ++/
-        void register(S : Scene)(S scene)
+        void register(string name, Scene scene)
         {
             assert(scene !is null);
-            Scene deprecationWorkaround = scene; // Because S is a template param, D doesn't realise that it's valid for this class to access private members.
-                                                 // So it gives me a deprecation warning.
-            deprecationWorkaround._manager = this;
-            deprecationWorkaround._name = SceneName.getFrom!S;
+            scene._manager = this;
+            scene._name = name;
 
             tracef("Registering Scene called '%s'", scene.name);
             static if(is(S : IPostBox))
             {
                 trace("The Scene inherits from an IPostBox, so it's onMail function will be subscribed automatically.");
-                deprecationWorkaround._flags |= Scene.Flags.IS_POSTBOX;
+                scene._flags |= Scene.Flags.IS_POSTBOX;
             }
             
             this._scenes.add(scene.name, scene);
 
             trace("Initialising Scene");
-            deprecationWorkaround._onInit();
+            scene._onInit();
             scene.onInit();
         }
 
