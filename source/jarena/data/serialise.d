@@ -130,7 +130,7 @@ private static
     // For @Serialisable structs, call their fromSdlTag function.
     void generateSDL(alias FieldAlias, FieldType, string FieldTypeName, string FieldTagName, string FieldMemberName)
                     (CodeBuilder code, ref size_t nameCounter)
-    if(is(FieldType == struct) && hasUDA!(FieldType, Serialisable) && !isNullableFieldType)
+    if(is(FieldType == struct) && hasUDA!(FieldType, Serialisable) && !isNullable!FieldType)
     {        
         static assert(hasMember!(FieldType, "fromSdlTag"),
                       format("The @Serialisable type '%s' doesn't have a function called 'fromSdlTag', please use `mixin SerialisableInterface;`",
@@ -139,7 +139,7 @@ private static
 
         code.put("// @Serialisable struct");
         code.putf("%s = (%s).init;", FieldMemberName, FieldTypeName);
-        code.putf("%s.fromSdlTag(tag.expectTag(\"%s\"));",TagName);
+        code.putf("%s.fromSdlTag(tag.expectTag(\"%s\"));", TagName);
     }
 
     // For vectors, check that the tag has N amount of values, and then read them into the vector.

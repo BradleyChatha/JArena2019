@@ -324,7 +324,7 @@ class Texture : TextureBase
     {
         RendererResources.TextureHandle _handle;
 
-        @safe @nogc
+        @property @safe @nogc
         inout(typeof(_handle)) handle() nothrow inout
         {
             assert(!this._handle.isNull, "This handle is null.");

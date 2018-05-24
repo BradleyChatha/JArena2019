@@ -15,7 +15,7 @@ class RectangleShape : ITransformable
     {
         Transform    _transform;
         uint         _borderSize;
-        Vertex[4]    _verts; // [0]TopLeft|[1]TopRight|[2]BotLeft|[3]BotRight
+        Vertex[4]    _verts;       // [0]TopLeft|[1]TopRight|[2]BotLeft|[3]BotRight
         Vertex[4*4]  _borderVerts; // [Per corner][0]TopLeft|[1]TopRight|[2]BotLeft|[3]BotRight
                                    // [0..4] = Top Left Corner|[4..8]TopRight|[8..12]BotLeft|[12..16]BotRight
         Vertex[4*5]  _transformed; // [Final4] = _verts. [First16] = _borderVerts
