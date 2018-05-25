@@ -12,6 +12,7 @@ private
     const WINDOW_NAME               = "JArena";
     const WINDOW_DEFAULT_SIZE       = uvec2(860, 740);
     const WINDOW_DEFAULT_FPS        = 60;
+    const WINDOW_DEFAULT_VSYNC      = true;
     const DEBUG_FONT                = "Data/Fonts/Spaceport_2006.otf";
     const DEBUG_FONT_SIZE           = 10;
     const DEBUG_TEXT_COLOUR         = Colours.rockSalt;
@@ -82,6 +83,8 @@ final class Engine
             this._debugCamera   = new Camera(RectangleF(0, 0, vec2(this._window.size)));
             this._frameTime     = (1000 / this._config.targetFPS.get(WINDOW_DEFAULT_FPS)).msecs;
             this._audio         = new AudioManager();
+
+            this._window.vsync = this._config.vsync.get(WINDOW_DEFAULT_VSYNC);
             
             // Setup init info
             Systems.window = this._window;
@@ -179,5 +182,6 @@ final class Engine
         Nullable!uvec2 windowSize;
         Nullable!int   targetFPS;
         Nullable!bool  showDebugText;
+        Nullable!bool  vsync;
     }
 }

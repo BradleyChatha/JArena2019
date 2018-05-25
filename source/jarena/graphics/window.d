@@ -154,8 +154,7 @@ final class Window
             GL.postContextLoad();
             debug GL.debugLogEnable();
 
-            SDL_GL_SetSwapInterval(1);        // Vsync. TODO: Make this a function.
-            glViewport(0, 0, size.x, size.y); // Use the entire window to render. TODO: Get around to putting this functionality into Camera
+            glViewport(0, 0, size.x, size.y); // Use the entire window to render. TODO: Get round to putting this functionality into Camera
             glEnable(GL_BLEND);               // Enable blending
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             GL.checkForError();
@@ -304,6 +303,27 @@ final class Window
             ivec2 value;
             SDL_GetWindowSize(cast(SDL_Window*)this.handle, &value.data[0], &value.data[1]);
             return uvec2(value);
+        }
+
+        /// Returns:
+        ///  Whether V-Sync is enabled.
+        @property @trusted @nogc
+        bool vsync() nothrow const
+        {
+            return cast(bool)SDL_GL_GetSwapInterval();
+        }
+
+        /// Sets whether V-Sync should be used or not
+        ///
+        /// Notes:
+        ///  In some cases, V-Sync may not be able to be used.
+        ///
+        /// Params:
+        ///  isOn = Whether to use V-Sync or not.
+        @property @trusted @nogc
+        void vsync(bool isOn) nothrow
+        {
+            SDL_GL_SetSwapInterval(isOn);
         }
 
         /// Returns:
