@@ -3,13 +3,16 @@ module jarena.graphics.renderer;
 
 private
 {
-    import std.experimental.logger;
+    import std.experimental.logger, std.typecons;
     import derelict.sdl2.sdl;
     import opengl;
     import jarena.core, jarena.graphics;
 
     const COMPOUNT_TEXTURE_DIRECTORY = "data/debug/compound/";
 }
+
+/// Passed to some functions to denote whether it should handle certain special cases or not.
+alias CanSpecialCase = Flag!"specialCase";
 
 /++
  + Contains information about a Camera, which can be used to control what is shown on screen.
@@ -410,18 +413,56 @@ final class Renderer
          + Params:
          +  shape = The shape to draw.
          + ++/
-        void drawRectShape(RectangleShape shape)
+        void drawRectShape(CanSpecialCase specialCase = CanSpecialCase.no)(RectangleShape shape)
         {
+            import std.math : approxEqual;
             assert(shape !is null);
+
+            static if(specialCase)
+            {
+                import std.stdio;
+
+                // Shapes that have an X or Y of 1 won't properly render.
+                // So we change up their values temporarily
+                bool shapeAxisIsOne = false;
+                vec2 shapeOldPos    = shape.position;
+                vec2 shapeOldSize   = shape.size;
+
+                if(shape.size.x == 1)
+                {
+                    shape.position = shape.position - vec2(1, 0);
+                    shape.size     = shape.size + vec2(1, 0);
+                    shapeAxisIsOne = true;
+                }
+                if(shape.size.y == 1)
+                {
+                    shape.position = shape.position - vec2(0, 1);
+                    shape.size     = shape.size + vec2(0, 1);
+                    shapeAxisIsOne = true;
+                }
+            }
 
             // Draw the rectangle's filling
             this.drawQuad(null, shape.verts, this._colourShader);
 
             // Draw the border.
-            this.drawQuad(null, shape.borderLeftVerts,   this._colourShader);
-            this.drawQuad(null, shape.borderRightVerts,  this._colourShader);
-            this.drawQuad(null, shape.borderTopVerts,    this._colourShader);
-            this.drawQuad(null, shape.borderBottomVerts, this._colourShader);
+            if(shape.borderSize != 0)
+            {
+                this.drawQuad(null, shape.borderLeftVerts,   this._colourShader);
+                this.drawQuad(null, shape.borderRightVerts,  this._colourShader);
+                this.drawQuad(null, shape.borderTopVerts,    this._colourShader);
+                this.drawQuad(null, shape.borderBottomVerts, this._colourShader);
+            }
+
+            // If the special case messed with the shape's values, set them back to their original.
+            static if(specialCase)
+            {
+                if(shapeAxisIsOne)
+                {
+                    shape.position = shapeOldPos;
+                    shape.size     = shapeOldSize;
+                }
+            }
         }
 
         /// Draws a `Sprite` to the screen.
