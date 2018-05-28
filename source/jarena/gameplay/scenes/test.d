@@ -110,6 +110,9 @@ class Test : Scene, IPostBox
                     gui.children[0].parent = gui2;
             }
 
+            if(input.isShiftDown && input.isMouseButtonDown(MouseButton.Left))
+                super.camera.center = input.mousePosition;
+
             super.updateScene(deltaTime);
             super.updateUI(deltaTime);
         }

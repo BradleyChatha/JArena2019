@@ -93,15 +93,16 @@ final class Camera
         @property @safe @nogc
         vec2 center() nothrow const
         {
-            return vec2();
-            //return sfView_getCenter(this.handle).to!vec2;
+            return this._view.translation + (this.size / 2);
         }
 
         ///
-        @property @safe @nogc
+        @property @safe
         void center(vec2 centerPos) nothrow
         {
-            //sfView_setCenter(this.handle, centerPos.toSF!sfVector2f);
+            this._view.translation = centerPos - (this.size / 2);
+            this._view.markDirty();
+            this.updateProjection();
         }
 
         ///
