@@ -111,7 +111,15 @@ class Test : Scene, IPostBox
             }
 
             if(input.isShiftDown && input.isMouseButtonDown(MouseButton.Left))
+            {
                 super.camera.center = input.mousePosition;
+
+                import std.stdio;
+                writefln("Screen: %s | World: %s | World->Screen: %s", 
+                         input.mousePosition, 
+                         super.camera.screenToWorldPos(input.mousePosition),
+                         super.camera.worldToScreenPos(super.camera.screenToWorldPos(input.mousePosition)));
+            }
 
             super.updateScene(deltaTime);
             super.updateUI(deltaTime);

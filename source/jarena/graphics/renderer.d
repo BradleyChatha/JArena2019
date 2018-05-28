@@ -56,6 +56,42 @@ final class Camera
         }
 
         /++
+         + Converts a screen position, to a world position.
+         +
+         + Notes:
+         +  For now, this function will only take into account the camera's position, but not it's rotation.
+         +
+         + Params:
+         +  screenPos = The screen position to convert.
+         +
+         + Returns:
+         +  `screenPos` as a world position.
+         + ++/
+        @safe @nogc
+        inout(vec2) screenToWorldPos(vec2 screenPos) nothrow pure inout
+        {
+            return this._view.translation + screenPos;
+        }
+
+        /++
+         + Converts a screen position, to a world position.
+         +
+         + Notes:
+         +  For now, this function will only take into account the camera's position, but not it's rotation.
+         +
+         + Params:
+         +  worldPos = The world position to convert.
+         +
+         + Returns:
+         +  `worldPos` as a screen position.
+         + ++/
+        @safe @nogc
+        inout(vec2) worldToScreenPos(vec2 worldPos) nothrow pure inout
+        {
+            return worldPos - this._view.translation;
+        }
+
+        /++
          + Moves the camera by a certain offset.
          +
          + Params:
