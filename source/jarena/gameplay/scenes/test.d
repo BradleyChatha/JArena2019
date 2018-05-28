@@ -12,6 +12,7 @@ class Test : Scene, IPostBox
     SpriteAtlas atlas;
     StackContainer gui;
     StackContainer gui2;
+    RectangleShape[2] centerLines;
     //GridContainer  grid;
 
     public override
@@ -25,6 +26,25 @@ class Test : Scene, IPostBox
             //atlas.register("TahnBig", RectangleI(256, 0, 256, 256));
             //atlas = SdlangLoader.parseAtlasTag(parseFile("Data/Atlases/test atlas.sdl"), "Test Atlas", "Data/", null, super.manager.cache.getCache!Texture);
             atlas = super.manager.cache.get!SpriteAtlas("Test Atlas");
+
+            foreach(i; 0..this.centerLines.length)
+            {
+                this.centerLines[i] = new RectangleShape();
+                this.centerLines[i].borderSize = 0;
+                this.centerLines[i].colour = Colours.brownBramble;
+            }
+            this.centerLines[0].area = RectangleF(
+                Systems.window.size.x / 2,
+                0,
+                1,
+                Systems.window.size.y
+            );
+            this.centerLines[1].area = RectangleF(
+                0,
+                Systems.window.size.y / 2,
+                Systems.window.size.x,
+                1
+            );
 
             this.tahn = new StaticObject(atlas.makeSprite("Tahn"), vec2(0), 1);
             super.register("Tahn", this.tahn);
@@ -110,16 +130,7 @@ class Test : Scene, IPostBox
                     gui.children[0].parent = gui2;
             }
 
-            if(input.isShiftDown && input.isMouseButtonDown(MouseButton.Left))
-            {
-                super.camera.center = input.mousePosition;
-
-                import std.stdio;
-                writefln("Screen: %s | World: %s | World->Screen: %s", 
-                         input.mousePosition, 
-                         super.camera.screenToWorldPos(input.mousePosition),
-                         super.camera.worldToScreenPos(super.camera.screenToWorldPos(input.mousePosition)));
-            }
+            super.camera.center = this.tahn.position + (this.tahn.bounds.size / 2);
 
             super.updateScene(deltaTime);
             super.updateUI(deltaTime);
@@ -129,6 +140,10 @@ class Test : Scene, IPostBox
         {
             super.renderScene(window);
             super.renderUI(window);
+
+            window.renderer.camera = super.guiCamera;
+            foreach(shape; this.centerLines)
+                window.renderer.drawRectShape!(CanSpecialCase.yes)(shape);
         }
     }
 }
