@@ -368,6 +368,20 @@ abstract class Scene
         }
 
         /++
+         + Notes:
+         +  A few issues prevent this camera from being marked `const`, but should still
+         +  be treated as such.
+         +
+         + Returns:
+         +  The camera used when rendering the GUI, to make custom UI elements easier to render.
+         + ++/
+        @property @safe @nogc
+        Camera guiCamera() nothrow
+        {
+            return this._guiCamera;
+        }
+
+        /++
          + The main event office.
          +
          + Notes:
