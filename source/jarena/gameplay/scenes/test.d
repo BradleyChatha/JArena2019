@@ -143,7 +143,7 @@ class Test : Scene, IPostBox
 
             window.renderer.camera = super.guiCamera;
             foreach(shape; this.centerLines)
-                window.renderer.drawRectShape!(CanSpecialCase.yes)(shape);
+                window.renderer.drawRectShape(shape);
         }
     }
 }
