@@ -122,7 +122,7 @@ abstract class Scene
         {
             auto cameraRect         = RectangleF(0, 0, vec2(Systems.window.size));
             this._proxyEventOffice  = new PostOffice();
-            this._gui               = new EditorContainer(this._proxyEventOffice, this.manager.cache);
+            this._gui               = new EditorContainer(this._proxyEventOffice);
             this._guiCamera         = new Camera(cameraRect);
             this._sceneCamera       = new Camera(cameraRect);
         }
@@ -476,14 +476,11 @@ abstract class Scene
 /// Manages multiple `Scene`s and is required for certain utility functions that a `Scene` provides.
 class SceneManager
 {
-    alias SceneMultiCache = MultiCache!(Texture, SpriteAtlas, AnimationInfo, Font, Sound);
-
     private
     {
         Cache!Scene     _scenes;                // Cache of all scenes.
         Scene           _currentScene;          // Current scene to update
         PostOffice      _eventOffice;           // Main event office.
-        SceneMultiCache _sharedCache;           // A MultiCache used to share assests between scenes.
         InputManager    _input;                 // Input Manager for the game's window.
     }
 
@@ -493,20 +490,16 @@ class SceneManager
          + Notes:
          +  If `input` is `null`, then one is created, and paired with the `eventOffice`.
          +
-         +  If `cache` is `null`, then one is created.
-         +
          + Params:
          +  eventOffice = A `PostOffice` that is recieving events from core game features, such as the `Window`.
          +  input = An `InputManager` that should be paried with the `eventOffice`.
-         +  cache = A multi cache to contain common assets shared between all scenes.
          + ++/
-        this(PostOffice eventOffice, InputManager input = null, SceneMultiCache cache = null)
+        this(PostOffice eventOffice, InputManager input = null)
         {
             assert(eventOffice !is null);
 
             this._eventOffice = eventOffice;
             this._scenes = new Cache!Scene;
-            this._sharedCache = (cache is null) ? new SceneMultiCache() : cache;
             this._input = (input is null) ? new InputManager(eventOffice) : input;
         }
 		
@@ -617,22 +610,6 @@ class SceneManager
         void swap(S : Scene)()
         {
             this.swap(SceneName.getFrom!S);
-        }
-
-        /++
-         + A `MultiCache` shared between all `Scene`s, which should be used so things like
-         + `Texture`s and `SpriteAtlas`s are only loaded in once.
-         +
-         + Returns:
-         +  A `MultiCache` shared between all `Scene`s.
-         +
-         + See_Also:
-         +  `SceneManager.SceneMultiCache` to see what types are stored in the cache.
-         + ++/
-        @property @safe @nogc
-        inout(SceneMultiCache) cache() nothrow inout
-        {
-            return this._sharedCache;
         }
 
         /// An `InputManager` provided for easy access for `Scene`s to get user input.

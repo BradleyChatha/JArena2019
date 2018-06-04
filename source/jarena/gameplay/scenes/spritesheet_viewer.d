@@ -268,17 +268,17 @@ final class SpriteAtlasViewerScene : ViewerScene
 
     public
     {
-        this(Cache!SpriteAtlas atlases)
+        this()
         {
             import std.algorithm : map;
             import std.array     : array;
 
-            this._atlases = atlases.byValue.map!(s => AtlasInfo(
-                (cast(SpriteAtlas)s),// Naughty naughty
-                s.bySpriteKeys.array, 
+            this._atlases = Systems.assets.byKeyValueFiltered!SpriteAtlas.map!(s => AtlasInfo(
+                (cast(SpriteAtlas)s.value),// Naughty naughty
+                s.value.bySpriteKeys.array, 
                 0,
                 false,
-                s.bySpriteSheetKeys.array,
+                s.value.bySpriteSheetKeys.array,
                 0,
                 0
             )).array;

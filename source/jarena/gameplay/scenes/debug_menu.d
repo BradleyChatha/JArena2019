@@ -27,8 +27,8 @@ final class DebugMenuScene : Scene
         {
             import std.conv : to;
             uint count = 0;
-            foreach(font; super.manager.cache.getCache!Font.byValue)
-                (cast(Font)font).dumpAllTextures("Font"~count++.to!string); // Casting away const here, but it _should_ be safe to do so in this case.
+            foreach(font; Systems.assets.byKeyValueFiltered!Font)
+                (cast(Font)font.value).dumpAllTextures(font.key); // Casting away const here, but it _should_ be safe to do so in this case.
         }
     }
 
@@ -40,9 +40,9 @@ final class DebugMenuScene : Scene
             this._list.colour = MENU_COLOUR;
             super.gui.addChild(this._list);
 
-            this._bding = super.manager.cache.get!Sound("Bding");
-            this._music = super.manager.cache.get!Sound("Debug Music");
-            auto font   = super.manager.cache.get!Font("Calibri");
+            //this._bding = Systems.assets.get!Sound("Bding");
+            //this._music = Systems.assets.get!Sound("Debug Music");
+            auto font   = Systems.assets.get!Font("Calibri");
             void addButton(string text, Button.OnClickFunc handler)
             {
                 this._list.addChild(new SimpleTextButton(

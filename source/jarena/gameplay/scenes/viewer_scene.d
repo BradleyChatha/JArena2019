@@ -37,7 +37,7 @@ abstract class ViewerScene : Scene
          + ++/
         SimpleLabel makeDataLabel(string fontKey = DEFAULT_FONT_KEY)
         {
-            return this.makeLabel(this._dataPanel, super.manager.cache.get!Font(fontKey));
+            return this.makeLabel(this._dataPanel, Systems.assets.get!Font(fontKey));
         }
 
         override void onSwap(PostOffice office){}
@@ -59,7 +59,7 @@ abstract class ViewerScene : Scene
             super.gui.addChild(this._instructionPanel);
 
             auto extraInstructions = "\nWASD = Move Camera | R = Reset Camera";
-            auto instLabel = this.makeLabel(this._instructionPanel, super.manager.cache.get!Font(DEFAULT_FONT_KEY));
+            auto instLabel = this.makeLabel(this._instructionPanel, Systems.assets.get!Font(DEFAULT_FONT_KEY));
             instLabel.updateTextASCII(this.instructions ~ extraInstructions);
             
             this._instructionPanel.autoSize = StackContainer.AutoSize.no;

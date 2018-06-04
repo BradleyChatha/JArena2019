@@ -1,10 +1,10 @@
-type "Data:list"
+type "Animation:list"
 
 value {
     type "Animation:spriteSheet"
     name "Test Animation"
 
-    atlasRef "../Atlases/test atlas.sdl"
+    atlasRef "Test Atlas"
     spriteSheetRef "TahnAnimation"
 
     frameDelayMS 500
@@ -15,7 +15,7 @@ value {
     type "Animation:spriteSheet"
     name "Tile Animation"
 
-    atlasRef "../Atlases/test atlas.sdl"
+    atlasRef "Test Atlas"
     spriteSheetRef "TileAnimation"
 
     frameDelayMS 1500
@@ -26,7 +26,7 @@ value {
 	type "Animation:spriteSheet"
 	name "Explosion Animation"
 	
-	atlasRef "../Atlases/explosion.sdl"
+	atlasRef "Explosion Atlas"
 	spriteSheetRef "ExplosionFrames"
 	
 	frameDelayMS 25

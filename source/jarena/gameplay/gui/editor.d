@@ -113,10 +113,8 @@ final class EditorContainer : FreeFormContainer
          +
          + Params:
          +  office = A `PostOffice` which the the editor will listen for key presses on.
-         +  cache  = A `MultiCache` that caches certain data the editor may need.
          + ++/
-        this(MCache)(PostOffice office, MCache cache)
-        if(canCache!(MCache, Font))
+        this(PostOffice office)
         {
             assert(office !is null);
 
@@ -125,7 +123,7 @@ final class EditorContainer : FreeFormContainer
             this._instructionPanel = new StackContainer(vec2(0, INSTRUCTION_Y), StackContainer.Direction.Vertical, PANEL_COLOUR);
 
             auto label = this._instructionPanel.addChild(new SimpleLabel(
-                new Text(cache.get!Font(GENERIC_FONT_KEY), "", vec2(0), GENERIC_CHAR_SIZE, Colour.white)
+                new Text(Systems.assets.get!Font(GENERIC_FONT_KEY), "", vec2(0), GENERIC_CHAR_SIZE, Colour.white)
             ));
             label.name = "labelText";
             label.updateTextASCII("Press left or right arrow keys");
@@ -142,8 +140,8 @@ final class EditorContainer : FreeFormContainer
             });
 
             // Register pre-defined extensions
-            this.registerExtension(new GenericElementExtension(cache.getCache!Font));
-            this.registerExtension(new GenericContainerExtension(cache.getCache!Font));
+            this.registerExtension(new GenericElementExtension());
+            this.registerExtension(new GenericContainerExtension());
 
             // Other
             this._containerStack ~= ContainerInfo(0, this);
@@ -381,11 +379,11 @@ private final class GenericElementExtension : EditorPanelExtension
 
     public
     {
-        this(Cache!Font fonts)
+        this()
         {
             void makeLabel(ref SimpleLabel label)
             {
-                label = new SimpleLabel(new Text(fonts.get(GENERIC_FONT_KEY), "", vec2(0), GENERIC_CHAR_SIZE, Colour.white));
+                label = new SimpleLabel(new Text(Systems.assets.get!Font(GENERIC_FONT_KEY), "", vec2(0), GENERIC_CHAR_SIZE, Colour.white));
             }
             
             super.registerKeybind!(Scancode.E)("Moves the selected item to the mouse",(input){
@@ -431,11 +429,11 @@ private final class GenericContainerExtension : EditorPanelExtension
 
     public
     {
-        this(Cache!Font fonts)
+        this()
         {
             void makeLabel(ref SimpleLabel label)
             {
-                label = new SimpleLabel(new Text(fonts.get(GENERIC_FONT_KEY), "", vec2(0), GENERIC_CHAR_SIZE, Colour.white));
+                label = new SimpleLabel(new Text(Systems.assets.get!Font(GENERIC_FONT_KEY), "", vec2(0), GENERIC_CHAR_SIZE, Colour.white));
             }
 
             makeLabel(this._labelChildCount);
