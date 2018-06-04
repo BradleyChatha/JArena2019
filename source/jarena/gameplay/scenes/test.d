@@ -24,8 +24,8 @@ class Test : Scene, IPostBox
             //atlas = new SpriteAtlas(new Texture("Atlas.png"));
             //atlas.register("Tahn", RectangleI(512, 0, 32, 32));
             //atlas.register("TahnBig", RectangleI(256, 0, 256, 256));
-            //atlas = SdlangLoader.parseAtlasTag(parseFile("Data/Atlases/test atlas.sdl"), "Test Atlas", "Data/", null, super.manager.cache.getCache!Texture);
-            atlas = super.manager.cache.get!SpriteAtlas("Test Atlas");
+            //atlas = SdlangLoader.parseAtlasTag(parseFile("Data/Atlases/test atlas.sdl"), "Test Atlas", "Data/", null, Systems.assets.getCache!Texture);
+            atlas = Systems.assets.get!SpriteAtlas("Test Atlas");
 
             foreach(i; 0..this.centerLines.length)
             {
@@ -51,8 +51,8 @@ class Test : Scene, IPostBox
             super.register("TahnBig", new StaticObject(atlas.makeSprite("TahnBig")));
             super.register("Jash", new StaticObject(atlas.makeSprite("Jash"), vec2(500, 0), 3));
 
-            //auto info = SdlangLoader.parseSpriteSheetAnimationTag(parseFile("Data/test animation.sdl"), "Data/", "Test Atlas", super.manager.cache);
-            auto info = super.manager.cache.get!AnimationInfo("Test Animation");
+            //auto info = SdlangLoader.parseSpriteSheetAnimationTag(parseFile("Data/test animation.sdl"), "Data/", "Test Atlas", Systems.assets.);
+            auto info = Systems.assets.get!AnimationInfo("Test Animation");
             super.register("AnimatedTahn", new AnimatedObject(new AnimatedSprite(info), vec2(500, 500)));
 
             this.gui  = new StackContainer(vec2(10, 400), StackContainer.Direction.Vertical, Colour(0,0,0,128));
@@ -74,7 +74,7 @@ class Test : Scene, IPostBox
             gui2.addChild(new TestControl(vec2(0,0), vec2(50, 30), Colour(128, 0, 128, 255)));
             gui2.addChild(new TestControl(vec2(0,0), vec2(25, 60), Colour(0, 128, 128, 255)));
 
-            auto font = super.manager.cache.get!Font("Crackdown");
+            auto font = Systems.assets.get!Font("Crackdown");
             super.register("Some random text", new TextObject(font, "A B C D E F G 1 2 3", vec2(0,550), 14, Colour(128, 0, 128, 255), 0));
             
             auto btnText = new Text(font, "Click Me", vec2(0), 14, Colour(255, 255, 255, 255));

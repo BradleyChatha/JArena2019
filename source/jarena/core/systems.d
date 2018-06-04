@@ -61,7 +61,9 @@ final class Systems
         alias Properties = AliasSeq!(
             _window,
             _renderResources,
-            _audio
+            _audio,
+            _loaderSDL,
+            _assets
         );
 
         @Property("window")
@@ -76,6 +78,12 @@ final class Systems
 
         @Property("audio")
         AudioManager _audio;
+
+        @Property("loaderSdlang")
+        LoaderSDL _loaderSDL;
+
+        @Property("assets")
+        AssetManager _assets;
     }
 
     public static final

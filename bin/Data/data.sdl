@@ -1,21 +1,32 @@
-type "Data:file"
+type "Package"
+name "Debug"
 
-animations {
+// These files are stored in SDLang files, so their name and type are figured out automatically.
+files {
+    // Animations
     file "Animations/Test Animations.sdl"
+
+    // Atlases
+    file "Atlases/test atlas.sdl"
+    file "Atlases/explosion.sdl"
+    //glob "Atlases/*.sdl"
 }
 
-atlases {
-    //file "Atlases/test atlas.sdl"
-    //file "Atlases/explosion.sdl"
-    glob "Atlases/*.sdl"
+// Files that aren't stored in in SDLang files need to be given a type and name manually.
+
+namedFiles type="Texture" {
+    namedFile "tex_TestAtlas" "Textures/Atlas.png"
+    namedFile "tex_Explosion" "Textures/Explosion.png"
 }
 
-fonts {
+// Sounds/Music
+namedFiles type="Sound" {
+    //namedFile "Bding"       "Audio/SFX/coin pickup.wav"
+    //namedFile "Debug Music" "Audio/Music/Curtain Call.mp3" stream="yes"
+}
+
+// Fonts
+namedFiles type="Font" {
     namedFile "Crackdown" "Fonts/crackdown.ttf"
     namedFile "Calibri"   "Fonts/calibri.ttf"
-}
-
-sounds {
-    namedFile "Bding"       "Audio/SFX/coin pickup.wav"
-    namedFile "Debug Music" "Audio/Music/Curtain Call.mp3" stream="yes"
 }

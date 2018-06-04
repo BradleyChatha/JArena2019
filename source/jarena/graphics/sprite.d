@@ -969,6 +969,13 @@ struct AnimationInfo
     bool repeat;
 }
 
+/// A class wrapper around `AnimationInfo`, used by loaders.
+class AnimationInfoClass
+{
+    alias info this;
+    AnimationInfo info;
+}
+
 /++
  + Adds the ability for a `Sprite` to be animated.
  +
@@ -1347,10 +1354,11 @@ class StaticObject : DrawableObject
         {
             if(this._sprite is null && this._texturePath !is null)
             {
+                assert(false, "Not implemented");
                 // I really need to find a clean/shorter way to access that cache T.T
-                auto texture = super.scene.manager.cache.loadOrGet(this._texturePath);
-                this._sprite = new Sprite(texture);
-                this.sprite.position = this._initialPosition;
+                //auto texture = super.scene.manager.cache.loadOrGet(this._texturePath);
+                //this._sprite = new Sprite(texture);
+                //this.sprite.position = this._initialPosition;
             }
         }
 

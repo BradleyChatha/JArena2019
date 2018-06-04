@@ -64,7 +64,6 @@ class Font
             // FreeType gives us bitmaps, so we need to tell OpenGL that everything is 1 byte away from eachother.
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-
             FT_Set_Pixel_Sizes(this._font, 0, size);
             CharSet set;
             set.texture = new MutableTexture(uvec2(1024, 1024));

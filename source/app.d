@@ -34,7 +34,7 @@ void main()
     FreeImage_Initialise();
     
     // Prepare all of the data loaders.
-    SdlangLoader.setup();
+    //SdlangLoader.setup();
     
     // Setup the engine.
     auto engine = new Engine();
@@ -44,8 +44,8 @@ void main()
     engine.scenes.register(new Test());
     engine.scenes.register(new MenuScene());
     engine.scenes.register(new DebugMenuScene());
-    engine.scenes.register(new AnimationViewerScene(engine.scenes.cache.getCache!AnimationInfo));
-    engine.scenes.register(new SpriteAtlasViewerScene(engine.scenes.cache.getCache!SpriteAtlas));
+    engine.scenes.register(new AnimationViewerScene());
+    engine.scenes.register(new SpriteAtlasViewerScene());
     engine.scenes.swap!MenuScene;
     //engine.scenes.swap!AnimationViewerScene;
     engine.doLoop();

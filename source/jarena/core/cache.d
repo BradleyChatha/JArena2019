@@ -101,9 +101,9 @@ if(isType!T)
 
         /// Returns: Range
         @property @safe @nogc
-        auto byValue() nothrow inout
+        auto byKeyValue() nothrow inout
         {
-            return this._cache.byValue;
+            return this._cache.byKeyValue;
         }
     }
 }
