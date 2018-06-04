@@ -35,7 +35,7 @@ final class MenuScene : Scene
             this._list.colour = MENU_COLOUR;
             super.gui.addChild(this._list);
 
-            auto font = super.manager.cache.get!Font("Calibri");
+            auto font = Systems.assets.get!Font("Calibri");
             foreach(item; SCENES)
             {
                 this._list.addChild(new SimpleTextButton(

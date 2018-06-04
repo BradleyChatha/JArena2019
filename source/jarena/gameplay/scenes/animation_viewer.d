@@ -57,13 +57,12 @@ final class AnimationViewerScene : ViewerScene
 
     public
     {
-        this(Cache!AnimationInfo animations)
+        this()
         {
             import std.array : array;
             import std.algorithm : map;
-            assert(animations !is null);
 
-            this._animations = animations.byValue.map!(v => cast(AnimationInfo)v).array;
+            this._animations = Systems.assets.byKeyValueFiltered!AnimationInfoClass.map!(v => v.value.info).array;
         }
     }
 

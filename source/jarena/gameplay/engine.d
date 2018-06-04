@@ -87,8 +87,10 @@ final class Engine
             this._window.vsync = this._config.vsync.get(WINDOW_DEFAULT_VSYNC);
             
             // Setup init info
-            Systems.window = this._window;
-            Systems.audio  = this._audio;
+            Systems.window       = this._window;
+            Systems.assets       = new AssetManager();
+            Systems.loaderSdlang = new LoaderSDL();
+            Systems.audio        = this._audio;
             Systems.finalise();
 
             // Make sure the post office types are valid
@@ -110,7 +112,7 @@ final class Engine
             this.events.subscribe(Window.Event.Close, (_,__) => this._window.close());
 
             // Load in assets
-            SdlangLoader.parseFile(ENGINE_DATA_PATH, this.scenes.cache);
+            Systems.loaderSdlang.loadPackage("Data/data.sdl");
 
             // Debug stuff
             debug this._config.showDebugText = true;
