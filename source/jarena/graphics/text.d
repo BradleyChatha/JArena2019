@@ -5,7 +5,7 @@ module jarena.graphics.text;
 
 private
 {
-    import std.experimental.logger;
+    import std.experimental.logger, std.typecons;
     import jarena.core, jarena.graphics, jarena.gameplay;
 }
 
@@ -34,7 +34,10 @@ class Font
     {
         // To make the code more clear
         alias CharSize = uint;
-        alias CharCode = ulong;
+        alias CharCode = uint;
+
+        alias SetSize = Flag!"setSize";
+        alias SetGLAlignment = Flag!"setAlignment";
 
         struct Glyph
         {
@@ -68,31 +71,49 @@ class Font
             CharSet set;
             set.texture = new MutableTexture(uvec2(1024, 1024));
             foreach(code; 0..128)
-            {
-                // Load the glyph.
-                auto errCode = FT_Load_Char(this._font, code, FT_LOAD_RENDER);
-                if(errCode != 0)
-                {
-                    errorf("FreeType could not load the character for code %s. Error = %s", code, errCode);
-                    continue;
-                }
+                this.generateGlyph!(SetSize.no, SetGLAlignment.no)(code, set);
 
-                // Stitch it into the character set's texture atlas.
-                RectangleI area;
-                auto mapSize = ivec2(this._font.glyph.bitmap.width, this._font.glyph.bitmap.rows);
-                set.texture.stitch!GL_RED(this._font.glyph.bitmap.buffer[0..(mapSize.y * mapSize.x)],
-                                          mapSize,
-                                          area);
-
-                // Then store the information about the glyph.
-                set.glyphs[code] = Glyph(
-                    area,
-                    ivec2(this._font.glyph.bitmap_left, this._font.glyph.bitmap_top),
-                    ivec2(this._font.glyph.advance.x, this._font.glyph.advance.y)
-                );
-            }
+            set.glyphs.rehash();
             glPixelStorei(GL_UNPACK_ALIGNMENT, 4); // So we don't mess up any other code, set the alignment back to default.
             this._sets[size] = set;
+        }
+
+        void generateGlyph(SetSize setSize, SetGLAlignment setAlignment)(CharCode code, ref CharSet set, size_t size = size_t.max)
+        {
+            import opengl;
+
+            // Set the size/alignment if we're told to handle that
+            static if(setSize)
+                FT_Set_Pixel_Sizes(this._font, 0, size);
+
+            static if(setAlignment)
+                glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+            // Load the glyph.
+            auto errCode = FT_Load_Char(this._font, code, FT_LOAD_RENDER);
+            if(errCode != 0)
+            {
+                errorf("FreeType could not load the character for code %s. Error = %s", code, errCode);
+                return;
+            }
+
+            // Stitch it into the character set's texture atlas.
+            RectangleI area;
+            auto mapSize = ivec2(this._font.glyph.bitmap.width, this._font.glyph.bitmap.rows);
+            set.texture.stitch!GL_RED(this._font.glyph.bitmap.buffer[0..(mapSize.y * mapSize.x)],
+                                      mapSize,
+                                      area);
+
+            // Then store the information about the glyph.
+            set.glyphs[code] = Glyph(
+                area,
+                ivec2(this._font.glyph.bitmap_left, this._font.glyph.bitmap_top),
+                ivec2(this._font.glyph.advance.x, this._font.glyph.advance.y)
+            );
+
+            // Reset the alignment
+            static if(setAlignment)
+                glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
         }
         
         CharSet getSetForSize(CharSize size)
