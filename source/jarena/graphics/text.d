@@ -56,7 +56,8 @@ class Font
         FT_Face           _font;
         CharSet[CharSize] _sets;
 
-        // Generates the entire ASCII character set for a certain character size.
+        // Generates a CharSet for the given CharSize.
+        // Note that this function doesn't generate any glyph textures (well, it technically makes a single one).
         void generateForSize(CharSize size)
         {
             import opengl;
@@ -64,17 +65,9 @@ class Font
             // TODO: Support for more than ASCII.
             assert((size in this._sets) is null, "Bug, this shouldn't have been called.");
 
-            // FreeType gives us bitmaps, so we need to tell OpenGL that everything is 1 byte away from eachother.
-            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-            FT_Set_Pixel_Sizes(this._font, 0, size);
             CharSet set;
             set.texture = new MutableTexture(uvec2(1024, 1024));
-            foreach(code; 0..128)
-                this.generateGlyph!(SetSize.no, SetGLAlignment.no)(code, set);
-
-            set.glyphs.rehash();
-            glPixelStorei(GL_UNPACK_ALIGNMENT, 4); // So we don't mess up any other code, set the alignment back to default.
+            this.generateGlyph!(SetSize.yes, SetGLAlignment.yes)(0, set, size); // Generate a single glyph, to make sure the AA is initialised.
             this._sets[size] = set;
         }
 
@@ -123,6 +116,27 @@ class Font
 
             if((code in set.glyphs) is null)
                 this.generateGlyph!(SetSize.yes, SetGLAlignment.yes)(code, set, size);
+        }
+
+        /// Ensures that _all_ of the characters in the given piece of text have generated glyph textures for
+        /// the specified CharSize.
+        /// Note that this function have 0 optimisation (for now) so is slow.
+        void ensureTextGlyphsAreGenerated(CharSize size, const(char[]) text)
+        {
+            import std.algorithm : filter;
+            import std.utf       : byChar;
+            import opengl;
+
+            auto set = this.getSetForSize(size);
+
+            // We handle the alignment and char size ourself, so there's less overhead than doing it every single generation.
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+            FT_Set_Pixel_Sizes(this._font, 0, size);
+            foreach(code; text.byChar.filter!(c => (c in set.glyphs) is null))
+                this.generateGlyph!(SetSize.no, SetGLAlignment.no)(code, set);
+
+            set.glyphs.rehash();
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 4); // So we don't mess up any other code, set the alignment back to default.
         }
         
         CharSet getSetForSize(CharSize size)
@@ -353,8 +367,7 @@ class Text : ITransformable
         @property @trusted
         void asciiText(const(char[]) text) //nothrow
         {
-            // DEBUG, DELETE ME
-            this._font.ensureGlyphIsGenerated(14, '£');
+            this._font.ensureTextGlyphsAreGenerated(this.charSize, text);
 
             auto set = this._font.getSetForSize(this.charSize);
             auto pos = vec2(0, 0);
@@ -372,7 +385,7 @@ class Text : ITransformable
             {
                 import std.math : abs;
 
-                auto glyph    = set.glyphs[cast(ulong)ch];
+                auto glyph    = set.glyphs[cast(Font.CharCode)ch];
                 auto charPos  = pos + vec2(glyph.bearing.x, 0);
                      charSize = vec2(glyph.area.size);
                 auto topLeft  = vec2(glyph.area.position); // UV coord
