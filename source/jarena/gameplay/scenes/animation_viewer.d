@@ -37,7 +37,7 @@ final class AnimationViewerScene : ViewerScene
             this._sprite.position  = vec2((Systems.window.size.x / 2) - (this._sprite.bounds.size.x / 2),
                                           (Systems.window.size.y / 2) - (this._sprite.bounds.size.y / 2));
 
-            this._labelAnimData.updateTextASCII(
+            this._labelAnimData.updateText(
                 format("Animation Name: %s\n"~
                        "Delay Per Frame: %sms\n"~
                        "Repeats: %s\n"~
@@ -136,7 +136,7 @@ final class AnimationViewerScene : ViewerScene
                 auto sheet = this._sprite.animation.spriteSheet;
                 auto currentFrameNumber = (this._sprite.currentFrame.y * sheet.columns) + this._sprite.currentFrame.x;
 
-                this._labelChangingData.updateTextASCII(format(
+                this._labelChangingData.updateText(format(
                     "Finished: %s\n"~
                     "Current Frame: %s (%s)", 
                     this._sprite.finished,

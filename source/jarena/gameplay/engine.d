@@ -104,7 +104,7 @@ final class Engine
             this.events.subscribe(Event.UpdateFPSDisplay, (_, __)
             {
                 import std.format : sformat;
-                this._debugText.updateTextASCII(sformat(this._debugBuffer, "FPS: %s | Time: %sms | RAM: %sMB", 
+                this._debugText.updateText(sformat(this._debugBuffer, "FPS: %s | Time: %sms | RAM: %sMB", 
                                                         this._fps.frameCount, 
                                                         this._fps.elapsedTime.total!"msecs",
                                                         getMemInfo().usedRAM / (1024 * 1024)));

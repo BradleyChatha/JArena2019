@@ -60,7 +60,7 @@ abstract class ViewerScene : Scene
 
             auto extraInstructions = "\nWASD = Move Camera | R = Reset Camera";
             auto instLabel = this.makeLabel(this._instructionPanel, Systems.assets.get!Font(DEFAULT_FONT_KEY));
-            instLabel.updateTextASCII(this.instructions ~ extraInstructions);
+            instLabel.updateText(this.instructions ~ extraInstructions);
             
             this._instructionPanel.autoSize = StackContainer.AutoSize.no;
             this._instructionPanel.size     = vec2(Systems.window.size.x, this._instructionPanel.size.y + INST_PANEL_Y_PADDING);

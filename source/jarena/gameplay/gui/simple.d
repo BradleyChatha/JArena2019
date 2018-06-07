@@ -233,9 +233,9 @@ class SimpleLabel : Control
             super.size          = this._text.screenSize + vec2(0, this._text.charSize / 2);
         }
 
-        void updateTextASCII(const(char)[] ascii)
+        void updateText(const(char)[] text)
         {
-            this._text.text = ascii;
+            this._text.text = text;
             this.updateLayout();
         }
 

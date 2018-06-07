@@ -68,7 +68,7 @@ final class EditorContainer : FreeFormContainer
             }
 
             auto label = this._instructionPanel.getChild!SimpleLabel("labelText");
-            label.updateTextASCII(instructions);
+            label.updateText(instructions);
 
             // Right-align the instruction panel.
             this._instructionPanel.position = vec2(cast(float)Systems.window.size.x - (label.size.x + INSTRUCTION_X_PAD), INSTRUCTION_Y);
@@ -126,7 +126,7 @@ final class EditorContainer : FreeFormContainer
                 new Text(Systems.assets.get!Font(GENERIC_FONT_KEY), "", vec2(0), GENERIC_CHAR_SIZE, Colour.white)
             ));
             label.name = "labelText";
-            label.updateTextASCII("Press left or right arrow keys");
+            label.updateText("Press left or right arrow keys");
 
             // Setup events
             office.subscribe(Window.Event.KeyDown, (_, mail)
@@ -388,7 +388,7 @@ private final class GenericElementExtension : EditorPanelExtension
             
             super.registerKeybind!(Scancode.E)("Moves the selected item to the mouse",(input){
                 this._element.position = input.mousePosition - (this._element.size / 2);
-                this._labelPosition.updateTextASCII(format("Position: %s", this._element.position));
+                this._labelPosition.updateText(format("Position: %s", this._element.position));
             });
 
             makeLabel(this._labelPosition);
@@ -404,10 +404,10 @@ private final class GenericElementExtension : EditorPanelExtension
         {
             this._element = selected;
 
-            this._labelPosition.updateTextASCII(format("Position: %s", this._element.position));
-            this._labelName.updateTextASCII(format("Name: '%s'", this._element.name ? this._element.name : "[NO NAME]"));
-            this._labelSize.updateTextASCII(format("Size: %s", this._element.size));
-            this._labelColour.updateTextASCII(format("Colour: %s", this._element.colour.toCssString));
+            this._labelPosition.updateText(format("Position: %s", this._element.position));
+            this._labelName.updateText(format("Name: '%s'", this._element.name ? this._element.name : "[NO NAME]"));
+            this._labelSize.updateText(format("Size: %s", this._element.size));
+            this._labelColour.updateText(format("Colour: %s", this._element.colour.toCssString));
 
             panel.addChild(this._labelName);
             panel.addChild(this._labelPosition);
@@ -447,7 +447,7 @@ private final class GenericContainerExtension : EditorPanelExtension
             this._element = cast(Container)selected;
             assert(this._element !is null);
             
-            this._labelChildCount.updateTextASCII(format("ChildCount: %s", this._element.children.length));
+            this._labelChildCount.updateText(format("ChildCount: %s", this._element.children.length));
 
             panel.addChild(this._labelChildCount);
         }

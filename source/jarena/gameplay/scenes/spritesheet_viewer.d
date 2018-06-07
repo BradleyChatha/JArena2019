@@ -103,7 +103,7 @@ final class SpriteAtlasViewerScene : ViewerScene
             this._sprite.position = (vec2(Systems.window.size) / vec2(2)) -
                                     (this._sprite.bounds.size  / vec2(2));
 
-            this._labelAtlasData.updateTextASCII(format(
+            this._labelAtlasData.updateText(format(
                 "Type: %s\n"~
                 "Name: \"%s\"\n"~
                 "\n%s",
@@ -299,7 +299,7 @@ final class SpriteAtlasViewerScene : ViewerScene
             if(input.wasKeyTapped(Scancode.BACKSPACE))
                 super.manager.swap!MenuScene;
 
-            this._labelAtlasIndex.updateTextASCII(format(
+            this._labelAtlasIndex.updateText(format(
                 "Atlas %s out of %s", this._currentAtlasIndex + 1, this._atlases.length
             ));
 
