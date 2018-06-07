@@ -253,7 +253,7 @@ class Text : ITransformable
         this(Font font, const(char[]) text, vec2 position = vec2(0), uint charSize = 14, Colour colour = Colour.white)
         {
             this(font, position, charSize, colour);
-            this.asciiText = text;
+            this.text = text;
         }
 
         /++
@@ -303,7 +303,7 @@ class Text : ITransformable
          +  Please see the 'Issues' section for `Font` for potential issues with large
          +  character sizes.
          +
-         +  At the moment, the size changes won't be performed until a call to `Text.asciiText`[set] is called.
+         +  At the moment, the size changes won't be performed until a call to `Text.text`[set] is called.
          +
          + Params:
          +  size = The character size to use.
@@ -348,7 +348,7 @@ class Text : ITransformable
 
         /// Returns: The text being used.
         @property @safe @nogc
-        const(char[]) asciiText() nothrow const
+        const(char[]) text() nothrow const
         {
             return this._text;
         }
@@ -362,9 +362,11 @@ class Text : ITransformable
          +
          +  The `text is $(B not) copied, so if it wasn't `immutable` before being passed to this function then
          +  it may be changed outside of this class' control (note that if that happens the on-screen text won't be updated though).
+         +
+         +  This function will automatically decode the `text` into `dchar` UTF points, but the text is still stored as a `char[]`.
          + ++/
         @property @trusted
-        void asciiText(const(char[]) text) //nothrow
+        void text(const(char[]) text) //nothrow
         {
             import std.utf : byUTF;
 

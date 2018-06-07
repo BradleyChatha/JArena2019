@@ -235,7 +235,7 @@ class SimpleLabel : Control
 
         void updateTextASCII(const(char)[] ascii)
         {
-            this._text.asciiText = ascii;
+            this._text.text = ascii;
             this.updateLayout();
         }
 
