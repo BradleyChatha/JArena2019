@@ -108,6 +108,20 @@ private
     ++/
 }
 
+/// Because of reasons, FMOD crashes if you try to load a sound inside a fiber.
+/// So this class has special support to load a `Sound` when the loader isn't inside a fiber.
+class DelayedSoundLoad
+{
+    /// The path to the sound.
+    string path;
+
+    ///
+    this(string path)
+    {
+        this.path = path;
+    }
+}
+
 package struct Package
 {
     string      name;
@@ -203,6 +217,12 @@ abstract class Loader
         {
             if(this._currentPackage.assets is null)
                 this._currentPackage.assets = new Cache!Asset();
+
+            // Get around a bug in FMOD
+            import jarena.audio;
+            auto delayedSound = (cast(DelayedSoundLoad)asset.value);
+            if(delayedSound !is null)
+                asset.value = new Sound(delayedSound.path);
 
             this._currentPackage.assets.add(asset.name, asset);
 

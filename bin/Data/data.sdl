@@ -21,8 +21,8 @@ namedFiles type="Texture" {
 
 // Sounds/Music
 namedFiles type="Sound" {
-    //namedFile "Bding"       "Audio/SFX/coin pickup.wav"
-    //namedFile "Debug Music" "Audio/Music/Curtain Call.mp3" stream="yes"
+    namedFile "Bding"       "Audio/SFX/coin pickup.wav"
+    namedFile "Debug Music" "Audio/Music/Curtain Call.mp3" stream="yes"
 }
 
 // Fonts
