@@ -34,7 +34,7 @@ class Font
     {
         // To make the code more clear
         alias CharSize = uint;
-        alias CharCode = uint;
+        alias CharCode = dchar;
 
         alias SetSize = Flag!"setSize";
         alias SetGLAlignment = Flag!"setAlignment";
@@ -62,7 +62,6 @@ class Font
         {
             import opengl;
 
-            // TODO: Support for more than ASCII.
             assert((size in this._sets) is null, "Bug, this shouldn't have been called.");
 
             CharSet set;
@@ -121,10 +120,10 @@ class Font
         /// Ensures that _all_ of the characters in the given piece of text have generated glyph textures for
         /// the specified CharSize.
         /// Note that this function have 0 optimisation (for now) so is slow.
-        void ensureTextGlyphsAreGenerated(CharSize size, const(char[]) text)
+        void ensureTextGlyphsAreGenerated(T : dchar)(CharSize size, const(T[]) text)
         {
             import std.algorithm : filter;
-            import std.utf       : byChar;
+            import std.utf       : byUTF;
             import opengl;
 
             auto set = this.getSetForSize(size);
@@ -132,7 +131,7 @@ class Font
             // We handle the alignment and char size ourself, so there's less overhead than doing it every single generation.
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
             FT_Set_Pixel_Sizes(this._font, 0, size);
-            foreach(code; text.byChar.filter!(c => (c in set.glyphs) is null))
+            foreach(code; text.byUTF!CharCode.filter!(c => (c in set.glyphs) is null))
                 this.generateGlyph!(SetSize.no, SetGLAlignment.no)(code, set);
 
             set.glyphs.rehash();
@@ -367,6 +366,8 @@ class Text : ITransformable
         @property @trusted
         void asciiText(const(char[]) text) //nothrow
         {
+            import std.utf : byUTF;
+
             this._font.ensureTextGlyphsAreGenerated(this.charSize, text);
 
             auto set = this._font.getSetForSize(this.charSize);
@@ -381,7 +382,7 @@ class Text : ITransformable
             this._transformed.length = 0;
             this._verts.length = 0;
             this._text = text;
-            foreach(ch; text)
+            foreach(ch; text.byUTF!(Font.CharCode))
             {
                 import std.math : abs;
 
