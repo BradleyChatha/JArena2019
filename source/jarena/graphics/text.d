@@ -65,7 +65,7 @@ class Font
             assert((size in this._sets) is null, "Bug, this shouldn't have been called.");
 
             CharSet set;
-            set.texture = new MutableTexture(uvec2(1024, 1024));
+            set.texture = new MutableTexture(uvec2(256, 256));
             this.generateGlyph!(SetSize.yes, SetGLAlignment.yes)(0, set, size); // Generate a single glyph, to make sure the AA is initialised.
             this._sets[size] = set;
         }

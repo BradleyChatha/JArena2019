@@ -87,7 +87,7 @@ abstract class Scene
             {
                 import std.algorithm : map, joiner;
 
-                auto names = this._drawOrder.map!(o => "\"" ~ o.name ~ "\"").joiner(", ");
+                //auto names = this._drawOrder.map!(o => "\"" ~ o.name ~ "\"").joiner(", ");
                 //tracef("Draw Order after addition: [%s]", names);
             }
         }
