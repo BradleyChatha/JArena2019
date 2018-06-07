@@ -282,7 +282,7 @@ class NamedFileExtensionSDL : LoaderExtension
                 return [Asset(info.name, new Texture(info.path))];
 
             case "Sound":
-                return [Asset(info.name, new Sound(info.path))];
+                return [Asset(info.name, new DelayedSoundLoad(info.path))];
 
             case "Font":
                 return [Asset(info.name, new Font(info.path))];

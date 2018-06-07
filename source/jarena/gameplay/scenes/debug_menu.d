@@ -40,8 +40,8 @@ final class DebugMenuScene : Scene
             this._list.colour = MENU_COLOUR;
             super.gui.addChild(this._list);
 
-            //this._bding = Systems.assets.get!Sound("Bding");
-            //this._music = Systems.assets.get!Sound("Debug Music");
+            this._bding = Systems.assets.get!Sound("Bding");
+            this._music = Systems.assets.get!Sound("Debug Music");
             auto font   = Systems.assets.get!Font("Calibri");
             void addButton(string text, Button.OnClickFunc handler)
             {
