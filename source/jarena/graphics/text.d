@@ -78,7 +78,7 @@ class Font
             this._sets[size] = set;
         }
 
-        void generateGlyph(SetSize setSize, SetGLAlignment setAlignment)(CharCode code, ref CharSet set, size_t size = size_t.max)
+        void generateGlyph(SetSize setSize, SetGLAlignment setAlignment)(CharCode code, ref CharSet set, CharSize size = CharSize.max)
         {
             import opengl;
 
@@ -114,6 +114,15 @@ class Font
             // Reset the alignment
             static if(setAlignment)
                 glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+        }
+
+        /// Ensures that the given CharCode has been generated for the given CharSize.
+        void ensureGlyphIsGenerated(CharSize size, CharCode code)
+        {
+            auto set = this.getSetForSize(size);
+
+            if((code in set.glyphs) is null)
+                this.generateGlyph!(SetSize.yes, SetGLAlignment.yes)(code, set, size);
         }
         
         CharSet getSetForSize(CharSize size)
@@ -344,6 +353,9 @@ class Text : ITransformable
         @property @trusted
         void asciiText(const(char[]) text) //nothrow
         {
+            // DEBUG, DELETE ME
+            this._font.ensureGlyphIsGenerated(14, '£');
+
             auto set = this._font.getSetForSize(this.charSize);
             auto pos = vec2(0, 0);
             // TODO: Condense the `largest` variables into two vec2s
