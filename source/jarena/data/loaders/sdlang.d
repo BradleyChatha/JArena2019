@@ -215,7 +215,7 @@ class LoaderSDL : Loader
                         foreach(fileArray; files)
                         foreach(file; fileArray)
                         {
-                            //infof("Loading asset from path '%s'", file.path);
+                            infof("File found, '%s'", file.path);
                             auto contents = readText(file.path);
 
                             // The first line must always be the type.
@@ -236,7 +236,7 @@ class LoaderSDL : Loader
                         foreach(fileArray; files)
                         foreach(file; fileArray)
                         {
-                           // infof("Loading asset from path '%s'", file.path);
+                            infof("File found, '%s'", file.path);
                             auto data = [file.name, file.path, type];
                             super.addLoadingTask(extension, cast(const(ubyte[]))data);
                         }
@@ -539,12 +539,12 @@ class AnimationExtensionSDL : LoaderExtensionSDLFile
             auto frameDelayMS    = tag.expectTagValue!int("frameDelayMS").msecs;
             auto repeat          = tag.expectTagValue!bool("repeat");
 
+            infof("[Name='%s'|Atlas='%s'|FrameDelay=%s ms|Repeating=%s]",
+                  name, atlasName, frameDelayMS, repeat);
+
             // Get the atlas
             auto atlas = super.waitForAsset!SpriteAtlas(loader, atlasName);
             assert(atlas !is null);
-
-            infof("[Name='%s'|Atlas='%s'|FrameDelay=%s ms|Repeating=%s]",
-                  name, atlasName, frameDelayMS, repeat);
 
             // Then create the object.
             auto info = new AnimationInfoClass();
