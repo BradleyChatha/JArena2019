@@ -217,10 +217,13 @@ class Text : ITransformable
 {
     private
     {
+        alias RecF = RectangleF;
+
         Font          _font;
         const(char)[] _text;
-        Transform     _transform;
         uint          _charSize;
+        Buffer!RecF   _charRects;
+        Transform     _transform;
         Buffer!Vertex _verts;
         Buffer!Vertex _transformed;
         vec2          _size;
@@ -230,12 +233,13 @@ class Text : ITransformable
         this(Font font, vec2 position, uint charSize, Colour colour)
         {
             assert(font !is null);
-            this._transformed = new Buffer!Vertex();
-            this._verts   = new Buffer!Vertex();
-            this._font    = font;
-            this.charSize = charSize;
-            this.colour   = colour;
-            this.position = position;
+            this._transformed   = new Buffer!Vertex();
+            this._verts         = new Buffer!Vertex();
+            this._charRects     = new Buffer!RectangleF();
+            this._font          = font;
+            this.charSize       = charSize;
+            this.colour         = colour;
+            this.position       = position;
         }
     }
 
@@ -254,6 +258,32 @@ class Text : ITransformable
         {
             this(font, position, charSize, colour);
             this.text = text;
+        }
+
+        /++
+         + Retrieves a rectangle representing the position and size of a certain character of this text.
+         +
+         + Notes:
+         +  Special characters such as new lines ('\n') do not have a rectangle created for them, so if there were a '\n' as
+         +  character #0, and a 'B' as character #1, then `getRectForChar(0)' would return the rectangle for the 'B' character.
+         +
+         +  These rectangles are calculated during the `Text.text`[set] property, so calling this function multiple times is not slow.
+         +
+         + Special Characters:
+         +  These characters do not have a rectangle created for them.
+         +
+         +  '\n'
+         +
+         + Params:
+         +  charIndex = The index of the character to retrieve the rectangle of.
+         +
+         + Returns:
+         +  Either null (check with 'returnValue.isNull'), or the rectangle for the character at `charIndex`.
+         + ++/
+        @safe @nogc
+        const(Nullable!RectangleF) getRectForChar(size_t charIndex) nothrow const
+        {
+            return (charIndex < this._charRects.length) ? typeof(return)(this._charRects[charIndex]) : typeof(return).init;
         }
 
         /++
@@ -383,6 +413,7 @@ class Text : ITransformable
             bool wasNewline = false;
             this._transformed.length = 0;
             this._verts.length = 0;
+            this._charRects.length = 0;
             this._text = text;
             foreach(ch; text.byUTF!(Font.CharCode))
             {
@@ -434,6 +465,9 @@ class Text : ITransformable
 
                 if(charSize.x > largestWidth)
                     largestWidth = charSize.x;
+
+                // Store the rectangle for this character.
+                this._charRects ~= RectangleF(charPos, charSize);
 
                 // Change the 'cursor' to where the next character should be placed.
                 pos.x = pos.x + cast(float)(glyph.advance.x >> 6); // >> 6 is to convert it into pixels.

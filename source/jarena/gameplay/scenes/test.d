@@ -75,7 +75,19 @@ class Test : Scene, IPostBox
             gui2.addChild(new TestControl(vec2(0,0), vec2(25, 60), Colour(0, 128, 128, 255)));
 
             auto font = Systems.assets.get!Font("Crackdown");
-            super.register("Some random text", new TextObject(font, "A B C D E F G 1 2 3", vec2(0,550), 14, Colour(128, 0, 128, 255), 0));
+            auto someText = new TextObject(font, "A B C D E F G 1 2 3", vec2(0,550), 14, Colour(128, 0, 128, 255));
+            super.register("Some random text", someText);
+
+            size_t i = 0;
+            while(true)
+            {
+                auto rect = someText.getRectForChar(i);
+                if(rect.isNull)
+                    break;
+
+                writefln("Char #%s is at %s", i, rect);
+                i++;
+            }
             
             auto btnText = new Text(font, "Click Me", vec2(0), 14, Colour(255, 255, 255, 255));
             gui.addChild(new SimpleTextButton(btnText, btn => writeln("Button position: ", btn.position)));
