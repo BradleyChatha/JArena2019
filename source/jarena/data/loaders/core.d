@@ -267,7 +267,9 @@ abstract class Loader
         /////////////////////////
         Object waitForAsset(LoaderExtension extension, string assetName)
         {
-            assert(this._currentTask != LoadingInfo.init, "This function was called outside a loading task.");
+            if(this._currentTask != LoadingInfo.init)
+                assert(false, "This function was called outside a loading task.");
+                
             assert(extension == this._currentTask.extension, "This function was called with the wrong extension.");
 
             // Check if it's already cached.

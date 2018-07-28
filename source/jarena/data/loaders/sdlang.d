@@ -505,6 +505,7 @@ class SpriteAtlasExtensionSDL : LoaderExtensionSDLFile
     }
 }
 
+/// TODO: Document this.
 class AnimationExtensionSDL : LoaderExtensionSDLFile
 {
     private
