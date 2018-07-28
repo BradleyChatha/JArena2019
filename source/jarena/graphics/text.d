@@ -333,15 +333,14 @@ class Text : ITransformable
          +  Please see the 'Issues' section for `Font` for potential issues with large
          +  character sizes.
          +
-         +  At the moment, the size changes won't be performed until a call to `Text.text`[set] is called.
-         +
          + Params:
          +  size = The character size to use.
          + ++/
-        @property @trusted @nogc
-        void charSize(uint size) nothrow
+        @property @trusted
+        void charSize(uint size)
         {
             this._charSize = size;
+            this.text = this.text; // To recalculate the verts.
         }
 
         /// Returns: The size of the text on screen.
