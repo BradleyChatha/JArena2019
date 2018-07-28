@@ -363,7 +363,7 @@ class NamedFileExtensionSDL : LoaderExtensionSDLNamedFile
                 return [Asset(assetName, new Texture(assetPath))];
 
             case "Sound":
-                return [Asset(assetName, new DelayedSoundLoad(assetPath))];
+                return [Asset("", new DelayedLoadAsset(() => [Asset(assetName, new Sound(assetPath))]))]; // FMOD crashes in fibers
 
             case "Font":
                 return [Asset(assetName, new Font(assetPath))];

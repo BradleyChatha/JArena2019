@@ -108,17 +108,31 @@ private
     ++/
 }
 
-/// Because of reasons, FMOD crashes if you try to load a sound inside a fiber.
-/// So this class has special support to load a `Sound` when the loader isn't inside a fiber.
-class DelayedSoundLoad
+/++
+ + Some libraries may have $(I issues) (read: crashes) when loading data within a fiber.
+ +
+ + To get around this, the extension loading the data can return this class, which should function
+ + almost identically to the normal `LoaderExtension.onLoadAssets` function, except that it will instead be ran outside
+ + of a fiber, preventing any of these strange crashes.
+ +
+ + $(B Beware) that `LoaderExtension.waitForAsset` $(B cannot) be used inside of the loading function, as it's
+ + functionality relies on fibers. To get around this, all calls to this function should be made $(I before) returning
+ + an object of this type (so it's all done in a fiber). If the loading function given to this object requires a call to `waitForAssets` 
+ + to properly function, then it is deemed unsupported by the loading system and unfortunately, a work around will have to be found.
+ + ++/
+class DelayedLoadAsset
 {
-    /// The path to the sound.
-    string path;
+    alias FuncT = Asset[] delegate();
+
+    /// The function that loads in the assets.
+    FuncT loadFunc;
 
     ///
-    this(string path)
+    this(FuncT loadFunc)
     {
-        this.path = path;
+        assert(loadFunc !is null);
+
+        this.loadFunc = loadFunc;
     }
 }
 
@@ -218,11 +232,16 @@ abstract class Loader
             if(this._currentPackage.assets is null)
                 this._currentPackage.assets = new Cache!Asset();
 
-            // Get around a bug in FMOD
-            import jarena.audio;
-            auto delayedSound = (cast(DelayedSoundLoad)asset.value);
-            if(delayedSound !is null)
-                asset.value = new Sound(delayedSound.path);
+            // Perform the delayed loading
+            auto delayed = (cast(DelayedLoadAsset)asset.value);
+            if(delayed !is null)
+            {
+                info("Performing delayed load.");
+                foreach(delayedAsset; delayed.loadFunc())
+                    this.onAssetLoad(delayedAsset);
+
+                return;
+            }
 
             this._currentPackage.assets.add(asset.name, asset);
 
