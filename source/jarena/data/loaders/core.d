@@ -269,7 +269,7 @@ abstract class Loader
         {
             if(this._currentTask != LoadingInfo.init)
                 assert(false, "This function was called outside a loading task.");
-                
+
             assert(extension == this._currentTask.extension, "This function was called with the wrong extension.");
 
             // Check if it's already cached.
@@ -504,23 +504,23 @@ abstract class LoaderExtension
     protected
     {
         /++
-        + Called whenever the extension is used to load in assets.
-        +
-        + Notes:
-        +  The contents of `data` are dependent on the loader. As all extensions
-        +  should only be written for a certain loader, this is a non-issue.
-        +
-        +  An array must be returned, as there is a possibility the `data` can contain multiple assets.
-        +
-        +  The code in this function is ran in a Fiber exclusive to the loading of assets from `data`.
-        +
-        + Params:
-        +  loader = The loader that is using this extension.
-        +  data   = The data that the loader has given to this extension.
-        +
-        + Returns:
-        +  An array of all the assets that could be loaded from the given data.
-        + ++/
+         + Called whenever the extension is used to load in assets.
+         +
+         + Notes:
+         +  The contents of `data` are dependent on the loader. As all extensions
+         +  should only be written for a certain loader, this is a non-issue.
+         +
+         +  An array must be returned, as there is a possibility the `data` can contain multiple assets.
+         +
+         +  The code in this function is ran in a Fiber exclusive to the loading of assets from `data`.
+         +
+         + Params:
+         +  loader = The loader that is using this extension.
+         +  data   = The data that the loader has given to this extension.
+         +
+         + Returns:
+         +  An array of all the assets that could be loaded from the given data.
+         + ++/
         Asset[] onLoadAssets(Loader loader, const(ubyte[]) data);
 
         /++
@@ -542,17 +542,17 @@ abstract class LoaderExtension
         }
 
         /++
-        + Instructs the loader to pause the current loading task until an asset
-        + with a certain name is loaded in.
-        +
-        + Params:
-        +  T         = The type to cast the Asset to.
-        +  loader    = The loader that is using this extension.
-        +  assetName = The name of the asset to wait for.
-        +
-        + Returns:
-        +  The asset that was loaded in.
-        + ++/
+         + Instructs the loader to pause the current loading task until an asset
+         + with a certain name is loaded in.
+         +
+         + Params:
+         +  T         = The type to cast the Asset to.
+         +  loader    = The loader that is using this extension.
+         +  assetName = The name of the asset to wait for.
+         +
+         + Returns:
+         +  The asset that was loaded in.
+         + ++/
         final T waitForAsset(T : Object)(Loader loader, string assetName)
         {
             assert(loader !is null);
