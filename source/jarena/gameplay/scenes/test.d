@@ -13,6 +13,7 @@ class Test : Scene, IPostBox
     StackContainer gui;
     StackContainer gui2;
     RectangleShape[2] centerLines;
+    TextObject someText;
     //GridContainer  grid;
 
     public override
@@ -75,7 +76,7 @@ class Test : Scene, IPostBox
             gui2.addChild(new TestControl(vec2(0,0), vec2(25, 60), Colour(0, 128, 128, 255)));
 
             auto font = Systems.assets.get!Font("Crackdown");
-            auto someText = new TextObject(font, "A B C D E F G 1 2 3", vec2(0,550), 14, Colour(128, 0, 128, 255));
+            this.someText = new TextObject(font, "A B C D E F G 1 2 3", vec2(0,550), 14, Colour(128, 0, 128, 255));
             super.register("Some random text", someText);
 
             size_t i = 0;
@@ -96,10 +97,23 @@ class Test : Scene, IPostBox
 
         void onSwap(PostOffice office)
         {
+            office.subscribe(Window.Event.MouseWheelMoved, &this.onMouseWheel);
         }
 
         void onUnswap(PostOffice office)
         {
+            office.unsubscribe(&this.onMouseWheel);
+        }
+
+        void onMouseWheel(PostOffice _, Mail mail)
+        {
+            auto direction = cast(ValueMail!MouseWheelDirection)mail;
+            assert(direction !is null);
+            
+            if(direction.value == MouseWheelDirection.Up)
+                this.someText.charSize = this.someText.charSize + 2;
+            else
+                this.someText.charSize = this.someText.charSize - 2;
         }
 
         void onUpdate(Duration deltaTime, InputManager input)
