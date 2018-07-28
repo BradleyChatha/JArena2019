@@ -6,6 +6,7 @@ private
     import jarena.core, jarena.data, jarena.graphics;
 }
 
+/// TODO: Document this.
 final class AssetManager
 {
     private
@@ -33,11 +34,13 @@ final class AssetManager
     
     public
     {
+        ///
         this()
         {
             this._assets = new Cache!Asset();
         }
 
+        /// TODO: Document
         T get(T : Object)(string assetName)
         {
             import std.exception : enforce;
@@ -51,12 +54,14 @@ final class AssetManager
             return casted;
         }
 
+        /// ditto
         T get(T)(string assetName)
         if(is(T == AnimationInfo))
         {
             return this.get!AnimationInfoClass(assetName);
         }
 
+        /// TODO: Document
         @property
         auto byKeyValueFiltered(T : Object)()
         {
