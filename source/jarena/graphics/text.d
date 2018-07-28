@@ -393,6 +393,9 @@ class Text : ITransformable
          +  it may be changed outside of this class' control (note that if that happens the on-screen text won't be updated though).
          +
          +  This function will automatically decode the `text` into `dchar` UTF points, but the text is still stored as a `char[]`.
+         +
+         +  If a glyph for a character cannot be loaded, then it is not rendered. $(B This also means the size
+         +  of the text doesn't take these missed characters into account, this will also effect how `getRectForChar` works.). 
          + ++/
         @property @trusted
         void text(const(char[]) text) //nothrow
@@ -418,7 +421,10 @@ class Text : ITransformable
             {
                 import std.math : abs;
 
-                auto glyph    = set.glyphs[cast(Font.CharCode)ch];
+                auto glyph = set.glyphs.get(cast(Font.CharCode)ch, Font.Glyph.init);
+                if(glyph == Font.Glyph.init)
+                    continue;
+
                 auto charPos  = pos + vec2(glyph.bearing.x, 0);
                      charSize = vec2(glyph.area.size);
                 auto topLeft  = vec2(glyph.area.position); // UV coord
