@@ -113,16 +113,30 @@ class LoaderSDL : Loader
 
     private
     {
+        struct NamedFileInfo
+        {
+            string name;
+            string path;
+            string type;
+            string[string] attributes;
+        }
+
         struct FileInfo
         {
             string path; // Path to the file.
             string name; // Some tags allow you to specify the name to cache the file as.
+            string[string] attributes;
         }
         
         // Used to parse 'file' and 'glob' tags, getting any useful data from them.
         FileInfo[] getFileInfo(string baseDir, Tag tag)
         {
             FileInfo[] files;
+
+            // Read in the attributes
+            string[string] attribs;
+            foreach(attrib; tag.attributes)
+                attribs[attrib.name] = attrib.value.get!string;
 
             // Reminder: All paths must either be absolute, or are assumed to be relative to the data file itself.
             switch(tag.name)
@@ -131,7 +145,7 @@ class LoaderSDL : Loader
                     auto path = tag.expectValue!string;
                          path = buildNormalizedPath(baseDir, tag.expectValue!string);
 
-                    files ~= FileInfo(path);
+                    files ~= FileInfo(path, null, attribs);
                     break;
 
                 case "namedFile":
@@ -142,7 +156,7 @@ class LoaderSDL : Loader
                     auto path = values[1].get!string;
                          path = buildNormalizedPath(baseDir, path);
 
-                    files ~= FileInfo(path, values[0].get!string);
+                    files ~= FileInfo(path, values[0].get!string, attribs);
                     break;
 
                 case "glob":
@@ -237,7 +251,7 @@ class LoaderSDL : Loader
                         foreach(file; fileArray)
                         {
                             infof("File found, '%s'", file.path);
-                            auto data = [file.name, file.path, type];
+                            auto data = [NamedFileInfo(file.name, file.path, type, file.attributes)];
                             super.addLoadingTask(extension, cast(const(ubyte[]))data);
                         }
                         break;
@@ -264,12 +278,12 @@ abstract class LoaderExtensionSDLNamedFile : LoaderExtension
 {
     override final Asset[] onLoadAssets(Loader loader, const(ubyte[]) data)
     {
-        // The data is a string[] that's casted to a ubyte[].
-        // [0] = Name to give the asset. [1] = Path to the asset's file. [2] = The type given to the asset.
-        auto array = cast(string[])data;
-        assert(array.length == 3, "Either this wasn't updated to match a new data format, or this function wasn't called by a 'namedFile' tag.");
+        // The data is a NamedFileInfo[] that's casted to a ubyte[].
+        auto array = cast(LoaderSDL.NamedFileInfo[])data;
+        assert(array.length == 1, "Either this wasn't updated to match a new data format, or this function wasn't called by a 'namedFile' tag.");
 
-        return this.onLoadNamedFileAssets(loader, array[0], array[1], array[2]);
+        auto info = array[0];
+        return this.onLoadNamedFileAssets(loader, info.name, info.path, info.type, info.attributes);
     }
 
     /++
@@ -290,7 +304,7 @@ abstract class LoaderExtensionSDLNamedFile : LoaderExtension
      + Returns:
      +  See `Loader.onLoadAssets`.
      + ++/
-    abstract Asset[] onLoadNamedFileAssets(Loader loader, string assetName, string assetPath, string assetType);
+    abstract Asset[] onLoadNamedFileAssets(Loader loader, string assetName, string assetPath, string assetType, string[string] attributes);
 }
 
 /++
@@ -338,6 +352,10 @@ abstract class LoaderExtensionSDLFile : LoaderExtension
  +  Like the other premade extensions in this module, the `LoaderSDL` class will automatically register
  +  this extension for it's respective data types.
  +
+ +  Files of type 'Sound' support the 'stream' attribute. If 'stream' is set to 'yes', then the
+ +  file is loaded as a streaming sound (See `Sound.ctor' for info). Otherwise, if it's set to 'no' or doesn't
+ +  exist, the sound is loaded in as a normal sound.
+ +
  + Usage:
  +  This extension can handle loading in 'Texture', 'Sound', and 'Font's.
  +
@@ -349,13 +367,14 @@ abstract class LoaderExtensionSDLFile : LoaderExtension
  + name "Example"
  +
  + namedFiles type="Sound" {
- +      namedFile "JumpSound" "Sounds/Jump.wav"
+ +      namedFile "JumpSound" "Sounds/Jump.wav" stream="no"
+ +      namedFile "BackgroundMusic" "Music/bg.wav" stream="yes"
  + }
  + ```
  + ++/
 class NamedFileExtensionSDL : LoaderExtensionSDLNamedFile
 {
-    override Asset[] onLoadNamedFileAssets(Loader loader, string assetName, string assetPath, string assetType)
+    override Asset[] onLoadNamedFileAssets(Loader loader, string assetName, string assetPath, string assetType, string[string] attributes)
     {
         switch(assetType)
         {
@@ -363,7 +382,8 @@ class NamedFileExtensionSDL : LoaderExtensionSDLNamedFile
                 return [Asset(assetName, new Texture(assetPath))];
 
             case "Sound":
-                return [Asset("", new DelayedLoadAsset(() => [Asset(assetName, new Sound(assetPath))]))]; // FMOD crashes in fibers
+                auto isStreaming = (attributes.get("stream", "no") == "yes") ? Yes.streaming : No.streaming;
+                return [Asset("", new DelayedLoadAsset(() => [Asset(assetName, new Sound(assetPath, isStreaming))]))]; // FMOD crashes in fibers
 
             case "Font":
                 return [Asset(assetName, new Font(assetPath))];
