@@ -291,15 +291,16 @@ abstract class LoaderExtensionSDLNamedFile : LoaderExtension
      + it's actual data.
      +
      + Example:
-     +  The following SDLang tag '`namedFiles type="Texture" { namedFile "Error" "Textures/Error.png" }`' would produce
-     +  these parameters - assetName="Error". assetPath="Textures/Error.png". assetType="Texture". 
+     +  The following SDLang tag '`namedFiles type="Texture" { namedFile "Error" "Textures/Error.png" someAttrib="hello" attrib2="boobies" }`' would produce
+     +  these parameters - assetName="Error". assetPath="Textures/Error.png". assetType="Texture". attributes=["someAttrib": "hello", "attrib2": "boobies"].
      +
      + Params:
-     +  loader    = The loader using this extension.
-     +  assetName = The name given to the asset by the 'namedFile' tag.
-     +              Unless it's vital for the loading in of the asset, this should be the name given to it.
-     +  assetPath = The path to the file that contain's the asset's data.
-     +  assetType = The type associated with the asset, provided by the 'namedFiles' tag.
+     +  loader     = The loader using this extension.
+     +  assetName  = The name given to the asset by the 'namedFile' tag.
+     +               Unless it's vital for the loading in of the asset, this should be the name given to it.
+     +  assetPath  = The path to the file that contain's the asset's data.
+     +  assetType  = The type associated with the asset, provided by the 'namedFiles' tag.
+     +  attributes = The attributes added to the asset.
      +
      + Returns:
      +  See `Loader.onLoadAssets`.
