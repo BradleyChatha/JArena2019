@@ -208,7 +208,7 @@ private class EngineDebugControls
     size_t fpsLastIndex;
     float  fpsDeltaSeconds;
     SimpleLabel fpsAverageText;
-    const int FPS_LEEWAY_SECONDS = 2; // The readln freezes the game, which is messing with the FPS results. So this is just how many seconds to 'ghost'
+    const int FPS_LEEWAY_SECONDS = 5; // The readln freezes the game, which is messing with the FPS results. So this is just how many seconds to 'ghost'
 
     this(Engine engine, bool enabled)
     {
@@ -254,6 +254,7 @@ private class EngineDebugControls
             this.recordingFPS = true;
             this.fpsRecorded.length = secondsToRecord + FPS_LEEWAY_SECONDS;
             this.fpsDeltaSeconds = 0;
+            this.fpsAverageText.updateText("");
         }
     }
 
@@ -274,7 +275,7 @@ private class EngineDebugControls
             {
                 if(i < FPS_LEEWAY_SECONDS)
                     continue;
-                    
+
                 average += fps;
             }
             average /= this.fpsRecorded.length;
