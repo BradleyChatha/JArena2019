@@ -97,7 +97,15 @@ final class Window
          + Mail:
          +  `ValueMail!uvec2`, which contains the new size of the window.
          + ++/
-        Resized = 107
+        Resized = 107,
+
+        /++
+         + Send when the mouse wheeled is moved.
+         +
+         + Mail:
+         +  `ValueMail!MouseWheelDirection`, which contains the direction the wheel was moved in.
+         + ++/
+         MouseWheelMoved = 108
     }
 
     private
@@ -109,12 +117,13 @@ final class Window
         
         // Instead of making a bunch of different objects every frame where the user does something
         // we instead just reuse the objects.
-        CommandMail                 _commandMail;       // Mail used for events without extra data (e.g. closing the window)
-        ValueMail!SDL_KeyboardEvent _keyMail;           // Mail used for key events.
-        ValueMail!dchar             _textMail;          // Mail used for the Text Entered event.
-        ValueMail!vec2              _positionMail;      // Mail used for any event that provides a position (e.g. mouse moved)
-        ValueMail!uvec2             _upositionMail;     // ^^ but for uintegers.
-        ValueMail!MouseButton       _mouseMail;         // Mail used for mouse button events.
+        CommandMail                     _commandMail;       // Mail used for events without extra data (e.g. closing the window)
+        ValueMail!SDL_KeyboardEvent     _keyMail;           // Mail used for key events.
+        ValueMail!dchar                 _textMail;          // Mail used for the Text Entered event.
+        ValueMail!vec2                  _positionMail;      // Mail used for any event that provides a position (e.g. mouse moved)
+        ValueMail!uvec2                 _upositionMail;     // ^^ but for uintegers.
+        ValueMail!MouseButton           _mouseMail;         // Mail used for mouse button events.
+        ValueMail!MouseWheelDirection   _mouseWheelMail;    // Mail used for when the mouse wheel is moved.
 
         @property @safe @nogc
         inout(SDL_GLContext) context() nothrow inout
@@ -164,12 +173,13 @@ final class Window
             this._renderer.camera = new Camera(RectangleF(0, 0, vec2(size)));
 
             trace("Setting up reusuable mail");
-            this._commandMail   = new CommandMail(0);
-            this._keyMail       = new ValueMail!SDL_KeyboardEvent(0, SDL_KeyboardEvent());
-            this._textMail      = new ValueMail!dchar(0, '\0');
-            this._positionMail  = new ValueMail!vec2(0, vec2(0));
-            this._upositionMail = new ValueMail!uvec2(0, uvec2(0));
-            this._mouseMail     = new ValueMail!MouseButton(0, MouseButton.Left);
+            this._commandMail    = new CommandMail(0);
+            this._keyMail        = new ValueMail!SDL_KeyboardEvent(0, SDL_KeyboardEvent());
+            this._textMail       = new ValueMail!dchar(0, '\0');
+            this._positionMail   = new ValueMail!vec2(0, vec2(0));
+            this._upositionMail  = new ValueMail!uvec2(0, uvec2(0));
+            this._mouseMail      = new ValueMail!MouseButton(0, MouseButton.Left);
+            this._mouseWheelMail = new ValueMail!MouseWheelDirection(0, MouseWheelDirection.Down);
         }
 
         ~this()
@@ -242,6 +252,16 @@ final class Window
                         this._mouseMail.type  = Window.Event.MouseButtonReleased;
                         this._mouseMail.value = e.button.button.toArenaButton!MouseButton;
                         office.mail(this._mouseMail);
+                        break;
+
+                    case SDL_MOUSEWHEEL:
+                        auto wheelEvent = e.wheel;
+                        if(wheelEvent.direction == SDL_MOUSEWHEEL_FLIPPED)
+                            wheelEvent.y *= -1;
+
+                        this._mouseWheelMail.type  = Window.Event.MouseWheelMoved;
+                        this._mouseWheelMail.value = (wheelEvent.y < 0) ? MouseWheelDirection.Down : MouseWheelDirection.Up;
+                        office.mail(this._mouseWheelMail);
                         break;
 
                     // Window events, unfortunately, are nested within the main event object.
@@ -351,6 +371,13 @@ enum MouseButton : ubyte
     
     ///
     Middle = 1 << 2
+}
+
+/// Represents the direction that the mouse wheel was moved
+enum MouseWheelDirection : ubyte
+{
+    Up,
+    Down
 }
 
 /++
