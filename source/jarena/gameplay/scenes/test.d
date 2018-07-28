@@ -120,6 +120,7 @@ class Test : Scene, IPostBox
         {
             auto speedHorizontal = vec2(160 * deltaTime.asSeconds, 0);
             auto speedVertical   = vec2(0, 160 * deltaTime.asSeconds);
+            auto speedRotate     = 5 * deltaTime.asSeconds;
 
             if(input.isKeyDown(Scancode.D))
                 this.tahn.move(speedHorizontal);
@@ -147,6 +148,10 @@ class Test : Scene, IPostBox
                 this.tahn.yLevel = this.tahn.yLevel + 1; // += doesn't work for some reason.
             if(input.wasKeyTapped(Scancode.DOWN) && !input.wasKeyRepeated(Scancode.DOWN))
                 this.tahn.yLevel = this.tahn.yLevel - 1;
+            if(input.isKeyDown(Scancode.LEFT))
+                this.tahn.rotationF = this.tahn.rotation - speedRotate;
+            if(input.isKeyDown(Scancode.RIGHT))
+                this.tahn.rotationF = this.tahn.rotation + speedRotate;
 
             if(input.wasKeyTapped(Scancode.G) && !input.wasKeyRepeated(Scancode.G))
             {

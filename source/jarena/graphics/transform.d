@@ -29,6 +29,22 @@ interface ITransformable
          + ++/
         @property @safe @nogc
         const(vec2) position() const nothrow;
+
+        /++
+         + Sets the rotation of the transformable object.
+         +
+         + Params:
+         +  angle = The rotation to set the object at.
+         + ++/
+        @property @safe @nogc
+        void rotation(AngleDegrees angle) nothrow;
+
+        /// ditto
+        @property @safe @nogc
+        final void rotationF(float angle) nothrow
+        {
+            this.rotation = AngleDegrees(angle);
+        }
     }
 }
 
@@ -43,8 +59,9 @@ struct Transform
 {
     private
     {
-        mat4 _matrix;
-        vec2 _translation = vec2(0);
+        mat4         _matrix;
+        vec2         _translation = vec2(0);
+        AngleDegrees _rotation = AngleDegrees(0.0f);
 
         bool _dirty = true;
     }
@@ -70,6 +87,7 @@ struct Transform
          + Returns:
          +  `verts`
          + ++/
+        pragma(inline, true)
         @safe @nogc
         Vertex[] transformVerts(return Vertex[] verts) nothrow
         {
@@ -87,10 +105,22 @@ struct Transform
          + Returns:
          +  The translation of this transformation.
          + ++/
+        pragma(inline, true)
         @safe @nogc
         ref inout(vec2) translation() nothrow pure inout
         {
             return this._translation;
+        }
+
+        /++
+         + Returns:
+         +  The rotation of this transformation.
+         + ++/
+        pragma(inline, true)
+        @safe @nogc
+        ref inout(AngleDegrees) rotation() nothrow pure inout
+        {
+            return this._rotation;
         }
 
         /++
@@ -130,7 +160,7 @@ struct Transform
             {
                 this._matrix = mat4.identity;
                 // this._matrix.scale(...);
-                // this._matrix.rotate(...);
+                this._matrix.rotateZ(this._rotation.angle);
                 this._matrix.translate(this._translation.x, this._translation.y, 0);
 
                 this._dirty = false;

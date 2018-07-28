@@ -521,6 +521,29 @@ class Sprite : ITransformable
 
         /++
          + Returns:
+         +  The rotation of this object.
+         + ++/
+        @property @safe @nogc
+        const(AngleDegrees) rotation() nothrow const
+        {
+            return this._transform.rotation;
+        }
+
+        /++
+         + Sets the rotation of the transformable object.
+         +
+         + Params:
+         +  angle = The rotation to set the object at.
+         + ++/
+        @property @safe @nogc
+        void rotation(AngleDegrees angle) nothrow
+        {
+            this._transform.rotation = angle;
+            this._transform.markDirty();
+        }
+
+        /++
+         + Returns:
          +  The area of the sprite's texture which is being rendered.
          + ++/
         @property @safe @nogc

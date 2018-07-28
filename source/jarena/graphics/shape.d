@@ -106,6 +106,19 @@ class RectangleShape : ITransformable
             this._transform.markDirty();
         }
 
+        /++
+         + Sets the rotation of the transformable object.
+         +
+         + Params:
+         +  angle = The rotation to set the object at.
+         + ++/
+        @property @safe @nogc
+        void rotation(AngleDegrees angle) nothrow
+        {
+            this._transform.rotation = angle;
+            this._transform.markDirty();
+        }
+
         /// Returns: The size of this rectangle.
         @property @safe @nogc
         const(vec2) size() nothrow const

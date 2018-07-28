@@ -1,4 +1,4 @@
 windowSize 860 740
 showDebugText true // Always set to true for debug builds
-debugControls true 
+debugControls false 
 vsync false
