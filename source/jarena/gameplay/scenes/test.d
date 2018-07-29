@@ -140,9 +140,15 @@ class Test : Scene, IPostBox
                 this.tahn.isHidden = false;
 
             if(input.wasKeyTapped(Scancode.J))
+            {
                 this.atlas.changeSprite(this.tahn, "TahnBig");
+                this.tahn.origin = vec2(this.tahn.textureRect.size / ivec2(2));
+            }
             if(input.wasKeyTapped(Scancode.K))
+            {
                 this.atlas.changeSprite(this.tahn, "Tahn");
+                this.tahn.origin = vec2(this.tahn.textureRect.size / ivec2(2));
+            }
 
             if(input.wasKeyTapped(Scancode.UP) && !input.wasKeyRepeated(Scancode.UP))
                 this.tahn.yLevel = this.tahn.yLevel + 1; // += doesn't work for some reason.

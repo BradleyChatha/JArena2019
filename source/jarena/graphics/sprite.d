@@ -544,6 +544,29 @@ class Sprite : ITransformable
 
         /++
          + Returns:
+         +  The origin of this object.
+         + ++/
+        @property @safe @nogc
+        const(vec2) origin() nothrow const
+        {
+            return this._transform.origin;
+        }
+
+        /++
+         + Sets the origin of the transformable object.
+         +
+         + Params:
+         +  point = The point to set the object's origin to.
+         + ++/
+        @property @safe @nogc
+        void origin(vec2 point) nothrow
+        {
+            this._transform.origin = point;
+            this._transform.markDirty();
+        }
+
+        /++
+         + Returns:
          +  The area of the sprite's texture which is being rendered.
          + ++/
         @property @safe @nogc

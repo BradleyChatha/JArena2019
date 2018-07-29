@@ -45,6 +45,22 @@ interface ITransformable
         {
             this.rotation = AngleDegrees(angle);
         }
+
+        /++
+         + Returns:
+         +  The origin of this object.
+         + ++/
+        @property @safe @nogc
+        const(vec2) origin() nothrow const;
+
+        /++
+         + Sets the origin of the transformable object.
+         +
+         + Params:
+         +  point = The point to set the object's origin to.
+         + ++/
+        @property @safe @nogc
+        void origin(vec2 point) nothrow;
     }
 }
 
@@ -61,6 +77,7 @@ struct Transform
     {
         mat4         _matrix;
         vec2         _translation = vec2(0);
+        vec2         _origin = vec2(0);
         AngleDegrees _rotation = AngleDegrees(0.0f);
 
         bool _dirty = true;
@@ -113,6 +130,9 @@ struct Transform
         }
 
         /++
+         + Notes:
+         +  Rotations are applied around the `Transform.origin`
+         +
          + Returns:
          +  The rotation of this transformation.
          + ++/
@@ -121,6 +141,17 @@ struct Transform
         ref inout(AngleDegrees) rotation() nothrow pure inout
         {
             return this._rotation;
+        }
+
+        /++
+         + Returns:
+         +  The origin of this transformation.
+         + ++/
+        pragma(inline, true)
+        @safe @nogc
+        ref inout(vec2) origin() nothrow pure inout
+        {
+            return this._origin;
         }
 
         /++
@@ -159,8 +190,10 @@ struct Transform
             if(this._dirty)
             {
                 this._matrix = mat4.identity;
+                this._matrix.translate(-this.origin.x, -this.origin.y, 0);
                 // this._matrix.scale(...);
                 this._matrix.rotateZ(this._rotation.angle);
+                this._matrix.translate(this.origin.x, this.origin.y, 0);
                 this._matrix.translate(this._translation.x, this._translation.y, 0);
 
                 this._dirty = false;
