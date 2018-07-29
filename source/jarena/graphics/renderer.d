@@ -444,14 +444,7 @@ final class Renderer
             if(verts.length == 0)
                 return;
 
-            assert((verts.length % 4) == 0);
-
-            Vertex[4] buffer;
-            foreach(i; 0..verts.length / 4)
-            {
-                buffer[0..4] = verts[i*4..(i*4)+4];
-                this.drawQuad(text.texture, buffer, this._textShader);
-            }
+            this.drawQuadMultiple(text.texture, text.verts, this._textShader);
         }
 
         /// Draws a VertexBuffer
@@ -492,6 +485,21 @@ final class Renderer
         auto vertSlice = Slice(this._vertBuffer.length, this._vertBuffer.length + 4);
         this._vertBuffer ~= verts[];
 
+        this.addToBucket(texture, vertSlice, shader);
+    }
+
+    private void drawQuadMultiple(TextureBase texture, Vertex[] verts, Shader shader)
+    {
+        assert(verts.length % 4 == 0, "The verts need to be a multiple of 4.");
+        auto vertSlice = Slice(this._vertBuffer.length, this._vertBuffer.length + verts.length);
+        this._vertBuffer ~= verts;
+
+        this.addToBucket(texture, vertSlice, shader);
+    }
+
+    pragma(inline, true)
+    private void addToBucket(TextureBase texture, Slice vertSlice, Shader shader)
+    {
         // All sprites that have the same texture and shader are batched together into a single bucket
         // When 'sprite' has a different texture or shader than the last one, a new bucket is created
         // Even there is a bucket that already has 'sprite''s texture and shader, it won't be added into that bucket unless it's the latest one
