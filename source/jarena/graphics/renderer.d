@@ -455,6 +455,7 @@ final class Renderer
         }
 
         /// Draws a VertexBuffer
+        pragma(inline, true)
         void drawBuffer(ref VertexBuffer buffer)
         {
             glBindVertexArray(buffer.vao);
