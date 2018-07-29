@@ -504,18 +504,22 @@ final class Renderer
         // When 'sprite' has a different texture or shader than the last one, a new bucket is created
         // Even there is a bucket that already has 'sprite''s texture and shader, it won't be added into that bucket unless it's the latest one
         // This preserves draw order, while also being a slight optimisation.
-        auto camera = CameraInfo(this.camera.viewMatrix, this.camera._ortho);
-        if(this._buckets.length == 0 
-        ||(this._buckets[$-1].texture != texture)
-        || this._buckets[$-1].shader != shader
-        || this._buckets[$-1].camera != camera)
+        auto camera     = CameraInfo(this.camera.viewMatrix, this.camera._ortho);
+        auto lastBucket = (this._buckets.length == 0) ? RenderBucket.init : this._buckets[$-1];
+        if(this._buckets.length == 0
+        || lastBucket.texture != texture
+        || lastBucket.shader != shader
+        || lastBucket.camera != camera)
         {
             this._buckets ~= RenderBucket(texture, shader, camera, vertSlice);
         }
         else
         {
+            import std.format;
+
             // If we get here, then we can just replace the end with the vertSlice
-            assert(vertSlice.start == this._buckets[$-1].verts.end);
+            assert(lastBucket != RenderBucket.init);
+            assert(vertSlice.start == lastBucket.verts.end);
             this._buckets[$-1].verts.end = vertSlice.end;
         }
     }
