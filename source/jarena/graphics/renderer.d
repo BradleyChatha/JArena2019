@@ -515,8 +515,6 @@ final class Renderer
         }
         else
         {
-            import std.format;
-
             // If we get here, then we can just replace the end with the vertSlice
             assert(lastBucket != RenderBucket.init);
             assert(vertSlice.start == lastBucket.verts.end);
