@@ -22,7 +22,8 @@ final class MenuScene : Scene
         alias SCENES = TypeTuple!(Test,
                                   DebugMenuScene,
                                   AnimationViewerScene, 
-                                  SpriteAtlasViewerScene);
+                                  SpriteAtlasViewerScene,
+                                  StressTest_Render1Scene);
 
         StackContainer _list;
     }

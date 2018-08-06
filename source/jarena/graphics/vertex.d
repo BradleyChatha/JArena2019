@@ -72,23 +72,98 @@ enum BufferDrawType : GLenum
 }
 
 /++
+ + Defines what different features the buffer is capable of doing.
+ +
+ + These flags can be ORed together to create custom buffers.
+ +
+ + The reason that capabilities have to be specified is because the user can then well-define how
+ + the buffer is supposed to be used, instead of it having 200 different ways to do things and the user
+ + having no clue which ones are being used (hard to debug).
+ + ++/
+enum BufferFeatures : uint
+{
+    /++
+     + Enables the `VertexBuffer.upload` function, as well as the `VertexBuffer.verts` and
+     + `VertexBuffer.indicies` variables.
+     +
+     + This is useful for buffers that require their entire set of data to be updated.
+     + ++/
+    FullUpload = 1 << 0,
+
+    /++
+     + Almost identicle to `FullUpload`, except that it changes the way that 
+     + `VertexBuffer.upload` manages the buffer's data. (see it's documentation for details).
+     +
+     + Mutually Exclusive:
+     +  `BufferFeatures.FullUpload`
+     + ++/
+    FullUploadSubData = 1 << 1,
+
+    /++
+     + Enables the user to be able to manually change the size of the buffer's data.
+     +
+     + May have strange interactions with other functions that change the data's length.
+     + ++/
+    MutableSize = 1 << 2,
+
+    /++
+     + Same as `MutableSize`, but this disables copying of the old data once the buffer is resized.
+     + ++/
+    MutableSizeNoCopy = 1 << 3,
+
+    /++
+     + Enables the `VertexBuffer.applyMapFunc` function.
+     +
+     + This is useful for code that requires more precise control of how data is uploaded to the GPU.
+     + ++/
+    CanMapBuffers = 1 << 4
+}
+
+///
+enum isVertexBuffer(T) = isInstanceOf!(VertexBuffer, T);
+
+/++
  + A wrapper around an OpenGL VAO/VBO/EBO combo.
  +
- + Usage:
+ + Usage(FullUpload):
  +  First, call `VertexBuffer.setup` before the first usage of a buffer.
  +
  +  Second, set what your verticies are in `VertexBuffer.verts`.
  +
  +  Third, set the indicies in `VertexBuffer.indicies`.
  +
- +  Fourth, call `VertexBuffer.update` to update the VBO with the data in `VertexBuffer.verts`,
+ +  Fourth, call `VertexBuffer.upload` to update the VBO with the data in `VertexBuffer.verts`,
  +  and to update the EBO with the indicies in `VertexBuffer.indicies`.
  +
  +  Finally, bind the `VertexBuffer.vao` (or whichever is needed for the certain case) and
  +  call something like `glDrawElements`. Alternatively, use `Renderer.drawBuffer`.
  + ++/
-struct VertexBuffer
+struct VertexBuffer(BufferFeatures features)
 {
+    ///
+    alias Features = features;
+
+    ///
+    alias MapFunc = void delegate(scope Vertex[] vboData, scope uint[] eboData);
+
+    mixin(mutuallyExclusive([
+        BufferFeatures.FullUploadSubData: [BufferFeatures.FullUpload],
+        BufferFeatures.MutableSizeNoCopy: [BufferFeatures.MutableSize]
+    ]));
+
+    // Set some flags
+    static if(Features & BufferFeatures.FullUploadSubData
+           || Features & BufferFeatures.MutableSize
+           || Features & BufferFeatures.MutableSizeNoCopy
+           || Features & BufferFeatures.CanMapBuffers)
+    {
+        enum HasBufferSizes = true;
+    }
+    else
+    {
+        enum HasBufferSizes = false;
+    }
+
     private
     {
         uint _vao;
@@ -97,6 +172,13 @@ struct VertexBuffer
         BufferDataType _dataType;
         BufferDrawType _drawType;
 
+        static if(HasBufferSizes)
+        {
+            // Both are in bytes.
+            size_t _vboSize;
+            size_t _eboSize;
+        }
+
         @nogc
         void free() nothrow
         {
@@ -104,15 +186,33 @@ struct VertexBuffer
             glDeleteBuffers(1, &this._vbo);
             glDeleteBuffers(1, &this._ebo);
         }
+
+        static dstring mutuallyExclusive(BufferFeatures[][BufferFeatures] exlusivity)
+        {
+            import codebuilder;
+            auto builder = new CodeBuilder();
+            foreach(feature, exclusiveWith; exlusivity)
+            {
+                foreach(exclusiveFeature; exclusiveWith)
+                {
+                    builder.putf("static assert(!((Features & BufferFeatures.%s) && (Features & BufferFeatures.%s)), `BufferFeatures.%s cannot be used alongside BufferFeatures.%s`);",
+                                 feature, exclusiveFeature, feature, exclusiveFeature);
+                }
+            }
+            return builder.data.idup;
+        }
     }
     
     public
     {
-        /// The verticies contained in this buffer.
-        Vertex[] verts;
+        static if(Features & BufferFeatures.FullUpload || Features & BufferFeatures.FullUploadSubData)
+        {
+            /// The verticies contained in this buffer.
+            Vertex[] verts;
 
-        /// The indicies contained in this buffer.
-        uint[]   indicies;
+            /// The indicies contained in this buffer.
+            uint[]   indicies;
+        }
 
         /// This type cannot be copied, use `ref` or put it on the heap if needed.
         @disable
@@ -125,22 +225,104 @@ struct VertexBuffer
         }
 
         /++
-         + Updates the buffer's VBO and EBO to reflect the current data in `verts` and 'indicies'.
+         + Uploads the buffer's VBO and EBO (GPU side) to reflect the current data in `verts` and 'indicies' (CPU[kinda, I guess] side).
          +
          + Notes:
+         +  This function is only enabled with `BufferFeatures.FullUpload` or `BufferFeatures.FullUploadSubData`.
+         +
          +  This function $(B must) be called for any changes made to `verts` and `indicies` to become visible
          +  on the GPU side of things.
          +
          +  The buffers are left bound afterwards.
+         +
+         + FullUpload:
+         +  If `BufferFeatures.FullUpload` is used, then `glBufferData` is used to update both the VBO and EBO, meaning that the GPU will allocate
+         +  a new chunk of memory for the new data, and that the data will be uploaded all at once. These two things
+         +  together can cause a slowdown if used too often, with too much data.
+         +
+         + FullUploadSubData:
+         +  If `BufferFeatures.FullUploadSubData` is used, then the VBO and EBO (on the GPU) is made a larger size, and
+         +  `glBufferSubData` is used to upload the data. The size of the VBO is changed using `glBufferData` where the size
+         +  is (previousSize * 2) or the size of the `VertexBuffer.verts`/`VertexBuffer.indicies` array, whichever is bigger.
+         +
+         +  When data needs to be uploaded, but the buffer itself doesn't need to resize, then `glBufferSubData` is used to
+         +  upload the data into the start of the VBO and EBO. This means we can reuse the memory that OpenGL has already
+         +  allocated for us, saving the cost of allocation. However this still has the issue of the verticies and indicies both being
+         +  uploaded all at once, which will cause a slowdown with big datasets. Do note that the old data may not be completely
+         +  overridden, so make sure your `VertexBuffer.indicies` doesn't directly point to them.
          + ++/
-        @nogc
-        void update() nothrow
+        static if(Features & BufferFeatures.FullUpload)
+        void upload()
         {
             glBindBuffer(GL_ARRAY_BUFFER, this._vbo);
             glBufferData(GL_ARRAY_BUFFER, (Vertex.sizeof * this.verts.length), &this.verts[0], this._drawType);
 
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this._ebo);
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, (uint.sizeof * this.indicies.length), &this.indicies[0], this._drawType);
+
+            static if(HasBufferSizes)
+            {
+                this._vboSize = (Vertex.sizeof * this.verts.length);
+                this._eboSize = (uint.sizeof * this.indicies.length);
+            }
+        }
+
+        /// ditto
+        static if(Features & BufferFeatures.FullUploadSubData)
+        void upload()
+        {
+            static void uploadBuffer(uint bufferName, GLenum bufferType, BufferDrawType drawType, void[] toUpload, ref size_t currentSize)
+            {
+                glBindBuffer(bufferType, bufferName);
+                
+                // Note: void[].length is in bytes
+                if(toUpload.length > currentSize)
+                {
+                    currentSize = toUpload.length;
+                    glBufferData(bufferType, toUpload.length, &toUpload[0], drawType);
+                }
+                else
+                {
+                    glBufferSubData(bufferType, 0, toUpload.length, &toUpload[0]);
+                }
+            }
+
+            uploadBuffer(this._vbo, GL_ARRAY_BUFFER,         this._drawType, this.verts,    this._vboSize);
+            uploadBuffer(this._ebo, GL_ELEMENT_ARRAY_BUFFER, this._drawType, this.indicies, this._eboSize);
+
+            GL.checkForError();
+        }
+
+        /++
+         + Maps the EBO and VBO data (using `glMapBuffer`), slices them so they're D-friendly, and then passes
+         + the slices into the given function which can read/write to the slices as wanted.
+         +
+         + The changes made to the data in the slices will be uploaded into the GPU(At least that's what I think mapping does).
+         +
+         + Notes:
+         +  Of course, appending to these slices will cause them to be allocated into a new array, since
+         +  these aren't GC-owned pointers. (among other things)
+         +
+         + Params:
+         +  mapFunc = The function that is applied to the mapped data.
+         + ++/
+        static if(Features & BufferFeatures.CanMapBuffers)
+        void applyMapFunc(scope MapFunc mapFunc)
+        {
+            glBindBuffer(GL_ARRAY_BUFFER, this._vbo);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this._ebo);
+
+            auto vboData = (cast(Vertex*)glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE))[0..this._vboSize / Vertex.sizeof];
+            auto eboData = (cast(uint*)glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE))[0..this._eboSize / uint.sizeof];
+
+            scope(exit)
+            {
+                glUnmapBuffer(GL_ARRAY_BUFFER);
+                glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+                GL.checkForError();
+            }
+
+            mapFunc(vboData, eboData);
         }
         
         /++
@@ -208,6 +390,92 @@ struct VertexBuffer
         BufferDrawType drawType() nothrow const
         {
             return this._drawType;
+        }
+
+        static if(HasBufferSizes)
+        {
+            /// Returns: The size, in bytes, of the VBO's data.
+            @property @safe @nogc
+            size_t vboSize() nothrow const
+            {
+                return this._vboSize;
+            }
+
+            /// Returns: The size, in bytes, of the EBO's data.
+            @property @safe @nogc
+            size_t eboSize() nothrow const
+            {
+                return this._eboSize;
+            }
+        }
+
+        static if(Features & BufferFeatures.MutableSize
+               || Features & BufferFeatures.MutableSizeNoCopy)
+        {
+            private void resizeBuffer(uint bufferName, GLenum bufferType, size_t newSize, ref size_t oldSize)
+            {
+                glBindBuffer(bufferType, bufferName);
+
+                // Copy the old data.
+                static if(Features & BufferFeatures.MutableSize)
+                {
+                    ubyte[] vboCopy;
+                    vboCopy.length = oldSize;
+
+                    if(vboCopy.length > 0)
+                        glGetBufferSubData(bufferType, 0, vboCopy.length, &vboCopy[0]); 
+                }
+
+                // Give the buffer a new size.
+                glBufferData(bufferType, cast(uint)newSize, null, this.drawType);
+                oldSize = newSize;
+
+                // Copy the data back over.
+                static if(Features & BufferFeatures.MutableSize)
+                {
+                    if(vboCopy.length > 0)
+                        glBufferSubData(bufferType, 0, (newSize < vboCopy.length) ? newSize : vboCopy.length, &vboCopy[0]);
+                }
+
+                GL.checkForError();
+            }
+
+            /++
+             + Sets the size of the VBO's data, in bytes
+             +
+             + Notes:
+             +  Changing the size requires that the current data in the VBO is copied from the GPU into a temp buffer,
+             +  the VBO being given a new chunk of data for the size, and then the old data being copied back over.
+             +
+             +  If the size is lower than before, the trailing data is simply left out.
+             +
+             +  Data copying can be disabled entirely by using `BufferFeatures.MutableSizeNoCopy` instead. However,
+             +  that means all the data must be copied over as the buffer will be filled with whatever the driver decides
+             +  (which is probably whatever was being used in that memory beforehand).
+             +
+             + Params:
+             +  newSize = The new size of the VBO's data.
+             + ++/
+            @property
+            void vboSize(size_t newSize)
+            {
+                assert(newSize <= uint.max, "OpenGL doesn't seem to support anything bigger than uint.");
+                if(newSize % Vertex.sizeof != 0)
+                    assert(false, "Mis-aligned size.");
+
+                this.resizeBuffer(this._vbo, GL_ARRAY_BUFFER, newSize, this._vboSize);
+            }
+
+            /// ditto
+            @property
+            void eboSize(size_t newSize)
+            {
+                assert(newSize <= uint.max, "OpenGL doesn't seem to support anything bigger than uint.");
+                if(newSize % uint.sizeof != 0)
+                    assert(false, "Mis-aligned size.");
+
+                this.resizeBuffer(this._ebo, GL_ELEMENT_ARRAY_BUFFER, newSize, this._eboSize);
+            }
         }
     }
 }

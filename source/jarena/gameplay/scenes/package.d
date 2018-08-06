@@ -2,4 +2,5 @@
 module jarena.gameplay.scenes;
 
 public import   jarena.gameplay.scenes.animation_viewer, jarena.gameplay.scenes.menu, jarena.gameplay.scenes.menu, jarena.gameplay.scenes.test,
-                jarena.gameplay.scenes.spriteatlas_viewer, jarena.gameplay.scenes.viewer_scene, jarena.gameplay.scenes.debug_menu;
+                jarena.gameplay.scenes.spriteatlas_viewer, jarena.gameplay.scenes.viewer_scene, jarena.gameplay.scenes.debug_menu,
+                jarena.gameplay.scenes.stress_render_1;

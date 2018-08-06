@@ -157,7 +157,7 @@ class MutableTexture : TextureBase
             );
 
             // Move the nextY value down if we've reached the edge of the texture.
-            if(size.x + this.xOffset >= this._size.x)
+            if(size.x + this.xOffset > this._size.x)
             {
                 this.xOffset  = 0;
                 this.nextY   += this.largestY;
@@ -165,7 +165,7 @@ class MutableTexture : TextureBase
             }
 
             // Using our current algorithm, once we reach the bottom of the texture, there's no room.
-            if(size.y + this.nextY >= this._size.y)
+            if(size.y + this.nextY > this._size.y)
             {
                 info("There is not enough room for the texture");
                 return false;
