@@ -46,6 +46,7 @@ void main()
     engine.scenes.register(new DebugMenuScene());
     engine.scenes.register(new AnimationViewerScene());
     engine.scenes.register(new SpriteAtlasViewerScene());
+    //engine.scenes.register(new StressTest_Render1Scene());
     engine.scenes.swap!MenuScene;
     //engine.scenes.swap!AnimationViewerScene;
     engine.doLoop();

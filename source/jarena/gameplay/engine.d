@@ -9,6 +9,7 @@ private
 
     const ENGINE_CONFIG_PATH       = "data/engineConf.sdl";
     const ENGINE_DATA_PATH         = "data/data.sdl";
+    const DEFAULT_COMPOUND_SIZE    = uvec2(256, 256);
     const WINDOW_NAME              = "JArena";
     const WINDOW_DEFAULT_SIZE      = uvec2(860, 740);
     const WINDOW_DEFAULT_FPS       = 60;
@@ -94,6 +95,8 @@ final class Engine
             Systems.loaderSdlang = new LoaderSDL();
             Systems.audio        = this._audio;
             Systems.finalise();
+
+            Systems.renderResources.compoundTextureSize = this._config.compoundTextureSize.get(DEFAULT_COMPOUND_SIZE);
 
             // Make sure the post office types are valid
             // (_ALL_ events that are to be used with this office should be reserved here
@@ -190,6 +193,7 @@ final class Engine
         Nullable!bool  showDebugText;
         Nullable!bool  vsync;
         Nullable!bool  debugControls;
+        Nullable!uvec2 compoundTextureSize;
     }
 }
 

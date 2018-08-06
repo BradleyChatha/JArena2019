@@ -243,6 +243,8 @@ final class Renderer
 {
     private
     {
+        alias VertexBufferFU = VertexBuffer!(BufferFeatures.FullUploadSubData);
+
         struct Slice
         {
             size_t start;
@@ -278,9 +280,9 @@ final class Renderer
         // Despite having very similar names, they're used for different purposes.
         // VertexBuffer is used to store the data that is uploaded to the GPU
         // Buffer!Vertex stores all verticies registered for rendering, which may or may not be rendered right away.
-        VertexBuffer  _quadBuffer;
-        Buffer!Vertex _vertBuffer;
-        Buffer!uint   _indexBuffer;
+        VertexBufferFU _quadBuffer;
+        Buffer!Vertex  _vertBuffer;
+        Buffer!uint    _indexBuffer;
     }
 
     public final
@@ -360,7 +362,7 @@ final class Renderer
                 this._quadBuffer.verts    = this._vertBuffer[bucket.verts.start..bucket.verts.end];
                 this._quadBuffer.indicies = this._indexBuffer[0..$];
                 
-                this._quadBuffer.update();
+                this._quadBuffer.upload();
                 debug GL.checkForError();
 
                 // Textureless renders can be used for things like shapes
@@ -449,7 +451,8 @@ final class Renderer
 
         /// Draws a VertexBuffer
         pragma(inline, true)
-        void drawBuffer(ref VertexBuffer buffer)
+        void drawBuffer(VB)(ref VB buffer)
+        if(isVertexBuffer!VB)
         {
             glBindVertexArray(buffer.vao);
             glDrawElements(buffer.dataType, cast(uint)buffer.indicies.length, GL_UNSIGNED_INT, null);
@@ -497,7 +500,6 @@ final class Renderer
         this.addToBucket(texture, vertSlice, shader);
     }
 
-    pragma(inline, true)
     private void addToBucket(TextureBase texture, Slice vertSlice, Shader shader)
     {
         // All sprites that have the same texture and shader are batched together into a single bucket
@@ -558,6 +560,16 @@ final class RendererResources
     private
     {
         MutableTexture[] _textures;
+        uvec2            _newCompoundSize;
+    }
+
+    /++
+     +=============
+     += Vertacies =
+     +=============
+     + ++/
+    public
+    {
     }
 
     /++
@@ -589,7 +601,17 @@ final class RendererResources
             }
 
             // No avaliable textures could stitch it, so make a new one.
-            auto texture = new MutableTexture(uvec2(2048, 2048));
+            ivec2 sizei;
+            glBindTexture(GL_TEXTURE_2D, texID);
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH,  &sizei.data[0]);
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &sizei.data[1]);
+
+            // Determine if the texture can even fit within our specified compound size.
+            auto size = this._newCompoundSize;
+            if(sizei.x > size.x || sizei.y > size.y)
+                size = uvec2(sizei + ivec2(1));
+
+            auto texture = new MutableTexture(size);
             this._textures ~= texture;
 
             if(!texture.stitch(texID, area))
@@ -611,6 +633,19 @@ final class RendererResources
             trace("Dumping all compound textures");
             foreach(i, tex; this._textures)
                 tex.dump(i.to!string);
+        }
+
+        /++
+        + Notes:
+        +  If a texture is given that is too small for this size, then the given texture is simply
+        +  used as-is.
+        +
+        + Params:
+        +  newCompoundSize = The size of all newly made compound textures.
+        + ++/
+        void compoundTextureSize(uvec2 newCompoundSize)
+        {
+            this._newCompoundSize = newCompoundSize;
         }
     }
 }
