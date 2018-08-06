@@ -119,7 +119,7 @@ enum BufferFeatures : uint
     CanMapBuffers = 1 << 4
 }
 
-///
+/// Determines if the given type is a `VertexBuffer`.
 enum isVertexBuffer(T) = isInstanceOf!(VertexBuffer, T);
 
 /++
