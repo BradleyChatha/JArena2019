@@ -391,3 +391,180 @@ abstract class Button : Control
         }
     }
 }
+
+/++
+ + The basis for a control that can take keyboard input and display it on screen.
+ +
+ + Notes:
+ +  For text capturing to work, both `SimpleTextInput.isActive` and `Input.listenForText` need to be true.
+ +
+ +  When `SimpleTextInput.textArea` isn't set to `vec2(float.infinity)`, it will make sure that it's text
+ +  cannot grow in size outside of this area. Again, useful for things such as textboxes.
+ +
+ + Limitations:
+ +  Currently, only a single line of text is supported.
+ +
+ +  Support for most control codes is either unsupported or undefined.
+ +
+ +  Currently, only the X-axis for `SimpleTextInput.textArea` is used.
+ + ++/
+class TextInput : Control
+{
+    enum BLINK_TIMER = 500; // ms
+
+    private
+    {
+        Text     _textObject;
+        Text     _cursorObject;
+        char[]   _text;
+        vec2     _area;
+        bool     _isActive;
+        bool     _displayCursor;
+        Duration _blinkTimer;
+    }
+
+    public
+    {
+        this(Text text, vec2 position, vec2 textArea = vec2(float.infinity))
+        {
+            assert(text !is null);
+
+            this._textObject = text;
+            this._cursorObject = new Text(text.font, "|", vec2(0), text.charSize, text.colour);
+            this._area = textArea;
+            this.position = position;
+        }
+
+        @property @safe @nogc
+        bool isActive() nothrow const
+        {
+            return this._isActive;
+        }
+
+        @property @safe @nogc
+        void isActive(bool active) nothrow
+        {
+            this._isActive = active;
+        }
+
+        /++
+         + Notes:
+         +  $(B Copy this data if it needs to be kept before this control is updated again) as it wont
+         +  be copied automatically, meaning it's data can change as the user types.
+         +
+         + Returns:
+         +  The text that has been inputted so far.
+         + ++/
+        @property @safe @nogc
+        const(char[]) textInput() nothrow const
+        {
+            return this._text;
+        }
+    }
+
+    protected
+    {
+        @property @safe @nogc
+        ref inout(vec2) textArea() nothrow inout
+        {
+            return this._area;
+        }
+
+        /++
+         + Returns:
+         +  The on-screen `Text` object.
+         + ++/
+        @property @safe @nogc
+        inout(Text) textObject() nothrow inout
+        {
+            return this._textObject;
+        }
+    }
+
+    override
+    {
+        protected void onNewParent(UIElement newParent, UIElement oldParent){}
+        protected void onChildStateChanged(UIElement child, StateChange change){}
+        protected void onAddChild(UIElement child){}
+        protected void onRemoveChild(UIElement child){}
+        protected void onSizeChanged(vec2 oldSize, vec2 newSize){}
+        
+        protected void onPositionChanged(vec2 oldPos, vec2 newPos)
+        {
+            this._textObject.position = newPos;
+        }
+
+        protected void onColourChanged(Colour oldColour, Colour newColour)
+        {
+            this._textObject.colour = newColour;
+        }
+
+        public void onUpdate(InputManager input, Duration deltaTime)
+        {
+            if(!this._isActive || !input.listenForText)
+                return;
+
+            // Blink the cursor
+            this._blinkTimer -= deltaTime;
+            if(this._blinkTimer.asSeconds <= 0)
+            {
+                this._displayCursor = !this._displayCursor;
+                this._blinkTimer += BLINK_TIMER.msecs;
+            }
+
+            // Removes the last character.
+            void doBackspace() scope
+            {
+                if(this._text.length > 0)
+                {
+                    this._text.length -= 1;
+                    this._textObject.text = this._text;
+                }
+            }
+
+            // Handle special input keys.
+            if(input.wasKeyTapped(Scancode.BACKSPACE))
+                doBackspace();
+
+            foreach(ch; input.textInput)
+            {
+                // Handle special characters.
+                if(ch == '\b')
+                {
+                    doBackspace();
+                    continue;
+                }
+
+                if(ch == '\n')
+                    continue; // No support for new lines yet.
+
+                // Add the character, and see if it can fit.
+                this._text ~= ch;
+                this._textObject.text = this._text;                
+                if(this._textObject.getRectForChar(this._text.length - 1).topRight.x
+                 > this._area.x)
+                {
+                    this._text.length -= 1;
+                    this._textObject.text = this._text;
+                }
+            }
+
+            // Update the cursor's position.
+            if(this._text.length == 0)
+                this._cursorObject.position = this.position;
+            else
+            {
+                auto rect = this._textObject.getRectForChar(this._text.length - 1);
+                this._cursorObject.position = vec2(rect.position.x + rect.size.x, rect.position.y);
+            }
+        }
+
+        public void onRender(Window window)
+        {
+            window.renderer.drawText(this._textObject);
+
+            if(this._isActive && this._displayCursor)
+                window.renderer.drawText(this._cursorObject);
+        }
+    }
+}

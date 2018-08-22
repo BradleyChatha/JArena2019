@@ -416,17 +416,12 @@ final class Renderer
         {
             assert(shape !is null);
 
-            // Draw the rectangle's filling
-            this.drawQuad(null, shape.verts, this._colourShader);
-
-            // Draw the border.
-            if(shape.borderSize != 0)
-            {
-                this.drawQuad(null, shape.borderLeftVerts,   this._colourShader);
-                this.drawQuad(null, shape.borderRightVerts,  this._colourShader);
-                this.drawQuad(null, shape.borderTopVerts,    this._colourShader);
-                this.drawQuad(null, shape.borderBottomVerts, this._colourShader);
-            }
+            // HACKY: The first 4 verts are the main filling, everything after are the borders
+            auto verts = shape.verts; // Making sure the array stays on the stack long enough.
+            if(shape.borderSize == 0)
+                this.drawQuad(null, verts[0..4], this._colourShader);
+            else
+                this.drawQuadMultiple(null, verts[], this._colourShader);
         }
 
         /// Draws a `Sprite` to the screen.

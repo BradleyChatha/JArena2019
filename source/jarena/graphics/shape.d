@@ -19,6 +19,7 @@ class RectangleShape : ITransformable
         Vertex[4*4]  _borderVerts; // [Per corner][0]TopLeft|[1]TopRight|[2]BotLeft|[3]BotRight
                                    // [0..4] = Top Left Corner|[4..8]TopRight|[8..12]BotLeft|[12..16]BotRight
         Vertex[4*5]  _transformed; // [Final4] = _verts. [First16] = _borderVerts
+        Vertex[4*5]  _cachedVerts; // This contains the _transformed verts, but in a specific order for rendering.
 
         @safe @nogc
         void recalcBorderVerts() nothrow
@@ -117,6 +118,29 @@ class RectangleShape : ITransformable
         {
             this._transform.rotation = angle;
             this._transform.markDirty();
+        }
+
+        /++
+         + Sets the scale of the transformable object (default 1).
+         +
+         + Params:
+         +  amount = The amount to scale it by.
+         + ++/
+        @property @safe @nogc
+        void scale(vec2 amount) nothrow
+        {
+            this._transform.scale = amount;
+            this._transform.markDirty();
+        }
+
+        /++
+         + Returns:
+         +  The amount to scale it by.
+         + ++/
+        @property @safe @nogc
+        const(vec2) scale() nothrow const
+        {
+            return this._transform.scale;
         }
 
         /++
@@ -257,75 +281,49 @@ class RectangleShape : ITransformable
         /// Also: When rendering the shape, $(B Call this function first) as this is the only function that
         ///       will transform the verts if the transform is dirty.
         @property @safe @nogc
-        Vertex[4] verts() nothrow
+        Vertex[20] verts() nothrow
         {
             if(this._transform.isDirty)
             {
                 this._transformed[$-4..$] = this._verts[0..4];
                 this._transformed[0..$-4] = this._borderVerts[0..$];
                 this._transform.transformVerts(this._transformed);
+
+                this._cachedVerts = 
+                [
+                    // Main body
+                    this._transformed[$-4],
+                    this._transformed[$-3],
+                    this._transformed[$-2],
+                    this._transformed[$-1],
+
+                    // Left Border
+                    this._transformed[0],
+                    this._transformed[1],
+                    this._transformed[10],
+                    this._transformed[11],
+
+                    // Bottom Border
+                    this._transformed[8],
+                    this._transformed[10],
+                    this._transformed[13],
+                    this._transformed[15],
+
+                    // Right Border
+                    this._transformed[4],
+                    this._transformed[5],
+                    this._transformed[14],
+                    this._transformed[15],
+
+                    // Top Border
+                    this._transformed[0],
+                    this._transformed[2],
+                    this._transformed[5],
+                    this._transformed[7]
+                ];
             }
-            return this._transformed[$-4..$];
-        }
 
-        /// ditto
-        @property @safe @nogc
-        Vertex[4] borderLeftVerts() nothrow
-        {
-            Vertex[4] toReturn = 
-            [
-                this._transformed[0..4][0],
-                this._transformed[0..4][1],
-                this._transformed[8..12][2],
-                this._transformed[8..12][3]
-            ];
-
-            return toReturn;
-        }
-
-        /// ditto
-        @property @safe @nogc
-        Vertex[4] borderBottomVerts() nothrow
-        {
-            Vertex[4] toReturn = 
-            [
-                this._transformed[8..12][0],
-                this._transformed[8..12][2],
-                this._transformed[12..16][1],
-                this._transformed[12..16][3]
-            ];
-
-            return toReturn;
-        }
-
-        /// ditto
-        @property @safe @nogc
-        Vertex[4] borderRightVerts() nothrow
-        {
-            Vertex[4] toReturn = 
-            [
-                this._transformed[4..8][0],
-                this._transformed[4..8][1],
-                this._transformed[12..16][2],
-                this._transformed[12..16][3]
-            ];
-
-            return toReturn;
-        }
-
-        /// ditto
-        @property @safe @nogc
-        Vertex[4] borderTopVerts() nothrow
-        {
-            Vertex[4] toReturn = 
-            [
-                this._transformed[0..4][0],
-                this._transformed[0..4][2],
-                this._transformed[4..8][1],
-                this._transformed[4..8][3]
-            ];
-
-            return toReturn;
+            return this._cachedVerts;
         }
     }
 }

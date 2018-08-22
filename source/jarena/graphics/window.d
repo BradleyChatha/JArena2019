@@ -58,10 +58,13 @@ final class Window
         /++
          + Sent when text is entered into the window.
          +
-         + See: https://www.sfml-dev.org/tutorials/2.0/window-events.php#the-textentered-event
+         + See: https://wiki.libsdl.org/Tutorials/TextInput
+         +
+         + Notes:
+         +  $(B Copy the data from this mail if you need to store it), since it refers to a stack variable.
          +
          + Mail:
-         +  `ValueMail!dchar`
+         +  `ValueMail!char[]` (UTF-8 encoded)
          + ++/
         TextEntered = 103,
 
@@ -119,7 +122,7 @@ final class Window
         // we instead just reuse the objects.
         CommandMail                     _commandMail;       // Mail used for events without extra data (e.g. closing the window)
         ValueMail!SDL_KeyboardEvent     _keyMail;           // Mail used for key events.
-        ValueMail!dchar                 _textMail;          // Mail used for the Text Entered event.
+        ValueMail!(char[])              _textMail;          // Mail used for the Text Entered event.
         ValueMail!vec2                  _positionMail;      // Mail used for any event that provides a position (e.g. mouse moved)
         ValueMail!uvec2                 _upositionMail;     // ^^ but for uintegers.
         ValueMail!MouseButton           _mouseMail;         // Mail used for mouse button events.
@@ -175,7 +178,7 @@ final class Window
             trace("Setting up reusuable mail");
             this._commandMail    = new CommandMail(0);
             this._keyMail        = new ValueMail!SDL_KeyboardEvent(0, SDL_KeyboardEvent());
-            this._textMail       = new ValueMail!dchar(0, '\0');
+            this._textMail       = new ValueMail!(char[])(0, []);
             this._positionMail   = new ValueMail!vec2(0, vec2(0));
             this._upositionMail  = new ValueMail!uvec2(0, uvec2(0));
             this._mouseMail      = new ValueMail!MouseButton(0, MouseButton.Left);
@@ -228,14 +231,17 @@ final class Window
                         this._keyMail.value = e.key;
                         office.mail(this._keyMail);
                         break;
-                    //
-                    //case sfEvtTextEntered:
-                    //    import std.conv : to;
-                    //    this._textMail.type = Window.Event.TextEntered;
-                    //    this._textMail.value = e.text.unicode.to!dchar;
-                    //    office.mail(this._textMail);
-                    //    break;
-                    //
+                    
+                    case SDL_TEXTINPUT:
+                        import core.stdc.string : strlen;
+
+                        auto len = strlen(&e.text.text[0]);
+
+                        this._textMail.type = Window.Event.TextEntered;
+                        this._textMail.value = e.text.text[0..len]; // UTF-8 **Lives on the stack**
+                        office.mail(this._textMail);
+                        break;
+                    
                     case SDL_MOUSEMOTION:
                         this._positionMail.type  = Window.Event.MouseMoved;
                         this._positionMail.value = vec2(e.motion.x, e.motion.y);
@@ -410,8 +416,12 @@ final class InputManager
         {
             vec2 position;
             MouseButton buttonMask;
+            MouseButton buttonTappedMask;
         }
 
+        char[SDL_TEXTINPUTEVENT_TEXT_SIZE] _textInput;
+        size_t               _textLength;
+        bool                 _listenForText; // Whether to handle TextEntered events or not.
         KeyState[KEY_COUNT]  _keyStates; // Keys are indexed by scan code
         Buffer!Scancode      _tapped;    // Any ScanCodes in this array were tapped down this frame.
         MouseState           _mouse;
@@ -457,9 +467,25 @@ final class InputManager
             assert(mail !is null);
 
             if(m.type == Window.Event.MouseButtonPressed)
+            {
                 this._mouse.buttonMask |= mail.value;
+                this._mouse.buttonTappedMask |= mail.value;
+            }
             else
                 this._mouse.buttonMask &= ~cast(int)(mail.value);
+        }
+
+        void onTextInput(PostOffice office, Mail m)
+        {
+            auto mail = cast(ValueMail!(char[]))m;
+            assert(mail !is null);
+            assert(mail.value.length <= this._textInput.length);
+
+            if(!this._listenForText)
+                return;
+
+            this._textInput[0..mail.value.length] = mail.value[0..$];
+            this._textLength = mail.value.length;
         }
     }
 
@@ -488,11 +514,14 @@ final class InputManager
             this._tapped.length = this._keyStates.length;
             this._tapped.length = 0;
 
+            this.listenForText = false;
+
             office.subscribe(Window.Event.KeyDown,              &this.onKeyEvent);
             office.subscribe(Window.Event.KeyUp,                &this.onKeyEvent);
             office.subscribe(Window.Event.MouseMoved,           &this.onMouseMoved);
             office.subscribe(Window.Event.MouseButtonPressed,   &this.onMouseButton);
             office.subscribe(Window.Event.MouseButtonReleased,  &this.onMouseButton);
+            office.subscribe(Window.Event.TextEntered,          &this.onTextInput);
         }
 
         /// $(B Important: This function should be called _before_ the window processes it's events, or at the very end of a frame's update)
@@ -501,7 +530,9 @@ final class InputManager
             foreach(keyCode; this._tapped[0..$])
                 this._keyStates[keyCode].wasTapped = false;
 
+            this._mouse.buttonTappedMask = MouseButton.None;
             this._tapped.length = 0;
+            this._textLength = 0;
         }
 
         /// Returns: `true` if `key` is currently being pressed down.
@@ -563,11 +594,71 @@ final class InputManager
             return (this._mouse.buttonMask & button) > 0;
         }
 
+        /++
+         + Returns:
+         +  `true` if `button` was only pressed down this specific frame.
+         +  `false` if `button` isn't pressed down, or if `button` has been held down for longer than 1 frame.
+         + ++/
+        @safe @nogc
+        bool wasMouseButtonTapped(MouseButton button) nothrow const
+        {
+            return (this._mouse.buttonTappedMask & button) > 0;
+        }
+
         /// Returns: The last known position of the mouse.
         @property @safe @nogc
         vec2 mousePosition() nothrow const
         {
             return this._mouse.position;
+        }
+
+        /++
+         + Notes:
+         +  Make sure to store a copy of this data if it is needed beyond a single frame.
+         +
+         +  The value of this variable is reset to all '\0' characters whenever `onUpdate` is called.
+         +
+         + Returns:
+         +  A slice to a $(B reused internal buffer) that contains text entered by the user.
+         + ++/
+        @property @safe @nogc
+        const(char[]) textInput() nothrow const
+        {
+            return this._textInput[0..this._textLength];
+        }
+
+        /++
+         + Returns:
+         +  Whether the input manager is handling `Window.TextEntered` events.
+         + ++/
+        @property @safe @nogc
+        bool listenForText() nothrow const
+        {
+            return this._listenForText;
+        }
+
+        /++
+         + Sets whether to handle `Window.TextEntered` events.
+         +
+         + If the value is `true`, then the result of the event is stored in `Input.textInput`.
+         +
+         + Otherwise, no handling is done and the event is completely ignored, meaning `Input.textInput` will be left empty.
+         +
+         + Notes:
+         +  If `shouldListen` is false, then the value of `Input.textInput` is instantly reset.
+         +
+         + Params:
+         +  shouldListen = Whether to listen or not.
+         + ++/
+        @property @trusted @nogc
+        void listenForText(bool shouldListen) nothrow
+        {
+            if(!shouldListen)
+                SDL_StopTextInput();
+            else
+                SDL_StartTextInput();
+
+            this._listenForText = shouldListen;
         }
     }
 }

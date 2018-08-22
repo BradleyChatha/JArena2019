@@ -100,7 +100,7 @@ class Font
             set.glyphs[code] = Glyph(
                 area,
                 ivec2(this._font.glyph.bitmap_left, this._font.glyph.bitmap_top),
-                ivec2(this._font.glyph.advance.x, this._font.glyph.advance.y)
+                ivec2(cast(int)this._font.glyph.advance.x, cast(int)this._font.glyph.advance.y)
             );
 
             // Reset the alignment
@@ -208,10 +208,6 @@ class Font
 
 /++
  + A class which is used to create renderable text.
- +
- + Issues:
- +  In some cases, whenever the text object's position is changed, rendering of the text
- +  becomes slightly messed up.
  + ++/
 class Text : ITransformable
 {
@@ -264,21 +260,13 @@ class Text : ITransformable
          + Retrieves a rectangle representing the position and size of a certain character of this text.
          +
          + Notes:
-         +  Special characters such as new lines ('\n') do not have a rectangle created for them, so if there were a '\n' as
-         +  character #0, and a 'B' as character #1, then `getRectForChar(0)' would return the rectangle for the 'B' character.
-         +
          +  These rectangles are calculated during the `Text.text`[set] property, so calling this function multiple times is not slow.
-         +
-         + Special Characters:
-         +  These characters do not have a rectangle created for them.
-         +
-         +  '\n'
          +
          + Params:
          +  charIndex = The index of the character to retrieve the rectangle of.
          +
          + Returns:
-         +  Either null (check with 'returnValue.isNull'), or the rectangle for the character at `charIndex`.
+         +  Either null (check with 'returnValue.isNull') if the index is out of range, or the rectangle for the character at `charIndex`.
          + ++/
         @safe @nogc
         const(Nullable!RectangleF) getRectForChar(size_t charIndex) nothrow const
@@ -327,6 +315,29 @@ class Text : ITransformable
         const(AngleDegrees) rotation() nothrow const
         {
             return this._transform.rotation;
+        }
+
+        /++
+         + Sets the scale of the transformable object (default 1).
+         +
+         + Params:
+         +  amount = The amount to scale it by.
+         + ++/
+        @property @safe @nogc
+        void scale(vec2 amount) nothrow
+        {
+            this._transform.scale = amount;
+            this._transform.markDirty();
+        }
+
+        /++
+         + Returns:
+         +  The amount to scale it by.
+         + ++/
+        @property @safe @nogc
+        const(vec2) scale() nothrow const
+        {
+            return this._transform.scale;
         }
 
         /++
@@ -480,6 +491,9 @@ class Text : ITransformable
                 charPos -= vec2(0, glyph.area.size.y);
                 charPos += vec2(0, yDistance);
 
+                // Store the rectangle for this character.
+                this._charRects ~= RectangleF(pos + this._transform.translation, charSize);
+
                 // Special case: new lines
                 if(ch == cast(long)'\n')
                 {
@@ -517,9 +531,6 @@ class Text : ITransformable
                 if(charSize.x > largestWidth)
                     largestWidth = charSize.x;
 
-                // Store the rectangle for this character.
-                this._charRects ~= RectangleF(charPos, charSize);
-
                 // Change the 'cursor' to where the next character should be placed.
                 pos.x = pos.x + cast(float)(glyph.advance.x >> 6); // >> 6 is to convert it into pixels.
                 pos.y = pos.y + cast(float)(glyph.advance.y >> 6);
@@ -534,6 +545,15 @@ class Text : ITransformable
                 this._size = vec2(largestX + charSize.x, largestY + charSize.y);
             else
                 this._size = vec2(largestX + charSize.x, largestY);
+        }
+
+        /++
+         + Returns: The `Font` being used.
+         + ++/
+        @property @safe @nogc
+        inout(Font) font() nothrow inout
+        {
+            return this._font;
         }
 
         /// Internal use only

@@ -47,6 +47,22 @@ interface ITransformable
         }
 
         /++
+         + Sets the scale of the transformable object (default (1,1)).
+         +
+         + Params:
+         +  amount = The amount to scale it by.
+         + ++/
+        @property @safe @nogc
+        void scale(vec2 amount) nothrow;
+
+        /++
+         + Returns:
+         +  The amount to scale it by.
+         + ++/
+        @property @safe @nogc
+        const(vec2) scale() nothrow const;
+
+        /++
          + Returns:
          +  The origin of this object.
          + ++/
@@ -78,6 +94,7 @@ struct Transform
         mat4         _matrix;
         vec2         _translation = vec2(0);
         vec2         _origin = vec2(0);
+        vec2         _scale = vec2(1);
         AngleDegrees _rotation = AngleDegrees(0.0f);
 
         bool _dirty = true;
@@ -104,7 +121,6 @@ struct Transform
          + Returns:
          +  `verts`
          + ++/
-        pragma(inline, true)
         @safe @nogc
         Vertex[] transformVerts(return Vertex[] verts) nothrow
         {
@@ -155,6 +171,17 @@ struct Transform
         }
 
         /++
+         + Returns:
+         +  The scale of this transformation.
+         + ++/
+        pragma(inline, true)
+        @safe @nogc
+        ref inout(vec2) scale() nothrow pure inout
+        {
+            return this._scale;
+        }
+
+        /++
          + Use this to tell the transform to update it's matrix.
          +
          + Any setter functions will do this automatically, but functions such as `translation`[get]
@@ -191,7 +218,7 @@ struct Transform
             {
                 this._matrix = mat4.identity;
                 this._matrix.translate(-this.origin.x, -this.origin.y, 0);
-                // this._matrix.scale(...);
+                this._matrix.scale(this._scale.x, this._scale.y, 1);
                 this._matrix.rotateZ(this._rotation.angle);
                 this._matrix.translate(this.origin.x, this.origin.y, 0);
                 this._matrix.translate(this._translation.x, this._translation.y, 0);
