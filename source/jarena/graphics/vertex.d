@@ -116,7 +116,15 @@ enum BufferFeatures : uint
      +
      + This is useful for code that requires more precise control of how data is uploaded to the GPU.
      + ++/
-    CanMapBuffers = 1 << 4
+    CanMapBuffers = 1 << 4,
+
+    /++
+     + Enables the `VertexBuffer.subUpload` function, which is safe wrapper around
+     + the glSubBufferData function.
+     +
+     + This is useful for cases where only a certain buffer/section needs to be updated, instead of the entire thing.
+     + ++/
+    PartialUploadSubData = 1 << 5
 }
 
 /// Determines if the given type is a `VertexBuffer`.
@@ -155,7 +163,8 @@ struct VertexBuffer(BufferFeatures features)
     static if(Features & BufferFeatures.FullUploadSubData
            || Features & BufferFeatures.MutableSize
            || Features & BufferFeatures.MutableSizeNoCopy
-           || Features & BufferFeatures.CanMapBuffers)
+           || Features & BufferFeatures.CanMapBuffers
+           || Features & BufferFeatures.PartialUploadSubData)
     {
         enum HasBufferSizes = true;
     }
@@ -323,6 +332,57 @@ struct VertexBuffer(BufferFeatures features)
             }
 
             mapFunc(vboData, eboData);
+        }
+
+        /++
+         + Uploads the given data to a portion of the VBO/EBO.
+         +
+         + Notes:
+         +  The buffer being uploaded to is determined by `T`, which can be one of either
+         +  `Vertex` (For the VBO) and `uint` (For the EBO).
+         +
+         +  This function does not support resizing the buffer, and will fail an assert when
+         +  an attempt to write past it is made.
+         +
+         + Params:
+         +  start = The start offset to start writing to.
+         +  data  = The data to write, the amount to write is determined by the slice's length.
+         + ++/
+        static if(Features & BufferFeatures.PartialUploadSubData)
+        void subUpload(T)(const size_t start, T[] data)
+        if(is(T == Vertex) || is(T == uint))
+        {
+            // Set some of the variables we need.
+            static if(is(T == Vertex))
+            {
+                auto bufferType = GL_ARRAY_BUFFER;
+                auto bufferName = this._vbo;
+                auto bufferSize = this._vboSize; // In bytes
+            }
+            else
+            {
+                auto bufferType = GL_ELEMENT_ARRAY_BUFFER;
+                auto bufferName = this._ebo;
+                auto bufferSize = this._eboSize;
+            }
+
+            if(data.length == 0)
+                return;
+
+            // Make sure we're in range
+            auto dataSizeBytes = (T.sizeof * data.length);
+            auto startInBytes  = (T.sizeof * start);
+            if((startInBytes + dataSizeBytes) > bufferSize)
+            {
+                import std.format;
+                assert(false, format("Attmpted to write outside of the vertex buffer.\n"
+                              ~ "Start: %s (%s b) | Data: %s (%s b) | Buffer: %s b",
+                                start, startInBytes, data.length, dataSizeBytes, bufferSize));
+            }
+
+            // Then upload the data
+            glBindBuffer(bufferType, bufferName);
+            glBufferSubData(bufferType, startInBytes, dataSizeBytes, &data[0]);
         }
         
         /++

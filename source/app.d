@@ -48,6 +48,7 @@ void main()
     engine.scenes.register(new SpriteAtlasViewerScene());
     engine.scenes.register(new JoshyClickerScene());
     //engine.scenes.register(new StressTest_Render1Scene());
+    engine.scenes.register(new StressTest_Render2Scene());
     engine.scenes.swap!MenuScene;
     //engine.scenes.swap!AnimationViewerScene;
     engine.doLoop();
