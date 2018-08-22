@@ -243,7 +243,7 @@ final class Renderer
 {
     private
     {
-        alias VertexBufferFU = VertexBuffer!(BufferFeatures.FullUploadSubData);
+        alias VertexBufferFU = VertexBuffer!(BufferFeatures.FullUploadSubData | BufferFeatures.PartialUploadSubData);
 
         struct Slice
         {
@@ -259,13 +259,29 @@ final class Renderer
             mat4 projection;
         }
 
+        enum BucketCommand
+        {
+            Quads,
+            Pool
+        }
+
+        union BucketData
+        {
+            Slice quadVerts;        // [Quads] Slice into _vertBuffer
+            SpritePool poolObject;  // [Pool] The pool to draw
+        }
+
         // Used for batching.
         struct RenderBucket
         {
+            // Common between buckets
             TextureBase texture;
             Shader      shader;
             CameraInfo  camera;   // To make cameras work how I want, this is needed.
-            Slice       verts;    // Slice into _vertBuffer
+
+            // Command specific
+            BucketCommand command;
+            BucketData    data;
         }
         
         Window              _window;
@@ -328,9 +344,11 @@ final class Renderer
         {            
             Shader previousShader;
             CameraInfo previousCam;
+            TextureBase previousTexture;
 
             foreach(bucket; this._buckets[0..$])
             {
+                // Perform common bucket operations.
                 // Change the shader/camera data
                 if(bucket.shader != previousShader || bucket.camera != previousCam)
                 {
@@ -339,42 +357,56 @@ final class Renderer
                     bucket.shader.setUniform("projection", bucket.camera.projection);
                     previousShader = bucket.shader;
                     previousCam    = bucket.camera;
+
+                    // Textureless renders can be used for things like shapes
+                    if(bucket.texture !is null && bucket.texture != previousTexture)
+                    {
+                        bucket.texture.use();
+                        glActiveTexture(GL_TEXTURE0);
+                    }
+                    else
+                        glBindTexture(GL_TEXTURE_2D, 0);
+                    previousTexture = bucket.texture;
                 }
 
-                // Create the new indicies
-                assert((bucket.verts.end - bucket.verts.start) % 4 == 0);
-                auto quadCount = (bucket.verts.end - bucket.verts.start) / 4;
-                auto previous  = uint.max; // We add 1 right after, so uint.max becomes 0
-                uint[6] temp;
-                this._indexBuffer.length = 0;
-                foreach(i; 0..quadCount)
+                // TODO: Move this into a function/seperate functions
+                switch(bucket.command)
                 {
-                    temp = 
-                    [
-                        previous+1, previous+2, previous+3,
-                        previous+2, previous+3, previous+4
-                    ];
-                    previous += 4;
-                    this._indexBuffer ~= temp;
-                }
+                    case BucketCommand.Pool:
+                        this.drawBuffer(bucket.data.poolObject.buffer, cast(uint)(bucket.data.poolObject.buffer.eboSize / uint.sizeof));
+                        break;
 
-                // Update the VBO with the new data
-                this._quadBuffer.verts    = this._vertBuffer[bucket.verts.start..bucket.verts.end];
-                this._quadBuffer.indicies = this._indexBuffer[0..$];
-                
-                this._quadBuffer.upload();
-                debug GL.checkForError();
+                    case BucketCommand.Quads:
+                        // Create the new indicies
+                        assert((bucket.data.quadVerts.end - bucket.data.quadVerts.start) % 4 == 0);
+                        auto quadCount = (bucket.data.quadVerts.end - bucket.data.quadVerts.start) / 4;
+                        auto previous  = uint.max; // We add 1 right after, so uint.max becomes 0
+                        uint[6] temp;
+                        this._indexBuffer.length = 0;
+                        foreach(i; 0..quadCount)
+                        {
+                            temp = 
+                            [
+                                previous+1, previous+2, previous+3,
+                                previous+2, previous+3, previous+4
+                            ];
+                            previous += 4;
+                            this._indexBuffer ~= temp;
+                        }
 
-                // Textureless renders can be used for things like shapes
-                if(bucket.texture !is null)
-                {
-                    bucket.texture.use();
-                    glActiveTexture(GL_TEXTURE0);
+                        // Update the VBO with the new data
+                        this._quadBuffer.verts    = this._vertBuffer[bucket.data.quadVerts.start..bucket.data.quadVerts.end];
+                        this._quadBuffer.indicies = this._indexBuffer[0..$];
+                        
+                        this._quadBuffer.upload();
+                        debug GL.checkForError();
+                        
+                        this.drawBuffer(this._quadBuffer, cast(uint)this._quadBuffer.indicies.length);
+                        break;
+
+                    default:
+                        assert(false);
                 }
-                else
-                    glBindTexture(GL_TEXTURE_2D, 0);
-                
-                this.drawBuffer(this._quadBuffer);
             }
 
             this._buckets.length = 0;
@@ -427,10 +459,21 @@ final class Renderer
         /// Draws a `Sprite` to the screen.
         void drawSprite(Sprite sprite)
         {
-            import std.algorithm : countUntil;
             assert(sprite !is null);
 
             this.drawQuad(sprite.texture, sprite.verts, this._textureShader);
+        }
+
+        /// Draws a `SpritePool`
+        void drawPool(SpritePool pool)
+        {
+            assert(pool !is null);
+
+            auto bucket = RenderBucket(pool.texture, this._textureShader, CameraInfo(this.camera.viewMatrix, this.camera._ortho),
+                                       BucketCommand.Pool);
+            bucket.data.poolObject = pool;
+
+            this._buckets ~= bucket;
         }
 
         /// Draws `Text` to the screen.
@@ -446,11 +489,11 @@ final class Renderer
 
         /// Draws a VertexBuffer
         pragma(inline, true)
-        void drawBuffer(VB)(ref VB buffer)
+        void drawBuffer(VB)(ref VB buffer, uint elementCount)
         if(isVertexBuffer!VB)
         {
             glBindVertexArray(buffer.vao);
-            glDrawElements(buffer.dataType, cast(uint)buffer.indicies.length, GL_UNSIGNED_INT, null);
+            glDrawElements(buffer.dataType, elementCount, GL_UNSIGNED_INT, null);
         }
 
         /// Sets whether to draw in wireframe or not.
@@ -508,14 +551,16 @@ final class Renderer
         || lastBucket.shader != shader
         || lastBucket.camera != camera)
         {
-            this._buckets ~= RenderBucket(texture, shader, camera, vertSlice);
+            auto bucket = RenderBucket(texture, shader, camera, BucketCommand.Quads);
+            bucket.data.quadVerts = vertSlice;
+            this._buckets ~= bucket;
         }
         else
         {
             // If we get here, then we can just replace the end with the vertSlice
             assert(lastBucket != RenderBucket.init);
-            assert(vertSlice.start == lastBucket.verts.end);
-            this._buckets[$-1].verts.end = vertSlice.end;
+            assert(vertSlice.start == lastBucket.data.quadVerts.end);
+            this._buckets[$-1].data.quadVerts.end = vertSlice.end;
         }
     }
 }

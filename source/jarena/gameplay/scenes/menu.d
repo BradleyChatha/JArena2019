@@ -24,7 +24,8 @@ final class MenuScene : Scene
                                   AnimationViewerScene, 
                                   SpriteAtlasViewerScene,
                                   JoshyClickerScene,
-                                  StressTest_Render1Scene);
+                                  StressTest_Render1Scene,
+                                  StressTest_Render2Scene);
 
         StackContainer _list;
     }
