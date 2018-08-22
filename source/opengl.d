@@ -150,31 +150,41 @@ abstract static class GL
         }
 
         /// Enables OpenGL debug logging.
+        ///
+        /// If the OpenGL version isn't OpenGL 4.3 then this function is no-op
         void debugLogEnable()
         {
             trace("Enabling the OpenGL debug log.");
 
-            if(GL.VERSION < GLVersion.gl43 || !DerelictGL3.isExtensionLoaded(KHR_debug))
+            if(GL.VERSION < GLVersion.gl43)
             {
                 warning("The current version of OpenGL doesn't support the 'KHR_debug' extension");
                 return;
             }
 
-            glEnable(GL_DEBUG_OUTPUT);
-            glDebugMessageCallback(&GL.debugLogFunction, null);
-            //GL.debugLogFilter(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_ERROR, GL_DONT_CARE, Blacklist.no);
+            static if(GL.VERSION >= GLVersion.gl43)
+            {
+                glEnable(GL_DEBUG_OUTPUT);
+                glDebugMessageCallback(&GL.debugLogFunction, null);
+                //GL.debugLogFilter(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_ERROR, GL_DONT_CARE, Blacklist.no);
 
-            uint id = 131185;
-            glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 1, &id, 0);
+                uint id = 131185;
+                glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 1, &id, 0);
 
-            GL.checkForError();
+                GL.checkForError();
+            }
         }
 
         /// Sets the filter for OpenGL's logger. https://www.khronos.org/opengl/wiki/Debug_Output#Logging
+        ///
+        /// If the OpenGL version isn't OpenGL 4.3 then this function is no-op
         void debugLogFilter(GLenum source, GLenum type, GLenum severity, Blacklist blacklist = Blacklist.no)
         {
-            infof("Setting log filter to (S:%s | T:%s | SEV:%s | BLACKLIST:%s)", source, type, severity, blacklist);
-            glDebugMessageControl(source, type, severity, 0, null, blacklist ? 0 : 1);
+            static if(GL.VERSION >= GLVersion.gl43)
+            {
+                infof("Setting log filter to (S:%s | T:%s | SEV:%s | BLACKLIST:%s)", source, type, severity, blacklist);
+                glDebugMessageControl(source, type, severity, 0, null, blacklist ? 0 : 1);
+            }
         }
 
         /++
@@ -252,6 +262,7 @@ abstract static class GL
     }
 
     // Debug log functions
+    static if(GL.VERSION >= GLVersion.gl43)
     private static final
     {
         string debugSourceToString(GLenum source) nothrow

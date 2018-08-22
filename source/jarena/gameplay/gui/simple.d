@@ -271,3 +271,79 @@ class SimpleLabel : Control
         }
     }
 }
+
+/++
+ + A simple `TextInput` control that will place the input text inside of a `RectangleShape`.
+ + ++/
+class SimpleTextBox : TextInput
+{
+    enum DEFAULT_PADDING = vec2(2, 2);
+
+    private
+    {
+        RectangleShape _rect;
+        vec2           _padding;
+    }
+
+    public
+    {
+        ///
+        this(Text text, vec2 position, vec2 size, vec2 padding = DEFAULT_PADDING)
+        {
+            this._padding = padding;
+            this._rect = new RectangleShape();
+            super(text, position, size);
+            this.size = size;
+            this.colour = Colour.white;
+
+            this._rect.borderSize = 1;
+            this._rect.borderColour = Colour.black;
+        }
+
+        /// Padding between the the top-left corner of the text object, and the top-left corner of the rectangle shape.
+        @property @safe @nogc
+        ref inout(vec2) padding() nothrow inout
+        {
+            return this._padding;
+        }
+    }
+
+    override
+    {
+        protected void onNewParent(UIElement newParent, UIElement oldParent){}
+        protected void onChildStateChanged(UIElement child, StateChange change){}
+        protected void onAddChild(UIElement child){}
+        protected void onRemoveChild(UIElement child){}
+
+        protected void onSizeChanged(vec2 oldSize, vec2 newSize)
+        {
+            this._rect.size = newSize;
+            super.textArea = newSize;
+        }
+        
+        protected void onPositionChanged(vec2 oldPos, vec2 newPos)
+        {
+            super.onPositionChanged(oldPos, newPos + padding);
+            this._rect.position = newPos;
+        }
+
+        protected void onColourChanged(Colour oldColour, Colour newColour)
+        {
+            this._rect.colour = newColour;
+        }
+
+        public void onUpdate(InputManager input, Duration deltaTime)
+        {
+            if(input.wasMouseButtonTapped(MouseButton.Left))
+                super.isActive = this._rect.area.contains!vec2(input.mousePosition);
+
+            super.onUpdate(input, deltaTime);
+        }
+
+        public void onRender(Window window)
+        {
+            window.renderer.drawRectShape(this._rect);
+            super.onRender(window);
+        }
+    }
+}

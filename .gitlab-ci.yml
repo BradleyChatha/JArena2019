@@ -26,7 +26,6 @@ build_debug_x64:
         - dub build --build=debug --arch=x86_64
     variables:
         BUILD_ARCH: "64"
-    allow_failure: true
 
 build_release_x86:
     stage: build
@@ -41,4 +40,3 @@ build_release_x64:
         - dub build --build=release --arch=x86_64
     variables:
         BUILD_ARCH: "64"
-    allow_failure: true

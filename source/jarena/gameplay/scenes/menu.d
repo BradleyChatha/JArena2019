@@ -23,6 +23,7 @@ final class MenuScene : Scene
                                   DebugMenuScene,
                                   AnimationViewerScene, 
                                   SpriteAtlasViewerScene,
+                                  JoshyClickerScene,
                                   StressTest_Render1Scene);
 
         StackContainer _list;

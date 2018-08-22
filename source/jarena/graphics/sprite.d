@@ -543,6 +543,29 @@ class Sprite : ITransformable
         }
 
         /++
+         + Sets the scale of the transformable object (default 1).
+         +
+         + Params:
+         +  amount = The amount to scale it by.
+         + ++/
+        @property @safe @nogc
+        void scale(vec2 amount) nothrow
+        {
+            this._transform.scale = amount;
+            this._transform.markDirty();
+        }
+
+        /++
+         + Returns:
+         +  The amount to scale it by.
+         + ++/
+        @property @safe @nogc
+        const(vec2) scale() nothrow const
+        {
+            return this._transform.scale;
+        }
+
+        /++
          + Returns:
          +  The origin of this object.
          + ++/
@@ -683,7 +706,7 @@ class Sprite : ITransformable
         RectangleF bounds() nothrow
         {
             auto rect = this.textureRect;
-            return RectangleF(this.position, vec2(rect.size));
+            return RectangleF(this.position, vec2(rect.size) * this.scale);
         }
 
         /// Internal use only.

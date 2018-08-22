@@ -14,6 +14,8 @@ class Test : Scene, IPostBox
     StackContainer gui2;
     RectangleShape[2] centerLines;
     TextObject someText;
+    TextObject inputText;
+    SimpleTextBox inputBox;
     //GridContainer  grid;
 
     public override
@@ -76,8 +78,13 @@ class Test : Scene, IPostBox
             gui2.addChild(new TestControl(vec2(0,0), vec2(25, 60), Colour(0, 128, 128, 255)));
 
             auto font = Systems.assets.get!Font("Crackdown");
-            this.someText = new TextObject(font, "A B C D E F G 1 2 3", vec2(0,550), 14, Colour(128, 0, 128, 255));
-            super.register("Some random text", someText);
+            this.someText  = new TextObject(font, "A B C D E F G 1 2 3", vec2(0,550), 14, Colour(128, 0, 128, 255));
+            this.inputText = new TextObject(font, "", vec2(0, 650), 14, Colour(128, 0, 128, 255));
+            super.register("Some random text", this.someText);
+            super.register("Changeable text", this.inputText);
+
+            this.inputBox = new SimpleTextBox(new Text(font, "Text Here", vec2(0), 14, Colour.black), vec2(0, 250), vec2(200, 50), vec2(2, 20));
+            super.gui.addChild(this.inputBox);
 
             size_t i = 0;
             while(true)
@@ -98,11 +105,13 @@ class Test : Scene, IPostBox
         void onSwap(PostOffice office)
         {
             office.subscribe(Window.Event.MouseWheelMoved, &this.onMouseWheel);
+            super.manager.input.listenForText = true;
         }
 
         void onUnswap(PostOffice office)
         {
             office.unsubscribe(&this.onMouseWheel);
+            super.manager.input.listenForText = false;
         }
 
         void onMouseWheel(PostOffice _, Mail mail)
@@ -121,6 +130,9 @@ class Test : Scene, IPostBox
             auto speedHorizontal = vec2(160 * deltaTime.asSeconds, 0);
             auto speedVertical   = vec2(0, 160 * deltaTime.asSeconds);
             auto speedRotate     = 5 * deltaTime.asSeconds;
+            
+            if(input.textInput.length > 0)
+                this.inputText.text.text = input.textInput;
 
             if(input.isKeyDown(Scancode.D))
                 this.tahn.move(speedHorizontal);
@@ -131,7 +143,7 @@ class Test : Scene, IPostBox
             if(input.isKeyDown(Scancode.S))
                 this.tahn.move(speedVertical);
 
-            if(input.wasKeyTapped(Scancode.BACKSPACE))
+            if(input.wasKeyTapped(Scancode.F1))
                 super.manager.swap!MenuScene;
 
             if(input.isKeyDown(Scancode.E))

@@ -51,7 +51,7 @@ struct Rectangle(T)
     }
 
     ///
-    bool contains(Vect)(Vect point)
+    bool contains(Vect)(Vect point) const
     if(isVector!Vect && Vect.dimension == 2)
     {
         return point.x >= this.position.x

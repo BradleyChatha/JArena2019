@@ -17,6 +17,7 @@ files {
 namedFiles type="Texture" {
     namedFile "tex_TestAtlas" "Textures/Atlas.png"
     namedFile "tex_Explosion" "Textures/Explosion.png"
+    namedFile "tex_Joshy"     "Textures/Joshy.png"
 }
 
 // Sounds/Music
