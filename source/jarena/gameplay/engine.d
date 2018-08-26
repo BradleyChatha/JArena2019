@@ -65,6 +65,7 @@ final class Engine
             {
                 tracef("Loading config file from '%s'", ENGINE_CONFIG_PATH);
                 this._config.updateFromSdlTag(parseFile(ENGINE_CONFIG_PATH));
+                trace(this._config.saveToSdlTag().toSDLDocument());
             }
             else
                 tracef("No config file exists. Please create one at '%s'", ENGINE_CONFIG_PATH);
