@@ -276,7 +276,7 @@ class LoaderSDL : Loader
  + ++/
 abstract class LoaderExtensionSDLNamedFile : LoaderExtension
 {
-    override final Asset[] onLoadAssets(Loader loader, const(ubyte[]) data)
+    override final PackageAsset[] onLoadAssets(Loader loader, const(ubyte[]) data)
     {
         // The data is a NamedFileInfo[] that's casted to a ubyte[].
         auto array = cast(LoaderSDL.NamedFileInfo[])data;
@@ -305,7 +305,7 @@ abstract class LoaderExtensionSDLNamedFile : LoaderExtension
      + Returns:
      +  See `Loader.onLoadAssets`.
      + ++/
-    abstract Asset[] onLoadNamedFileAssets(Loader loader, string assetName, string assetPath, string assetType, string[string] attributes);
+    abstract PackageAsset[] onLoadNamedFileAssets(Loader loader, string assetName, string assetPath, string assetType, string[string] attributes);
 }
 
 /++
@@ -317,7 +317,7 @@ abstract class LoaderExtensionSDLNamedFile : LoaderExtension
  + ++/
 abstract class LoaderExtensionSDLFile : LoaderExtension
 {
-    override final Asset[] onLoadAssets(Loader loader, const(ubyte[]) data)
+    override final PackageAsset[] onLoadAssets(Loader loader, const(ubyte[]) data)
     {
         // The data is a string, that's casted to a ubyte[].
         // The string is the contents of the file specified by the 'file' or 'glob' tags.
@@ -342,7 +342,7 @@ abstract class LoaderExtensionSDLFile : LoaderExtension
      + Returns:
      +  See `Loader.onLoadAssets`.
      + ++/
-    abstract Asset[] onLoadFileAssets(Loader loader, Tag fileTag);
+    abstract PackageAsset[] onLoadFileAssets(Loader loader, Tag fileTag);
 }
 
 /++
@@ -375,19 +375,19 @@ abstract class LoaderExtensionSDLFile : LoaderExtension
  + ++/
 class NamedFileExtensionSDL : LoaderExtensionSDLNamedFile
 {
-    override Asset[] onLoadNamedFileAssets(Loader loader, string assetName, string assetPath, string assetType, string[string] attributes)
+    override PackageAsset[] onLoadNamedFileAssets(Loader loader, string assetName, string assetPath, string assetType, string[string] attributes)
     {
         switch(assetType)
         {
             case "Texture":
-                return [Asset(assetName, new Texture(assetPath))];
+                return [PackageAsset(assetName, new Texture(assetPath))];
 
             case "Sound":
                 auto isStreaming = (attributes.get("stream", "no") == "yes") ? Yes.streaming : No.streaming;
-                return [Asset("", new DelayedLoadAsset(() => [Asset(assetName, new Sound(assetPath, isStreaming))]))]; // FMOD crashes in fibers
+                return [PackageAsset("", new DelayedLoadAsset(() => [PackageAsset(assetName, new Sound(assetPath, isStreaming))]))]; // FMOD crashes in fibers
 
             case "Font":
-                return [Asset(assetName, new Font(assetPath))];
+                return [PackageAsset(assetName, new Font(assetPath))];
 
             default:
                 throw new Exception(assetType);
@@ -462,7 +462,7 @@ class SpriteAtlasExtensionSDL : LoaderExtensionSDLFile
         }
     }
 
-    override Asset[] onLoadFileAssets(Loader loader, Tag sdl)
+    override PackageAsset[] onLoadFileAssets(Loader loader, Tag sdl)
     {
         auto name = sdl.expectTagValue!string("name");
         infof("Loading SpriteAtlas called '%s'", name);
@@ -501,7 +501,7 @@ class SpriteAtlasExtensionSDL : LoaderExtensionSDLFile
             }
         }
 
-        return [Asset(name, atlas)];
+        return [PackageAsset(name, atlas)];
     }
 }
 
@@ -510,7 +510,7 @@ class AnimationExtensionSDL : LoaderExtensionSDLFile
 {
     private
     {
-        Asset[] handleTag(Loader loader, Tag sdl)
+        PackageAsset[] handleTag(Loader loader, Tag sdl)
         {
             auto type = sdl.expectTagValue!string("type");
 
@@ -527,9 +527,9 @@ class AnimationExtensionSDL : LoaderExtensionSDLFile
             }
         }
 
-        Asset[] onLoadList(Loader loader, Tag tag)
+        PackageAsset[] onLoadList(Loader loader, Tag tag)
         {
-            Asset[] assets;
+            PackageAsset[] assets;
 
             foreach(child; tag.tags)
             {
@@ -550,7 +550,7 @@ class AnimationExtensionSDL : LoaderExtensionSDLFile
             return assets;
         }
 
-        Asset[] onLoadSpriteSheet(Loader loader, Tag tag)
+        PackageAsset[] onLoadSpriteSheet(Loader loader, Tag tag)
         {
             // Read in SDLang data
             auto name = tag.expectTagValue!string("name");
@@ -575,11 +575,11 @@ class AnimationExtensionSDL : LoaderExtensionSDLFile
             info.delayPerFrame = frameDelayMS;
             info.repeat        = repeat;
 
-            return [Asset(name, info)];
+            return [PackageAsset(name, info)];
         }
     }
 
-    override Asset[] onLoadFileAssets(Loader loader, Tag fileTag)
+    override PackageAsset[] onLoadFileAssets(Loader loader, Tag fileTag)
     {
         return this.handleTag(loader, fileTag);
     }

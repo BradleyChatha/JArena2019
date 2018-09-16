@@ -359,7 +359,7 @@ final class Renderer
                     previousCam    = bucket.camera;
 
                     // Textureless renders can be used for things like shapes
-                    if(bucket.texture !is null && bucket.texture != previousTexture)
+                    if(bucket.texture !is null && bucket.texture != previousTexture && !bucket.texture.isDisposed)
                     {
                         bucket.texture.use();
                         glActiveTexture(GL_TEXTURE0);
@@ -582,7 +582,15 @@ final class RendererResources
 
         void bind()
         {
+            assert(!this.isNull, "The texture handle is null.");
+
             this._texture.use();
+        }
+
+        void dispose()
+        {
+            this._resources = null;
+            this._texture = null;
         }
 
         bool opEquals(const ref TextureHandle other)
