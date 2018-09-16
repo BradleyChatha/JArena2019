@@ -17,6 +17,11 @@ private
  +  can generate a lot of objects needed to help with rendering text.
  +  The more reuse, the less wasted GPU memory and RAM.
  +
+ +  When this class is disposed, certain functions of `Text` become inaccurate.
+ +  Namely, it won't change it's verticies when it's given new text, since it needs information from it's font.
+ +  Also, `Text.getRectForChar` will return either an incorrectly sized rectangle of a previous character, or
+ +  `RectangleF.init`.
+ +
  + Issues:
  +  Currently only a single texture atlas, which also has a fixed size, is generated
  +  per character size, so a size that is too large will mean that there isn't enough space
@@ -26,7 +31,7 @@ private
  +  Currently, only the first 128 characters (ASCII) (including invisible ones...) are generated
  +  for each character size, anything beyond that won't render/will crash the program.
  + ++/
-class Font
+class Font : IDisposable
 {
     import derelict.freetype;
 
@@ -63,6 +68,7 @@ class Font
             import opengl;
 
             assert((size in this._sets) is null, "Bug, this shouldn't have been called.");
+            assert(!this.isDisposed, "This font as been disposed of.");
 
             CharSet set;
             set.texture = new MutableTexture(uvec2(256, 256));
@@ -73,6 +79,8 @@ class Font
         void generateGlyph(SetSize setSize, SetGLAlignment setAlignment)(CharCode code, ref CharSet set, CharSize size = CharSize.max)
         {
             import opengl;
+            
+            assert(!this.isDisposed, "This font as been disposed of.");
 
             // Set the size/alignment if we're told to handle that
             static if(setSize)
@@ -85,16 +93,19 @@ class Font
             auto errCode = FT_Load_Char(this._font, code, FT_LOAD_RENDER);
             if(errCode != 0)
             {
-                errorf("FreeType could not load the character for code %s. Error = %s", code, errCode);
+                errorf("FreeType could not load the character for code %s(%s). Error = %s", code, cast(int)code, errCode);
                 return;
             }
 
             // Stitch it into the character set's texture atlas.
             RectangleI area;
             auto mapSize = ivec2(this._font.glyph.bitmap.width, this._font.glyph.bitmap.rows);
-            set.texture.stitch!GL_RED(this._font.glyph.bitmap.buffer[0..(mapSize.y * mapSize.x)],
-                                      mapSize,
-                                      area);
+            if(mapSize != ivec2(0, 0))
+            {
+                set.texture.stitch!GL_RED(this._font.glyph.bitmap.buffer[0..(mapSize.y * mapSize.x)],
+                                          mapSize,
+                                          area);
+            }
 
             // Then store the information about the glyph.
             set.glyphs[code] = Glyph(
@@ -111,6 +122,7 @@ class Font
         /// Ensures that the given CharCode has been generated for the given CharSize.
         void ensureGlyphIsGenerated(CharSize size, CharCode code)
         {
+            assert(!this.isDisposed, "This font as been disposed of.");
             auto set = this.getSetForSize(size);
 
             if((code in set.glyphs) is null)
@@ -125,6 +137,8 @@ class Font
             import std.algorithm : filter;
             import std.utf       : byUTF;
             import opengl;
+            
+            assert(!this.isDisposed, "This font as been disposed of.");
 
             auto set = this.getSetForSize(size);
 
@@ -172,17 +186,40 @@ class Font
             
             // Load an instance of FT for this font.
             auto error = FT_Init_FreeType(&this._ft);
-            fatalf(error != 0,
+            enforceAndLogf(error == 0,
                 "FreeType was unable to initialise. Error code = %s",
                 error
             );
 
             // Create a face for it.
             error = FT_New_Face(this._ft, fontPath.toStringz, 0,  &this._font);
-            fatalf(error != 0,
+            enforceAndLogf(error == 0,
                 "Failed to load font. Error code = %s",
                 error
             );
+        }
+
+        /// Post Frame Dispose.
+        ///
+        /// Affects all `Text` objects using this font.
+        void dispose(ScheduledDispose scheduled = ScheduledDispose.no)
+        {
+            if(this.isDisposed)
+                return;
+
+            if(!scheduled)
+                Systems.shortTermScheduler.postFrameDispose(this);
+            else
+            {
+                foreach(set; this._sets)
+                    set.texture.dispose(ScheduledDispose.yes);
+
+                FT_Done_Face(this._font);
+                FT_Done_FreeType(this._ft);
+
+                this._font = null;
+                this._ft = null;
+            }
         }
 
         /++
@@ -192,15 +229,28 @@ class Font
          + ++/
         void dumpAllTextures(string name)
         {
+            assert(!this.isDisposed, "This font as been disposed of.");
+
             import std.format : format;
             foreach(charSize, set; this._sets)
                 set.texture.dump(format("%s_%s", name, charSize));
         }
+        
+        ///
+        @property
+        bool isDisposed()
+        {
+            return this._ft is null;
+        }
 
         ~this()
         {
-            FT_Done_Face(this._font);
-            FT_Done_FreeType(this._ft);
+            if(this._font !is null)
+                FT_Done_Face(this._font);
+
+            if(this._ft !is null)
+                FT_Done_FreeType(this._ft);
+            
             this._sets = null;
         }
     }
@@ -459,6 +509,13 @@ class Text : ITransformable
         {
             import std.utf : byUTF;
 
+            if(this.font.isDisposed)
+            {
+                this._text = text;
+                this._charRects.length = text.length;
+                return;
+            }
+
             this._font.ensureTextGlyphsAreGenerated(this.charSize, text);
 
             auto set = this._font.getSetForSize(this.charSize);
@@ -572,6 +629,11 @@ class Text : ITransformable
         /// Internal/debug use only
         @property @trusted
         TextureBase texture()
+        out(tex)
+        {
+            assert(tex !is null, "Null Font Texture");
+        }
+        do
         {
             auto set = this._font.getSetForSize(this.charSize);
             return set.texture;

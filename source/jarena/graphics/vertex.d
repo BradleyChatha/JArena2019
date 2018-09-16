@@ -376,8 +376,8 @@ struct VertexBuffer(BufferFeatures features)
             {
                 import std.format;
                 assert(false, format("Attmpted to write outside of the vertex buffer.\n"
-                              ~ "Start: %s (%s b) | Data: %s (%s b) | Buffer: %s b",
-                                start, startInBytes, data.length, dataSizeBytes, bufferSize));
+                                   ~ "Start: %s (%s b) | Data: %s (%s b) | Buffer: %s b",
+                                      start, startInBytes, data.length, dataSizeBytes, bufferSize));
             }
 
             // Then upload the data

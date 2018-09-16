@@ -12,7 +12,7 @@ final class AssetManager
     private
     {
         Package[string] _packages;
-        Cache!Asset     _assets;
+        Cache!PackageAsset     _assets;
     }
 
     package
@@ -25,7 +25,7 @@ final class AssetManager
             errorf((pack.name in this._packages) !is null, "Duplicate package name, '%s'.", pack.name);
 
             foreach(kv; pack.assets.byKeyValue)
-                this._assets.add(kv.key, cast(Asset)kv.value);
+                this._assets.add(kv.key, cast(PackageAsset)kv.value);
 
             destroy(pack.assets);
             this._packages[pack.name] = pack;
@@ -37,7 +37,7 @@ final class AssetManager
         ///
         this()
         {
-            this._assets = new Cache!Asset();
+            this._assets = new Cache!PackageAsset();
         }
 
         /// TODO: Document
@@ -46,7 +46,7 @@ final class AssetManager
             import std.exception : enforce;
 
             auto result = this._assets.get(assetName);
-            enforce(result != Asset.init, "The asset named '"~assetName~"' does not exist.");
+            enforce(result != PackageAsset.init, "The asset named '"~assetName~"' does not exist.");
 
             auto casted = cast(T)result.value;
             assert(casted !is null, "Cannot convert the asset called '"~assetName~"' into a '"~T.stringof~"'");

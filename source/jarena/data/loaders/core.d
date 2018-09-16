@@ -122,7 +122,7 @@ private
  + ++/
 class DelayedLoadAsset
 {
-    alias FuncT = Asset[] delegate();
+    alias FuncT = PackageAsset[] delegate();
 
     /// The function that loads in the assets.
     FuncT loadFunc;
@@ -138,14 +138,14 @@ class DelayedLoadAsset
 
 package struct Package
 {
-    string      name;
-    Cache!Asset assets;
+    string name;
+    Cache!PackageAsset assets;
 }
 
 /++
  + Contains information about an asset.
  + ++/
-struct Asset
+struct PackageAsset
 {
     /// The name of the asset. Must be unique between packages.
     string name;
@@ -195,7 +195,7 @@ abstract class Loader
         // Variables for loading
         LoadingInfo   _currentTask;
         LoadingInfo[] _loadingList;
-        Asset[]       _lastResult; // After a fiber is done loading, it will set this to the result.
+        PackageAsset[]       _lastResult; // After a fiber is done loading, it will set this to the result.
         Package       _currentPackage;
         Object        _lastLoadedAsset; // Used for waitForAsset.
 
@@ -227,10 +227,10 @@ abstract class Loader
                 assert(false, "It's still somehow running?");
         }
 
-        void onAssetLoad(Asset asset)
+        void onAssetLoad(PackageAsset asset)
         {
             if(this._currentPackage.assets is null)
-                this._currentPackage.assets = new Cache!Asset();
+                this._currentPackage.assets = new Cache!PackageAsset();
 
             // Perform the delayed loading
             auto delayed = (cast(DelayedLoadAsset)asset.value);
@@ -276,7 +276,7 @@ abstract class Loader
             if(this._currentPackage.assets !is null)
             {
                 auto cached = this._currentPackage.assets.get(assetName);
-                if(cached != Asset.init)
+                if(cached != PackageAsset.init)
                 {
                     infof("No need to wait for asset '%s' as it's already cached.", assetName);
                     return cached.value;
@@ -521,7 +521,7 @@ abstract class LoaderExtension
          + Returns:
          +  An array of all the assets that could be loaded from the given data.
          + ++/
-        Asset[] onLoadAssets(Loader loader, const(ubyte[]) data);
+        PackageAsset[] onLoadAssets(Loader loader, const(ubyte[]) data);
 
         /++
          + A helper function to easily check and treat the given data as valid UTF-8 text.
@@ -546,7 +546,7 @@ abstract class LoaderExtension
          + with a certain name is loaded in.
          +
          + Params:
-         +  T         = The type to cast the Asset to.
+         +  T         = The type to cast the PackageAsset to.
          +  loader    = The loader that is using this extension.
          +  assetName = The name of the asset to wait for.
          +

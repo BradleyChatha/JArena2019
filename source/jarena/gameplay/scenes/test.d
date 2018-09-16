@@ -179,6 +179,15 @@ class Test : Scene, IPostBox
                     gui.children[0].parent = gui2;
             }
 
+            if(input.wasKeyTapped(Scancode.F1))
+                this.tahn.texture.dispose();
+
+            if(input.wasKeyTapped(Scancode.F2))
+            {
+                Systems.assets.get!Font("Calibri").dispose();
+                Systems.assets.get!Font("Crackdown").dispose();
+            }
+
             super.camera.center = this.tahn.position + (this.tahn.bounds.size / 2);
 
             super.updateScene(deltaTime);

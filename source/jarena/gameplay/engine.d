@@ -91,10 +91,11 @@ final class Engine
             this._window.vsync = this._config.vsync.get(WINDOW_DEFAULT_VSYNC);
 
             // Setup init info
-            Systems.window       = this._window;
-            Systems.assets       = new AssetManager();
-            Systems.loaderSdlang = new LoaderSDL();
-            Systems.audio        = this._audio;
+            Systems.window              = this._window;
+            Systems.assets              = new AssetManager();
+            Systems.loaderSdlang        = new LoaderSDL();
+            Systems.audio               = this._audio;
+            Systems.shortTermScheduler  = new ShortTermScheduler();
             Systems.finalise();
 
             Systems.renderResources.compoundTextureSize = this._config.compoundTextureSize.get(DEFAULT_COMPOUND_SIZE);
@@ -152,6 +153,8 @@ final class Engine
             this._window.renderer.displayChanges();
             checkSDLError();
             GL.checkForError();
+
+            Systems.shortTermScheduler.onPostFrame();
         }
 
         ///
@@ -195,6 +198,48 @@ final class Engine
         Nullable!bool  vsync;
         Nullable!bool  debugControls;
         Nullable!uvec2 compoundTextureSize;
+    }
+}
+
+/++
+ + A system that is used to schedule certain tasks for an upcoming point of time.
+ + ++/
+class ShortTermScheduler
+{
+    private
+    {
+        IDisposable[] _endOfFrameDisposables;
+
+        void onPostFrame()
+        {
+            foreach(disposable; this._endOfFrameDisposables)
+                disposable.dispose(ScheduledDispose.yes);
+
+            this._endOfFrameDisposables.length = 0;
+        }
+    }
+
+    public
+    {
+        /++
+         + Scheduels the given `IDisposable` to have it's `IDisposable.dispose` called, with the
+         + 'scheduled' parameter set to `ScheduledDispose.yes`, after the current frame has been updated and rendered.
+         +
+         + Schedule a dispose for this time frame if your object might need to be used for one last frame before it can
+         + safely be disposed of.
+         +
+         + Assertions:
+         +  `disposable` can not be `null`.
+         +
+         + Params:
+         +  disposable = The `IDisposable` to dispose of.
+         + ++/
+        void postFrameDispose(IDisposable disposable)
+        {
+            assert(disposable !is null);
+
+            this._endOfFrameDisposables ~= disposable;
+        }
     }
 }
 

@@ -20,7 +20,7 @@ private
  +  This class mostly exists to make it easier for the internal rendering code to work with different
  +  texture types, so only the bare minimum is needed for inheriting classes.
  + ++/
-abstract class TextureBase
+abstract class TextureBase : IDisposable
 {
     public abstract
     {
@@ -95,6 +95,21 @@ class MutableTexture : TextureBase
                 glDeleteTextures(1, &this._textureID);
         }
 
+        /// Post Frame Dispose
+        void dispose(ScheduledDispose scheduled = ScheduledDispose.no)
+        {
+            if(this.isDisposed)
+                return;
+
+            if(!scheduled)
+                Systems.shortTermScheduler.postFrameDispose(this);
+            else
+            {
+                glDeleteTextures(1, &this._textureID);
+                this._textureID = 0;
+            }
+        }
+
         /++
          + Binds this texture as the active texture.
          +
@@ -102,14 +117,22 @@ class MutableTexture : TextureBase
          + ++/
         override void use()
         {
+            assert(!this.isDisposed, "This texture has been disposed of.");
             glBindTexture(GL_TEXTURE_2D, this._textureID);
         }
 
         /// Returns: The size of the entire texture.
-        @safe @nogc
+        @property @safe @nogc
         override const(uvec2) size() nothrow const
         {
             return this._size;
+        }
+
+        ///
+        @property
+        bool isDisposed()
+        {
+            return this._textureID == 0;
         }
 
         /++
@@ -138,12 +161,12 @@ class MutableTexture : TextureBase
          + ++/
         bool stitch(GLenum ColourFormat)(const ubyte[] pixels, const ivec2 size, out RectangleI area)
         {
-            import std.experimental.logger;
-
             enum ColourInfo = GL.getInfoFor!ColourFormat;
 
             // Error checking
-            fatalf((pixels.length % ColourInfo.bytesPerPixel) != 0,
+            assert(!this.isDisposed, "This texture has been disposed of.");
+
+            enforceAndLogf((pixels.length % ColourInfo.bytesPerPixel) == 0,
                 "The given pixel array needs to be a multiple of %s. It's length is %s.",
                 ColourInfo.bytesPerPixel, pixels.length
             );
@@ -151,7 +174,7 @@ class MutableTexture : TextureBase
             // Calculate how many bytes there are per row, and in total, then make sure it matches up with the array given.
             auto bytesPerRow    = (ColourInfo.bytesPerPixel * size.x);
             auto expectedBytes  = (size.y * bytesPerRow);
-            fatalf(pixels.length != expectedBytes,
+            enforceAndLogf(pixels.length == expectedBytes,
                 "The given pixel array needs to have a length of %s, to match the given size of %s. It's length is %s",
                 expectedBytes, size, pixels.length
             );
@@ -167,7 +190,8 @@ class MutableTexture : TextureBase
             // Using our current algorithm, once we reach the bottom of the texture, there's no room.
             if(size.y + this.nextY > this._size.y)
             {
-                info("There is not enough room for the texture");
+                warningf("There is not enough room for the texture. MegaH: %s. CursorY: %s. TextureH: %s",
+                          this._size.y, this.nextY, size.y);
                 return false;
             }
 
@@ -360,6 +384,26 @@ class Texture : TextureBase
         }
 
         /++
+         + Post Frame Dispose.
+         +
+         + Notes:
+         +  Because under the hood this class references a mega texture, disposing this object
+         +  won't dispose of the underlying texture. In it's current form, it doesn't actually
+         +  do much at all, but in the future once a better texture packing algorithm is implemented,
+         +  the space being used up in the mega texture can be flagged for reuse by disposing of textures.
+         + ++/
+        void dispose(ScheduledDispose scheduled = ScheduledDispose.no)
+        {
+            if(this.isDisposed)
+                return;
+
+            if(scheduled)
+                Systems.shortTermScheduler.postFrameDispose(this);
+            else
+                this._handle.dispose();
+        }
+
+        /++
          + When comparing two `Texture`s for equality, what actually happens is that
          + a comparison between the underlying, mega `MutableTexture` is performed.
          +
@@ -380,7 +424,14 @@ class Texture : TextureBase
         @property @trusted @nogc
         override const(uvec2) size() nothrow const
         {
-            return uvec2(this.handle.area.size);
+            return uvec2(this._handle.area.size);
+        }
+
+        ///
+        @property
+        bool isDisposed()
+        {
+            return this._handle.isNull;
         }
     }
 

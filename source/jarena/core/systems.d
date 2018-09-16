@@ -63,7 +63,8 @@ final class Systems
             _renderResources,
             _audio,
             _loaderSDL,
-            _assets
+            _assets,
+            _scheduler
         );
 
         @Property("window")
@@ -85,6 +86,9 @@ final class Systems
 
         @Property("assets")
         AssetManager _assets;
+
+        @Property("shortTermScheduler")
+        ShortTermScheduler _scheduler;
     }
 
     public static final
