@@ -252,6 +252,8 @@ class RectangleShape : ITransformable
         {
             foreach(ref vert; this._verts)
                 vert.colour = col;
+
+            this._transform.markDirty();
         }
 
         /// Returns: The colour of this rectangle's border.
@@ -272,6 +274,8 @@ class RectangleShape : ITransformable
         {
             foreach(ref vert; this._borderVerts)
                 vert.colour = col;
+
+            this._transform.markDirty();
         }
 
         /// Internal use only.

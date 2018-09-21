@@ -51,6 +51,13 @@ struct Rectangle(T)
     }
 
     ///
+    @safe @nogc
+    this(Rect)(Rect rect) nothrow pure
+    {
+        this(cast(T)rect.position.x, cast(T)rect.position.y, cast(T)rect.size.x, cast(T)rect.size.y);
+    }
+
+    ///
     bool contains(Vect)(Vect point) const
     if(isVector!Vect && Vect.dimension == 2)
     {

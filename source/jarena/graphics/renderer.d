@@ -496,6 +496,26 @@ final class Renderer
             glDrawElements(buffer.dataType, elementCount, GL_UNSIGNED_INT, null);
         }
 
+        ///
+        void drawQuad(TextureBase texture, Vertex[4] verts, Shader shader)
+        {
+            // Add in the verts
+            auto vertSlice = Slice(this._vertBuffer.length, this._vertBuffer.length + 4);
+            this._vertBuffer ~= verts[];
+
+            this.addToBucket(texture, vertSlice, shader);
+        }
+
+        ///
+        void drawQuadMultiple(TextureBase texture, Vertex[] verts, Shader shader)
+        {
+            assert(verts.length % 4 == 0, "The verts need to be a multiple of 4.");
+            auto vertSlice = Slice(this._vertBuffer.length, this._vertBuffer.length + verts.length);
+            this._vertBuffer ~= verts;
+
+            this.addToBucket(texture, vertSlice, shader);
+        }
+
         /// Sets whether to draw in wireframe or not.
         @property @nogc
         void useWireframe(bool use) nothrow
@@ -517,25 +537,6 @@ final class Renderer
             assert(cam !is null);
             this._camera = cam;
         }
-    }
-
-    // Long private functions go at the bottom
-    private void drawQuad(TextureBase texture, Vertex[4] verts, Shader shader)
-    {
-        // Add in the verts
-        auto vertSlice = Slice(this._vertBuffer.length, this._vertBuffer.length + 4);
-        this._vertBuffer ~= verts[];
-
-        this.addToBucket(texture, vertSlice, shader);
-    }
-
-    private void drawQuadMultiple(TextureBase texture, Vertex[] verts, Shader shader)
-    {
-        assert(verts.length % 4 == 0, "The verts need to be a multiple of 4.");
-        auto vertSlice = Slice(this._vertBuffer.length, this._vertBuffer.length + verts.length);
-        this._vertBuffer ~= verts;
-
-        this.addToBucket(texture, vertSlice, shader);
     }
 
     private void addToBucket(TextureBase texture, Slice vertSlice, Shader shader)

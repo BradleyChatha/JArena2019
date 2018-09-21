@@ -327,6 +327,16 @@ abstract class Container : UIElement
         }
 
         ///
+        final UI addChild(UI : UIElement)(string name, UI child)
+        {
+            assert(child !is null);
+            child.parent = this;
+            child.name = name;
+
+            return child;
+        }
+
+        ///
         final UI getChild(UI : UIElement)(size_t index) 
         {
             return cast(UI)this.children[index];
@@ -401,6 +411,8 @@ abstract class Button : Control
  +  When `SimpleTextInput.textArea` isn't set to `vec2(float.infinity)`, it will make sure that it's text
  +  cannot grow in size outside of this area. Again, useful for things such as textboxes.
  +
+ +  This class handles drawing the inputted text.
+ +
  + Limitations:
  +  Currently, only a single line of text is supported.
  +
@@ -421,6 +433,25 @@ class TextInput : Control
         bool     _isActive;
         bool     _displayCursor;
         Duration _blinkTimer;
+
+        void appendText(const char[] text)
+        {
+            foreach(ch; text)
+            {
+                if(ch == '\n')
+                    continue; // No support for new lines yet.
+
+                // Add the character, and see if it can fit.
+                this._text ~= ch;
+                this._textObject.text = this._text;                
+                if(this._textObject.getRectForChar(this._text.length - 1).topRight.x
+                 > this._area.x + this.position.x)
+                {
+                    this._text.length -= 1;
+                    this._textObject.text = this._text;
+                }
+            }
+        }
     }
 
     public
@@ -459,6 +490,18 @@ class TextInput : Control
         const(char[]) textInput() nothrow const
         {
             return this._text;
+        }
+        
+        /++
+         + Manually sets the text input.
+         +
+         + This can be useful to set a default value, or to update an input that can also be changed.
+         + ++/
+        @property
+        void textInput(const(char[]) text)
+        {
+            this._text.length = 0;
+            this.appendText(text);
         }
     }
 
@@ -526,28 +569,7 @@ class TextInput : Control
             if(input.wasKeyTapped(Scancode.BACKSPACE))
                 doBackspace();
 
-            foreach(ch; input.textInput)
-            {
-                // Handle special characters.
-                if(ch == '\b')
-                {
-                    doBackspace();
-                    continue;
-                }
-
-                if(ch == '\n')
-                    continue; // No support for new lines yet.
-
-                // Add the character, and see if it can fit.
-                this._text ~= ch;
-                this._textObject.text = this._text;                
-                if(this._textObject.getRectForChar(this._text.length - 1).topRight.x
-                 > this._area.x)
-                {
-                    this._text.length -= 1;
-                    this._textObject.text = this._text;
-                }
-            }
+            this.appendText(input.textInput);
 
             // Update the cursor's position.
             if(this._text.length == 0)

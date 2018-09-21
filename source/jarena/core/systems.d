@@ -74,7 +74,7 @@ final class Systems
         @Property("renderResources")
         @WhitelistModules("jarena.graphics.renderer",
                           "jarena.graphics.sprite",
-                          "jarena.gameplay.scenes.debug_menu",
+                          "jarena.gameplay.scenes.debugs.debug_menu",
                           "jarena.gameplay.engine")
         RendererResources _renderResources;
 

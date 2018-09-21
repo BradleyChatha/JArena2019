@@ -18,6 +18,7 @@ namedFiles type="Texture" {
     namedFile "tex_TestAtlas" "Textures/Atlas.png"
     namedFile "tex_Explosion" "Textures/Explosion.png"
     namedFile "tex_Joshy"     "Textures/Joshy.png"
+    namedFile "tex_MouseIcon" "Textures/editors/mouse-icon.png"
 }
 
 // Sounds/Music

@@ -1,4 +1,4 @@
-module jarena.gameplay.scenes.joshy_clicker;
+module jarena.gameplay.scenes.debugs.joshy_clicker;
 
 private
 {

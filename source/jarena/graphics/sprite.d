@@ -735,6 +735,9 @@ class Sprite : ITransformable
         {
             foreach(ref vert; this._verts)
                 vert.colour = col;
+
+            foreach(ref vert; this._transformed)
+                vert.colour = col;
         }
 
         /++
@@ -926,6 +929,27 @@ class SpriteAtlas
         }
 
         /++
+         + Unregisters a sprite.
+         +
+         + Params:
+         +  spriteName = The name of the sprite to unregister.
+         +
+         + Returns:
+         +  `true` if the sprite was unregistered, `false` otherwise.
+         + ++/
+        @safe
+        bool unregister(string spriteName)
+        {
+            if((spriteName in this._sprites) !is null)
+            {
+                this._sprites.remove(spriteName);
+                return true;
+            }
+            else
+                return false;
+        }
+
+        /++
          + Registers a sprite sheet.
          +
          + Details:
@@ -1055,6 +1079,20 @@ class SpriteAtlas
         inout(Texture) texture() nothrow inout
         {
             return this._texture;
+        }
+
+        /// Returns: KeyValue pair for sprites.
+        @property @safe @nogc
+        auto bySpriteKeyValue() nothrow inout
+        {
+            return this._sprites.byKeyValue;
+        }
+
+        /// Returns: KeyValue pair for sprite sheets.
+        @property @safe @nogc
+        auto bySpriteSheetKeyValue() nothrow inout
+        {
+            return this._spriteSheets.byKeyValue;
         }
 
         /// Returns: A range going over the names of all registered sprites, in no particular order.
