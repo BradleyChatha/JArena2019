@@ -397,7 +397,7 @@ class Texture : TextureBase
             if(this.isDisposed)
                 return;
 
-            if(scheduled)
+            if(!scheduled)
                 Systems.shortTermScheduler.postFrameDispose(this);
             else
                 this._handle.dispose();

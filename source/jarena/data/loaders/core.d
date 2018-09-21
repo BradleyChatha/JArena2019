@@ -167,6 +167,13 @@ struct PackageAsset
  + ++/
 abstract class Loader
 {
+    /// Debug information that loaders can provide so exceptions are given more informative messages.
+    struct DebugInfo
+    {
+        /// The name/file path/some kind of identifying info of the asset.
+        string assetName;
+    }
+
     private final
     {
         /// Information about a loading process.
@@ -180,6 +187,9 @@ abstract class Loader
 
             /// The fiber being used for loading.
             Fiber fiber;
+
+            /// Debug info about the loading process.
+            DebugInfo debugInfo;
         }
 
         /// Information about a loading task that is waiting for a certain asset.
@@ -193,11 +203,11 @@ abstract class Loader
         LoaderExtension[string] _extensions;
 
         // Variables for loading
-        LoadingInfo   _currentTask;
-        LoadingInfo[] _loadingList;
-        PackageAsset[]       _lastResult; // After a fiber is done loading, it will set this to the result.
-        Package       _currentPackage;
-        Object        _lastLoadedAsset; // Used for waitForAsset.
+        LoadingInfo    _currentTask;
+        LoadingInfo[]  _loadingList;
+        PackageAsset[] _lastResult; // After a fiber is done loading, it will set this to the result.
+        Package        _currentPackage;
+        Object         _lastLoadedAsset; // Used for waitForAsset.
 
         // Waiting lists
         string[]                 _loadedAssets; // Used to clean up the _waitingForAssetList
@@ -323,8 +333,9 @@ abstract class Loader
          + Params:
          +  extension = The extension to use to load in the data.
          +  data      = The data to load in.
+         +  debugInfo = Debug information about the data being loaded in. Used mostly for pretty exception messages.
          + ++/
-        void addLoadingTask(LoaderExtension extension, const(ubyte[]) data)
+        void addLoadingTask(LoaderExtension extension, const(ubyte[]) data, DebugInfo debugInfo = DebugInfo.init)
         {
             assert(extension !is null);
 
@@ -332,6 +343,7 @@ abstract class Loader
             info.extension = extension;
             info.fiber     = new Fiber((){this._lastResult = extension.onLoadAssets(this, data);});
             info.id        = cast(int)this._loadingList.length; // The cast is fine for this case.
+            info.debugInfo = debugInfo;
 
             infof("Created loading task #%s for extension '%s' with data with of length '%s'.",
                   info.id, extension, data.length);
@@ -356,11 +368,30 @@ abstract class Loader
         {
             trace("Executing tasks");
 
-            foreach(task; this._loadingList)
+            string[] debugLoadedAssets;
+            foreach(taskI, task; this._loadingList)
             {
                 // Execute the task
                 infof("Executing task #%s, with extension '%s'.", task.id, task.extension);
-                this.executeTask(task);
+
+                // Catch any exceptions, and gather up enough information for a nice looking exception.
+                try 
+                    this.executeTask(task);
+                catch(Exception ex)
+                {
+                    import std.algorithm : map;
+                    import std.array     : array;
+
+                    PackageLoadFailedException.Info info;
+                    info.loadedNames = debugLoadedAssets;
+                    info.failedInfo  = task.debugInfo;
+                    info.waitingInfo = this._waitingForAssetList.map!(waiting => PackageLoadFailedException.WaitingInfo(waiting.info.debugInfo, waiting.assetName))
+                                                                .array;
+                    info.loadedInfo  = this._loadingList[0..taskI].map!(task => task.debugInfo).array;
+                    info.notExecutedInfo = (taskI == this._loadingList.length - 1) ? null : this._loadingList[taskI+1..$].map!(task => task.debugInfo).array;
+
+                    throw new PackageLoadFailedException(info, ex.message.idup);
+                }
 
                 // Then clean up the waiting list
                 foreach(loadedAsset; this._loadedAssets)
@@ -374,6 +405,7 @@ abstract class Loader
                         }
                     }
                 }
+                debugLoadedAssets ~= this._loadedAssets;
                 this._loadedAssets.length = 0;
             }
 
@@ -558,5 +590,61 @@ abstract class LoaderExtension
             assert(loader !is null);
             return cast(T)loader.waitForAsset(this, assetName);
         }
+    }
+}
+
+/// An exception thrown by a `Loader` when it fails to load in a package.
+/// For now, throwing this exception can only be done internally (since there's no way to gather the `PackageLoadFailedException.Info` from the outside).
+class PackageLoadFailedException : Exception
+{
+    struct WaitingInfo
+    {
+        Loader.DebugInfo info;
+        string assetName;
+
+        string toString()
+        {
+            import std.format : format;
+            return format("\"%s\" needed by %s", this.assetName, this.info);
+        }
+    }
+
+    struct Info
+    {
+        // Loaded assets.
+        // On wait assets.
+        // File that failed.
+        string[]            loadedNames;
+        Loader.DebugInfo[]  loadedInfo;
+        WaitingInfo[]       waitingInfo;
+        Loader.DebugInfo[]  notExecutedInfo;
+        Loader.DebugInfo    failedInfo;
+    }
+
+    Info info;
+
+    this(Info info, string reason, string file = __FILE__, int line = __LINE__)
+    {
+        import std.array     : appender;
+        import std.format    : format;
+        import std.algorithm : map, joiner;
+        import std.conv      : to;
+        this.info = info;
+
+        auto output = appender!(char[]);
+        output.put("Uncaught exception while loading package.\n");
+        output.put("FAILED:\n");
+        output.put("\tInfo: %s\n".format(this.info.failedInfo));
+        output.put("\tReason: %s\n".format(reason));
+        output.put("LOADED(Debug Info):\n\t");
+        output.put(this.info.loadedInfo.map!(to!string).joiner("\n\t"));
+        output.put("\nLOADED(Asset Names):\n\t");
+        output.put(this.info.loadedNames.joiner("\n\t"));
+        output.put("\nWAITING:\n\t");
+        output.put(this.info.waitingInfo.map!(to!string).joiner("\n\t"));
+        output.put("\nNOT YET RAN:\n\t");
+        output.put(this.info.notExecutedInfo.map!(to!string).joiner("\n\t"));
+
+        super(output.data.idup, file, line);
     }
 }

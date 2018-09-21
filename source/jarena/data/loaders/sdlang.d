@@ -237,7 +237,7 @@ class LoaderSDL : Loader
                             auto type      = parseSource(firstLine).expectTagValue!string("type");
                             auto extension = super.getExtensionFor(type);
 
-                            super.addLoadingTask(extension, cast(const(ubyte[]))contents);
+                            super.addLoadingTask(extension, cast(const(ubyte[]))contents, Loader.DebugInfo(file.path));
                         }
                         break;
 
@@ -252,7 +252,7 @@ class LoaderSDL : Loader
                         {
                             infof("File found, '%s'", file.path);
                             auto data = [NamedFileInfo(file.name, file.path, type, file.attributes)];
-                            super.addLoadingTask(extension, cast(const(ubyte[]))data);
+                            super.addLoadingTask(extension, cast(const(ubyte[]))data, Loader.DebugInfo(file.path));
                         }
                         break;
 
