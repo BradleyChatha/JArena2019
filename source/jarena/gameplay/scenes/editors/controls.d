@@ -783,6 +783,9 @@ class EditorRectangle(MetadataT) : DrawableObject
                             this._rect.size = vec2(this._rect.size.x + input.wheelDelta, this._rect.size.y);
                     }
 
+                    if(input.isMouseButtonDown(MouseButton.Left))
+                        this._rect.size = this._rect.size + (input.mousePosition - this._lastMousePos);
+
                     if(this._rect.size.x < 0)
                     {
                         this._rect.position = vec2(oldPos.x, this._rect.position.y);
@@ -793,6 +796,10 @@ class EditorRectangle(MetadataT) : DrawableObject
                         this._rect.position = vec2(this._rect.position.x, oldPos.y);
                         this._rect.size     = vec2(this._rect.size.x, oldSize.y);
                     }
+                    if(this._rect.area.topRight.x > this._allowedArea.topRight.x)
+                        this._rect.size = vec2(this._allowedArea.topRight.x - this._rect.position.x, this._rect.size.y);
+                    if(this._rect.area.botRight.y > this._allowedArea.botRight.y)
+                        this._rect.size = vec2(this._rect.size.x, this._allowedArea.botRight.y - this._rect.position.y);
 
                     if(oldPos != this._rect.position || oldSize != this._rect.size)
                         this._onChange(this);
