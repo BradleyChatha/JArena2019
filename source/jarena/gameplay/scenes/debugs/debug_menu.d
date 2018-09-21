@@ -1,4 +1,4 @@
-module jarena.gameplay.scenes.debug_menu;
+module jarena.gameplay.scenes.debugs.debug_menu;
 
 private
 {

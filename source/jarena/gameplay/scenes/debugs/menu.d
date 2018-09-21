@@ -1,5 +1,5 @@
 /// Contains the main menu for the game.
-module jarena.gameplay.scenes.menu;
+module jarena.gameplay.scenes.debugs.menu;
 
 private
 {
@@ -24,6 +24,7 @@ final class MenuScene : Scene
                                   AnimationViewerScene, 
                                   SpriteAtlasViewerScene,
                                   JoshyClickerScene,
+                                  SpriteAtlasEditorScene,
                                   StressTest_Render1Scene,
                                   StressTest_Render2Scene);
 

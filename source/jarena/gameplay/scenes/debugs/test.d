@@ -1,7 +1,8 @@
 /// Contains a test scene.
-module jarena.gameplay.scenes.test;
+module jarena.gameplay.scenes.debugs.test;
 import std.stdio;
 import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jarena.gameplay.gui, jarena.gameplay.scenes;
+import jarena.gameplay.scenes.editors.controls;
 
 @SceneName("Test")
 class Test : Scene, IPostBox
@@ -16,6 +17,9 @@ class Test : Scene, IPostBox
     TextObject someText;
     TextObject inputText;
     SimpleTextBox inputBox;
+    ButtonTooltip tooltip;
+    EditorButton tooltippedButton;
+    EditorScrollBoxContainer scrollbox;
     //GridContainer  grid;
 
     public override
@@ -83,8 +87,8 @@ class Test : Scene, IPostBox
             super.register("Some random text", this.someText);
             super.register("Changeable text", this.inputText);
 
-            this.inputBox = new SimpleTextBox(new Text(font, "Text Here", vec2(0), 14, Colour.black), vec2(0, 250), vec2(200, 50), vec2(2, 20));
-            super.gui.addChild(this.inputBox);
+            this.inputBox = new SimpleTextBox(new Text(font, "", vec2(0), 14, Colour.black), vec2(0, 250), vec2(200, 50), vec2(2, 20));
+            super.gui.addChild(this.inputBox).textInput = "[Text Here]";
 
             size_t i = 0;
             while(true)
@@ -100,6 +104,23 @@ class Test : Scene, IPostBox
             auto btnText = new Text(font, "Click Me", vec2(0), 14, Colour(255, 255, 255, 255));
             gui.addChild(new SimpleTextButton(btnText, btn => writeln("Button position: ", btn.position)));
             gui.getChild!SimpleTextButton(gui.children.length - 1).fitToText();
+
+            this.tooltip = new ButtonTooltip("Delete(D)", "Allows deletion of memes.\nPlease don't hurt me.\n");
+            this.tooltippedButton = new EditorButton(Systems.assets.get!Texture("tex_MouseIcon"), "Test Button", "Please ignore\n");
+            this.tooltippedButton.position = vec2(0, 20);
+            super.gui.addChild(this.tooltip);
+            super.gui.addChild(this.tooltippedButton);
+
+            this.scrollbox = new EditorScrollBoxContainer();
+            this.scrollbox.position = vec2(0, 540);
+            this.scrollbox.size     = vec2(150, 150);
+            foreach(___; 0..10)
+            {
+                this.scrollbox.addChild(new TestControl(vec2(0), vec2(100, 20), Colour.red));
+                this.scrollbox.addChild(new TestControl(vec2(0), vec2(80, 20), Colour.green));
+                this.scrollbox.addChild(new TestControl(vec2(0), vec2(40, 20), Colour.blue));
+            }
+            super.gui.addChild(this.scrollbox);
         }
 
         void onSwap(PostOffice office)
@@ -179,6 +200,7 @@ class Test : Scene, IPostBox
                     gui.children[0].parent = gui2;
             }
 
+            this.tooltip.showing = input.isKeyDown(Scancode.F3);
             if(input.wasKeyTapped(Scancode.F1))
                 this.tahn.texture.dispose();
 

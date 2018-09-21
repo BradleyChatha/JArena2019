@@ -339,7 +339,7 @@ abstract class EditorPanelExtension
             this._keybinds ~= binding;
 
             import std.format;
-            this._instructions ~= format("%s = %s", binding.keyName, binding.description);
+            this._instructions ~= format("%s = %s\n", binding.keyName, binding.description);
         }
     }
     
@@ -389,6 +389,11 @@ private final class GenericElementExtension : EditorPanelExtension
             super.registerKeybind!(Scancode.E)("Moves the selected item to the mouse",(input){
                 this._element.position = input.mousePosition - (this._element.size / 2);
                 this._labelPosition.updateText(format("Position: %s", this._element.position));
+            });
+
+            super.registerKeybind!(Scancode.R)("Resizes the selected item to the mouse",(input){
+                this._element.size = vec2(input.mousePosition) - this._element.position;
+                this._labelSize.updateText(format("Size: %s", this._element.size));
             });
 
             makeLabel(this._labelPosition);

@@ -51,6 +51,9 @@ mixin template SerialisableInterface()
     enum  ThisName = getFieldName!ThisType;
     static assert(hasUDA!(ThisType, Serialisable), "Please attach an @Serialisable to the type: " ~ ThisType.stringof);
 
+    // For the compile time checks
+    mixin SerialisableInterfaceManual;
+
     /++
      + Updates the data in this struct based on the data in the given `tag`.
      + ++/
@@ -82,6 +85,26 @@ mixin template SerialisableInterface()
         mixin(toSdlTagGenerator!ThisType);
         return tag;
     }
+}
+
+/++
+ + A mixin template that should be used by any @Serialisable type that specifies it's
+ + own serialisation functions.
+ +
+ + All it does is insert some compile time checks to make sure the functions exist, and are properly formed.
+ + ++/
+mixin template SerialisableInterfaceManual()
+{
+    import std.traits : hasUDA;
+    alias ThisType = typeof(this);
+
+    static assert(hasUDA!(ThisType, Serialisable), "Please attach an @Serialisable to the type: " ~ ThisType.stringof);
+    static assert(is(typeof({import sdlang; auto o = ThisType.init; o.updateFromSdlTag(new Tag());})), 
+                  "The type '"~ThisType.stringof~"' hasn't implemented the updateFromSdlTag function. 'void updateFromSdlTag(sdlang.Tag tag)'");
+    static assert(is(typeof({import sdlang; auto o = ThisType.init; o.createFromSdlTag(new Tag());})), 
+                  "The type '"~ThisType.stringof~"' hasn't implemented the createFromSdlTag function. '"~ThisType.stringof~" createFromSdlTag(sdlang.Tag tag)'");
+    static assert(is(typeof({import sdlang; auto o = ThisType.init; Tag tag = o.saveToSdlTag();})), 
+                  "The type '"~ThisType.stringof~"' hasn't implemented the saveToSdlTag function. 'sdlang.Tag saveToSdlTag()'");
 }
 
 // Needs to be public so the mixin template can work.
@@ -121,7 +144,7 @@ string toSdlTagGenerator(ThisType)()
         enum  FieldTypeName = fullyQualifiedName!FieldType;
         enum  FieldTagName  = getFieldName!FieldAlias.name;
 
-        static if(is(typeof(code.generateSDLSerialise!(FieldAlias, FieldType, FieldTypeName, FieldTagName, "this." ~ fieldName)(nameCounter))))
+        //static if(is(typeof(code.generateSDLSerialise!(FieldAlias, FieldType, FieldTypeName, FieldTagName, "this." ~ fieldName)(nameCounter))))
             code.generateSDLSerialise!(FieldAlias, FieldType, FieldTypeName, FieldTagName, "this." ~ fieldName)(nameCounter);
     }        
     

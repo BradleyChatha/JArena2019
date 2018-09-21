@@ -417,6 +417,7 @@ final class InputManager
             vec2 position;
             MouseButton buttonMask;
             MouseButton buttonTappedMask;
+            int wheelDelta;
         }
 
         char[SDL_TEXTINPUTEVENT_TEXT_SIZE] _textInput;
@@ -487,9 +488,17 @@ final class InputManager
             this._textInput[0..mail.value.length] = mail.value[0..$];
             this._textLength = mail.value.length;
         }
+
+        void onMouseWheel(PostOffice office, Mail m)
+        {
+            auto mail = cast(ValueMail!MouseWheelDirection)m;
+            assert(mail !is null);
+
+            this._mouse.wheelDelta += (mail.value == MouseWheelDirection.Up) ? 1 : -1;
+        }
     }
 
-    public
+    public final
     {
         /++
          + Setup the InputManager.
@@ -522,6 +531,7 @@ final class InputManager
             office.subscribe(Window.Event.MouseButtonPressed,   &this.onMouseButton);
             office.subscribe(Window.Event.MouseButtonReleased,  &this.onMouseButton);
             office.subscribe(Window.Event.TextEntered,          &this.onTextInput);
+            office.subscribe(Window.Event.MouseWheelMoved,      &this.onMouseWheel);
         }
 
         /// $(B Important: This function should be called _before_ the window processes it's events, or at the very end of a frame's update)
@@ -530,6 +540,7 @@ final class InputManager
             foreach(keyCode; this._tapped[0..$])
                 this._keyStates[keyCode].wasTapped = false;
 
+            this._mouse.wheelDelta = 0;
             this._mouse.buttonTappedMask = MouseButton.None;
             this._tapped.length = 0;
             this._textLength = 0;
@@ -659,6 +670,19 @@ final class InputManager
                 SDL_StartTextInput();
 
             this._listenForText = shouldListen;
+        }
+
+        /++
+         + A number representing how many ticks the mouse has moved this frame.
+         +
+         + A positive number means it has been moved up.
+         + A negative number means it has been moved down.
+         + 0 means it hasn't been moved.
+         + ++/
+        @property @safe @nogc
+        int wheelDelta() nothrow inout
+        {
+            return this._mouse.wheelDelta;
         }
     }
 }

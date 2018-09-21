@@ -1,5 +1,5 @@
 /// Contains a base scene which can be used to easily create things like `AnimationViewerScene`.
-module jarena.gameplay.scenes.viewer_scene;
+module jarena.gameplay.scenes.util.viewer_scene;
 
 private
 {
