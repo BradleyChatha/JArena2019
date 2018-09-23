@@ -102,6 +102,26 @@ alias RectangleF = Rectangle!float;
 ///
 alias RectangleI = Rectangle!int;
 
+/++
+ + Describes a circle.
+ + ++/
+struct Circle
+{
+    ///
+    vec2  centerPos;
+
+    ///
+    float radius;
+
+    /// Returns: Whether the point `vect` is inside of this circle or not.
+    @safe @nogc
+    bool contains(VectT)(VecT vect) nothrow const
+    if(isVector!VectT)
+    {
+        return (vect.distance(this.centerPos) < this.radius);
+    }
+}
+
 ///
 enum AngleType
 {

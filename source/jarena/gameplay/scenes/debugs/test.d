@@ -20,6 +20,7 @@ class Test : Scene, IPostBox
     ButtonTooltip tooltip;
     EditorButton tooltippedButton;
     EditorScrollBoxContainer scrollbox;
+    CircleShape circle;
     //GridContainer  grid;
 
     public override
@@ -121,6 +122,8 @@ class Test : Scene, IPostBox
                 this.scrollbox.addChild(new TestControl(vec2(0), vec2(40, 20), Colour.blue));
             }
             super.gui.addChild(this.scrollbox);
+
+            this.circle = new CircleShape(vec2(0, -50), 15, Colour.red);
         }
 
         void onSwap(PostOffice office)
@@ -219,6 +222,7 @@ class Test : Scene, IPostBox
         void onRender(Window window)
         {
             super.renderScene(window);
+            window.renderer.drawCircleShape(this.circle);
             super.renderUI(window);
 
             window.renderer.camera = super.guiCamera;

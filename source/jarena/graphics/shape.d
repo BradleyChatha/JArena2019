@@ -331,3 +331,198 @@ class RectangleShape : ITransformable
         }
     }
 }
+
+/// Describes a circle which can be rendered to the screen.
+class CircleShape : ITransformable
+{
+    enum DEFAULT_TRIANGLE_COUNT = 40;
+    alias VertBuffer = VertexBuffer!(BufferFeatures.FullUploadSubData);
+
+    private
+    {
+        Transform     _transform;
+        Circle        _area;
+        Buffer!Vertex _verts;
+        Buffer!Vertex _transformedVerts;
+        VertBuffer    _buffer;
+        size_t        _triangleCount;
+        Colour        _colour;
+
+        @safe
+        void recalcVerts()
+        {
+            import std.math : PI, cos, sin;
+            enum TWO_PI = 2.0f * PI;
+
+            this._verts.length = 0;
+            this._transformedVerts.length = 0;
+
+            // TODO: Optimise vert usage by using a custom VertexBuffer
+            //       instead of letting the renderer do it for us.
+            foreach(i; 0..this._triangleCount + 1)
+            {
+                this._verts ~= Vertex(vec2(0), vec2(0), this._colour);
+                this._verts ~= (this._verts.length < 2) ? Vertex(vec2(0), vec2(0), this._colour) : this._verts[$-3];
+                this._verts ~= Vertex(
+                    vec2(
+                        this._area.radius * cos(i * TWO_PI / this._triangleCount),
+                        this._area.radius * sin(i * TWO_PI / this._triangleCount)
+                    ), 
+                    vec2(0), 
+                    this._colour
+                );
+                this._verts ~= Vertex(vec2(0), vec2(0), this._colour);
+            }
+
+            this._transformedVerts ~= this._verts[0..$];
+        }
+    }
+
+    public
+    {
+        ///
+        this(vec2 position, float radius, Colour colour = Colour.red, size_t triangleCount = DEFAULT_TRIANGLE_COUNT)
+        {
+            this._verts            = new Buffer!Vertex();
+            this._transformedVerts = new Buffer!Vertex();
+            this._triangleCount    = triangleCount;
+            this.position          = position;
+            this.radius            = radius;
+            this.colour            = colour;
+        }
+
+        /// Returns: The radius of this circle.
+        @property @safe @nogc
+        inout(float) radius() nothrow inout
+        {
+            return this._area.radius;
+        }
+
+        /// Sets the radius of this circle.
+        @property @safe
+        void radius(float rad)
+        {
+            this._area.radius = rad;
+            this.recalcVerts();
+            this._transform.markDirty();
+        }
+
+        /++
+         + Returns:
+         +  The position of this object.
+         + ++/
+        @property @safe @nogc
+        const(vec2) position() nothrow const
+        {
+            return this._transform.translation;
+        }
+
+        /++
+         + Sets the position of the transformable object.
+         +
+         + Params:
+         +  pos = The position to set the object at.
+         + ++/
+        @property @safe @nogc
+        void position(vec2 pos) nothrow
+        {
+            this._area.centerPos = pos;
+            this._transform.translation = pos;
+            this._transform.markDirty();
+        }
+
+        /++
+         + Sets the rotation of the transformable object.
+         +
+         + Params:
+         +  angle = The rotation to set the object at.
+         + ++/
+        @property @safe @nogc
+        void rotation(AngleDegrees angle) nothrow
+        {
+            this._transform.rotation = angle;
+            this._transform.markDirty();
+        }
+
+        /++
+         + Sets the scale of the transformable object (default 1).
+         +
+         + Params:
+         +  amount = The amount to scale it by.
+         + ++/
+        @property @safe @nogc
+        void scale(vec2 amount) nothrow
+        {
+            this._transform.scale = amount;
+            this._transform.markDirty();
+        }
+
+        /++
+         + Returns:
+         +  The amount to scale it by.
+         + ++/
+        @property @safe @nogc
+        const(vec2) scale() nothrow const
+        {
+            return this._transform.scale;
+        }
+
+        /++
+         + Returns:
+         +  The origin of this object.
+         + ++/
+        @property @safe @nogc
+        const(vec2) origin() nothrow const
+        {
+            return this._transform.origin;
+        }
+
+        /++
+         + Sets the origin of the transformable object.
+         +
+         + Params:
+         +  point = The point to set the object's origin to.
+         + ++/
+        @property @safe @nogc
+        void origin(vec2 point) nothrow
+        {
+            this._transform.origin = point;
+            this._transform.markDirty();
+        }
+
+        /// Returns: The colour of this rectangle (the filling, not the borders)
+        @property @safe @nogc
+        const(Colour) colour() nothrow const
+        {
+            return this._colour;
+        }
+
+        /++
+         + Sets the colour of this rectangle (the filling, not the borders)
+         +
+         + Params:
+         +  col = The new colour.
+         + ++/
+        @property @safe @nogc
+        void colour(Colour col) nothrow
+        {
+            foreach(ref vert; this._verts[0..$])
+                vert.colour = col;
+
+            foreach(ref vert; this._transformedVerts[0..$])
+                vert.colour = col;
+
+            this._colour = col;
+            this._transform.markDirty();
+        }
+
+        @property
+        Vertex[] verts()
+        {
+            if(this._transform.isDirty)
+                this._transform.transformVerts(this._transformedVerts[0..$]);
+
+            return this._transformedVerts[0..$];
+        }
+    }
+}

@@ -573,7 +573,8 @@ final class Renderer
         if(this._buckets.length == 0
         || lastBucket.texture != texture
         || lastBucket.shader != shader
-        || lastBucket.camera != camera)
+        || lastBucket.camera != camera
+        || lastBucket.command != BucketCommand.Quads)
         {
             auto bucket = RenderBucket(texture, shader, camera, BucketCommand.Quads);
             bucket.data.quadVerts = vertSlice;
