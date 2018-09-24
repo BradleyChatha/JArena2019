@@ -259,16 +259,23 @@ final class Renderer
             mat4 projection;
         }
 
+        struct BufferInfo
+        {
+            uint vao;
+            uint elementCount;
+            BufferDataType dataType;
+        }
+
         enum BucketCommand
         {
             Quads,
-            Pool
+            Buffer
         }
 
         union BucketData
         {
-            Slice quadVerts;        // [Quads] Slice into _vertBuffer
-            SpritePool poolObject;  // [Pool] The pool to draw
+            Slice quadVerts;    // [Quads] Slice into _vertBuffer
+            BufferInfo buffer;  // [Buffer] The buffer to draw
         }
 
         // Used for batching.
@@ -372,8 +379,8 @@ final class Renderer
                 // TODO: Move this into a function/seperate functions
                 switch(bucket.command)
                 {
-                    case BucketCommand.Pool:
-                        this.drawBuffer(bucket.data.poolObject.buffer, cast(uint)(bucket.data.poolObject.buffer.eboSize / uint.sizeof));
+                    case BucketCommand.Buffer:
+                        this.displayBuffer(bucket.data.buffer);
                         break;
 
                     case BucketCommand.Quads:
@@ -401,7 +408,8 @@ final class Renderer
                         this._quadBuffer.upload();
                         debug GL.checkForError();
                         
-                        this.drawBuffer(this._quadBuffer, cast(uint)this._quadBuffer.indicies.length);
+                        auto info = BufferInfo(this._quadBuffer.vao, cast(uint)this._quadBuffer.indicies.length, this._quadBuffer.dataType);
+                        this.displayBuffer(info);
                         break;
 
                     default:
@@ -456,6 +464,13 @@ final class Renderer
                 this.drawQuadMultiple(null, verts[], this._colourShader);
         }
 
+        /// Draws a `CircleShape`.
+        void drawCircleShape(CircleShape shape)
+        {
+            assert(shape !is null);
+            this.drawQuadMultiple(null, shape.verts, this._colourShader);
+        }
+
         /// Draws a `Sprite` to the screen.
         void drawSprite(Sprite sprite)
         {
@@ -469,11 +484,7 @@ final class Renderer
         {
             assert(pool !is null);
 
-            auto bucket = RenderBucket(pool.texture, this._textureShader, CameraInfo(this.camera.viewMatrix, this.camera._ortho),
-                                       BucketCommand.Pool);
-            bucket.data.poolObject = pool;
-
-            this._buckets ~= bucket;
+            this.drawBuffer(pool.buffer, pool.texture, this._textureShader);
         }
 
         /// Draws `Text` to the screen.
@@ -488,12 +499,17 @@ final class Renderer
         }
 
         /// Draws a VertexBuffer
-        pragma(inline, true)
-        void drawBuffer(VB)(ref VB buffer, uint elementCount)
+        void drawBuffer(VB)(ref VB buffer, TextureBase texture, Shader shader)
         if(isVertexBuffer!VB)
         {
-            glBindVertexArray(buffer.vao);
-            glDrawElements(buffer.dataType, elementCount, GL_UNSIGNED_INT, null);
+            auto bucket = RenderBucket(
+                texture,
+                shader,
+                CameraInfo(this.camera.viewMatrix, this.camera._ortho),
+                BucketCommand.Buffer
+            );
+            bucket.data.buffer = BufferInfo(buffer.vao, cast(uint)(buffer.eboSize / uint.sizeof), buffer.dataType);
+            this._buckets ~= bucket;
         }
 
         ///
@@ -539,6 +555,13 @@ final class Renderer
         }
     }
 
+    pragma(inline, true)
+    private void displayBuffer(BufferInfo info)
+    {
+        glBindVertexArray(info.vao);
+        glDrawElements(info.dataType, info.elementCount, GL_UNSIGNED_INT, null);
+    }
+
     private void addToBucket(TextureBase texture, Slice vertSlice, Shader shader)
     {
         // All sprites that have the same texture and shader are batched together into a single bucket
@@ -550,7 +573,8 @@ final class Renderer
         if(this._buckets.length == 0
         || lastBucket.texture != texture
         || lastBucket.shader != shader
-        || lastBucket.camera != camera)
+        || lastBucket.camera != camera
+        || lastBucket.command != BucketCommand.Quads)
         {
             auto bucket = RenderBucket(texture, shader, camera, BucketCommand.Quads);
             bucket.data.quadVerts = vertSlice;
