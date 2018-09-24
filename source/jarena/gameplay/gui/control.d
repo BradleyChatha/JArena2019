@@ -303,7 +303,11 @@ final class TestControl : UIElement
     }
 }
 
-/// NOTE: For containers, `UIElement.size` doesn't actually have any real effect, but it's still useful for alignment within other containers.
+/++
+ + Containers are controls that specialise in containing other controls within them.
+ +
+ + Examples of containers are a scrollbox container, and a container that aligns controls in a grid.
+ + ++/
 abstract class Container : UIElement
 {
     public
