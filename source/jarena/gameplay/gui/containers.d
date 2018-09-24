@@ -143,7 +143,6 @@ final class StackContainer : Container
 
     override
     {
-        protected void onNewParent(UIElement newParent, UIElement oldParent){}
         protected void onChildStateChanged(UIElement child, StateChange change)
         {
             this.sortPositions();
@@ -211,11 +210,7 @@ class FreeFormContainer : Container
     }
 
     override
-    {        
-        protected void onNewParent(UIElement newParent, UIElement oldParent){}
-        protected void onSizeChanged(vec2 oldSize, vec2 newSize){}
-        protected void onChildStateChanged(UIElement child, StateChange change){}
-
+    {
         protected void onAddChild(UIElement child)
         {
             this._children ~= child;
