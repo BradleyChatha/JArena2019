@@ -200,82 +200,82 @@ abstract class UIElement
         }
     }
 
-    // All of the functions that need to be defined in child classes.
-    abstract
-    {
-        /++
-         + Called whenever this UIElement is set as the `UIElement.parent` for another
-         + UIElement (therefore, making this element the parent, and the other element a child).
-         +
-         + Params:
-         +  child = The child UIElement that has had it's parent set to this UIElement.
-         + ++/
-        protected void onAddChild(UIElement child);
+    // =============================================
+    // = Functions that can be overidden as needed =
+    // =============================================
 
-        /++
-         + Called whenever this UIElement $(B was) set as the `UIElement.parent` for another
-         + UIElement, but is then replaced with another parent (meaning this element should no longer have it as a child).
-         +
-         + Params:
-         +  child = The child UIElement that should no longer be treated as a child.
-         + ++/
-        protected void onRemoveChild(UIElement child);
+    /++
+    + Called whenever this UIElement is set as the `UIElement.parent` for another
+    + UIElement (therefore, making this element the parent, and the other element a child).
+    +
+    + Params:
+    +  child = The child UIElement that has had it's parent set to this UIElement.
+    + ++/
+    protected void onAddChild(UIElement child){}
 
-        /++
-         + Called whenever the parent of this UIElement is changed.
-         +
-         + Note:
-         +  It is expected that the parent be responsible for aligning the child's position,
-         +  if needed (for example, with containers).
-         +
-         + Params:
-         +  newParent = The new UIElement acting as this element's parent. May be null.
-         +  oldParent = The old UIElement that used to act as this element's parent. May be null.
-         + ++/
-        protected void onNewParent(UIElement newParent, UIElement oldParent);
+    /++
+    + Called whenever this UIElement $(B was) set as the `UIElement.parent` for another
+    + UIElement, but is then replaced with another parent (meaning this element should no longer have it as a child).
+    +
+    + Params:
+    +  child = The child UIElement that should no longer be treated as a child.
+    + ++/
+    protected void onRemoveChild(UIElement child){}
 
-        /++
-         + Called whenever a child of this UIElement has a change in state.
-         +
-         + Params:
-         +  child = The child that fired this event.
-         +  change = The change in the child's state.
-         + ++/
-        protected void onChildStateChanged(UIElement child, StateChange change);
+    /++
+    + Called whenever the parent of this UIElement is changed.
+    +
+    + Note:
+    +  It is expected that the parent be responsible for aligning the child's position,
+    +  if needed (for example, with containers).
+    +
+    + Params:
+    +  newParent = The new UIElement acting as this element's parent. May be null.
+    +  oldParent = The old UIElement that used to act as this element's parent. May be null.
+    + ++/
+    protected void onNewParent(UIElement newParent, UIElement oldParent){}
 
-        /++
-         + Called whenever the position for this UIElement is changed.
-         +
-         + Params:
-         +  oldPos = The old position for this UIElement.
-         +  newPos = The new position for this UIElement.
-         + ++/
-        protected void onPositionChanged(vec2 oldPos, vec2 newPos);
+    /++
+    + Called whenever a child of this UIElement has a change in state.
+    +
+    + Params:
+    +  child = The child that fired this event.
+    +  change = The change in the child's state.
+    + ++/
+    protected void onChildStateChanged(UIElement child, StateChange change){}
 
-        /++
-         + Called whenever the size for this UIElement is changed.
-         +
-         + Params:
-         +  oldSize = The old size for this UIElement.
-         +  newSize = The new size for this UIElement.
-         + ++/
-        protected void onSizeChanged(vec2 oldSize, vec2 newSize);
+    /++
+    + Called whenever the position for this UIElement is changed.
+    +
+    + Params:
+    +  oldPos = The old position for this UIElement.
+    +  newPos = The new position for this UIElement.
+    + ++/
+    protected void onPositionChanged(vec2 oldPos, vec2 newPos){}
 
-        /++
-         + Called whenever the colour for this UIElement is changed.
-         +
-         + Params:
-         +  oldColour = The old colour for this UIElement.
-         +  newColour = The new colour for this UIElement.
-         + ++/
-        protected void onColourChanged(Colour oldColour, Colour newColour);
+    /++
+    + Called whenever the size for this UIElement is changed.
+    +
+    + Params:
+    +  oldSize = The old size for this UIElement.
+    +  newSize = The new size for this UIElement.
+    + ++/
+    protected void onSizeChanged(vec2 oldSize, vec2 newSize){}
 
-        ///
-        public void onUpdate(InputManager input, Duration deltaTime);
+    /++
+    + Called whenever the colour for this UIElement is changed.
+    +
+    + Params:
+    +  oldColour = The old colour for this UIElement.
+    +  newColour = The new colour for this UIElement.
+    + ++/
+    protected void onColourChanged(Colour oldColour, Colour newColour){}
 
-        ///
-        public void onRender(Window window);
-    }
+    ///
+    public void onUpdate(InputManager input, Duration deltaTime){}
+
+    ///
+    public void onRender(Window window){}
 }
 
 ///
@@ -296,15 +296,6 @@ final class TestControl : UIElement
 
     override
     {
-        protected void onNewParent(UIElement newParent, UIElement oldParent){}
-        protected void onSizeChanged(vec2 oldSize, vec2 newSize){}
-        protected void onChildStateChanged(UIElement child, StateChange change){}
-        protected void onAddChild(UIElement child){}
-        protected void onRemoveChild(UIElement child){}
-        protected void onPositionChanged(vec2 oldPos, vec2 newPos){}
-        protected void onColourChanged(Colour oldColour, Colour newColour){}
-        public void onUpdate(InputManager input, Duration deltaTime){}
-
         public void onRender(Window window)
         {
             window.renderer.drawRect(this.position, this.size, this.colour);
@@ -525,13 +516,7 @@ class TextInput : Control
     }
 
     override
-    {
-        protected void onNewParent(UIElement newParent, UIElement oldParent){}
-        protected void onChildStateChanged(UIElement child, StateChange change){}
-        protected void onAddChild(UIElement child){}
-        protected void onRemoveChild(UIElement child){}
-        protected void onSizeChanged(vec2 oldSize, vec2 newSize){}
-        
+    {        
         protected void onPositionChanged(vec2 oldPos, vec2 newPos)
         {
             this._textObject.position = newPos;

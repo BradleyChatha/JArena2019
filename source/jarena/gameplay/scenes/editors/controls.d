@@ -62,17 +62,10 @@ class ButtonTooltip : Control
 
     public override
     {
-        protected void onAddChild(UIElement child){}
-        protected void onRemoveChild(UIElement child){}
-        protected void onNewParent(UIElement newParent, UIElement oldParent){}
-        protected void onChildStateChanged(UIElement child, StateChange change){}
-
         protected void onPositionChanged(vec2 oldPos, vec2 newPos)
         {
             this._box.position = newPos;
         }
-
-        protected void onSizeChanged(vec2 oldSize, vec2 newSize){}
 
         protected void onColourChanged(Colour oldColour, Colour newColour)
         {
@@ -134,17 +127,11 @@ class EditorButton : Button
 
     public override
     {
-        protected void onAddChild(UIElement child){}
-        protected void onRemoveChild(UIElement child){}
-        protected void onNewParent(UIElement newParent, UIElement oldParent){}
-        protected void onChildStateChanged(UIElement child, StateChange change){}
-
         protected void onPositionChanged(vec2 oldPos, vec2 newPos)
         {
             this._image.position = newPos;
         }
 
-        protected void onSizeChanged(vec2 oldSize, vec2 newSize){}
         protected void onColourChanged(Colour oldColour, Colour newColour)
         {
             this._image.colour = newColour;
@@ -254,11 +241,6 @@ class EditorScrollBoxContainer : Container
         {
             this._mainBox.position = newPos;
             this.size = this.size; // Recalcs positions for the scrollbar and sorts child positions.
-        }
-
-        protected void onChildStateChanged(UIElement child, StateChange change)
-        {
-
         }
 
         protected void onAddChild(UIElement child)
@@ -379,11 +361,6 @@ class EditorAtlasPicker : Control
 
     public override
     {
-        protected void onAddChild(UIElement child){}
-        protected void onRemoveChild(UIElement child){}
-        protected void onNewParent(UIElement newParent, UIElement oldParent){}
-        protected void onChildStateChanged(UIElement child, StateChange change){}
-
         protected void onPositionChanged(vec2 oldPos, vec2 newPos)
         {
             this._box.position = newPos;
@@ -437,11 +414,6 @@ class EditorLabeledInput : Control
 
     public override
     {
-        protected void onAddChild(UIElement child){}
-        protected void onRemoveChild(UIElement child){}
-        protected void onNewParent(UIElement newParent, UIElement oldParent){}
-        protected void onChildStateChanged(UIElement child, StateChange change){}
-
         protected void onPositionChanged(vec2 oldPos, vec2 newPos)
         {
             this._box.position = newPos;
@@ -582,11 +554,6 @@ class EditorSpriteInfo : Control
 
     public override
     {
-        protected void onAddChild(UIElement child){}
-        protected void onRemoveChild(UIElement child){}
-        protected void onNewParent(UIElement newParent, UIElement oldParent){}
-        protected void onChildStateChanged(UIElement child, StateChange change){}
-
         protected void onPositionChanged(vec2 oldPos, vec2 newPos)
         {
             this._box.position = newPos;

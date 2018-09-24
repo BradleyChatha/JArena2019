@@ -173,11 +173,6 @@ class SimpleTextButton : SimpleButton
 
     override
     {
-        protected void onNewParent(UIElement newParent, UIElement oldParent){}
-        protected void onChildStateChanged(UIElement child, StateChange change){}
-        protected void onAddChild(UIElement child){}
-        protected void onRemoveChild(UIElement child){}
-
         protected void onColourChanged(Colour old, Colour newCol)
         {
             this._rect.colour = newCol;
@@ -248,13 +243,6 @@ class SimpleLabel : Control
 
     override
     {
-        protected void onNewParent(UIElement newParent, UIElement oldParent){}
-        protected void onChildStateChanged(UIElement child, StateChange change){}
-        protected void onAddChild(UIElement child){}
-        protected void onRemoveChild(UIElement child){}
-        public void onUpdate(InputManager input, Duration deltaTime){}
-        protected void onSizeChanged(vec2 oldSize, vec2 newSize){}
-
         protected void onPositionChanged(vec2 oldPos, vec2 newPos)
         {
             this.updateLayout();
@@ -310,11 +298,6 @@ class SimpleTextBox : TextInput
 
     override
     {
-        protected void onNewParent(UIElement newParent, UIElement oldParent){}
-        protected void onChildStateChanged(UIElement child, StateChange change){}
-        protected void onAddChild(UIElement child){}
-        protected void onRemoveChild(UIElement child){}
-
         protected void onSizeChanged(vec2 oldSize, vec2 newSize)
         {
             this._rect.size = newSize;
