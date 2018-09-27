@@ -520,7 +520,11 @@ class CircleShape : ITransformable
         Vertex[] verts()
         {
             if(this._transform.isDirty)
+            {
+                this._transformedVerts.length = 0;
+                this._transformedVerts ~= this._verts[0..$];
                 this._transform.transformVerts(this._transformedVerts[0..$]);
+            }
 
             return this._transformedVerts[0..$];
         }

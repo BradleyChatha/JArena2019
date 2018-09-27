@@ -166,7 +166,6 @@ final class Window
             GL.postContextLoad();
             debug GL.debugLogEnable();
 
-            glViewport(0, 0, size.x, size.y); // Use the entire window to render. TODO: Get round to putting this functionality into Camera
             glEnable(GL_BLEND);               // Enable blending
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             GL.checkForError();

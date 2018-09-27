@@ -21,6 +21,8 @@ class Test : Scene, IPostBox
     EditorButton tooltippedButton;
     EditorScrollBoxContainer scrollbox;
     CircleShape circle;
+    RectangleI scissorRect;
+    bool useWireframe;
     //GridContainer  grid;
 
     public override
@@ -191,9 +193,19 @@ class Test : Scene, IPostBox
             if(input.wasKeyTapped(Scancode.DOWN) && !input.wasKeyRepeated(Scancode.DOWN))
                 this.tahn.yLevel = this.tahn.yLevel - 1;
             if(input.isKeyDown(Scancode.LEFT))
-                this.tahn.rotationF = this.tahn.rotation - speedRotate;
+            {
+                if(!input.isShiftDown)
+                    this.tahn.rotationF = this.tahn.rotation - speedRotate;
+                else
+                    super.camera.rotation = super.camera.rotation - speedRotate;
+            }
             if(input.isKeyDown(Scancode.RIGHT))
-                this.tahn.rotationF = this.tahn.rotation + speedRotate;
+            {
+                if(!input.isShiftDown)
+                    this.tahn.rotationF = this.tahn.rotation + speedRotate;
+                else
+                    super.camera.rotation = super.camera.rotation + speedRotate;
+            }
 
             if(input.wasKeyTapped(Scancode.G) && !input.wasKeyRepeated(Scancode.G))
             {
@@ -213,6 +225,24 @@ class Test : Scene, IPostBox
                 Systems.assets.get!Font("Crackdown").dispose();
             }
 
+            if(input.wasKeyTapped(Scancode.F4))
+            {
+                if(this.scissorRect == RectangleI.init)
+                    this.scissorRect = RectangleI(ivec2(input.mousePosition), 200, 200);
+                else
+                    this.scissorRect = RectangleI.init;
+            }
+            if(this.scissorRect != RectangleI.init)
+                this.scissorRect = RectangleI(ivec2(input.mousePosition), 200, 200);
+
+            if(input.wasKeyTapped(Scancode.F5))
+                this.useWireframe = !this.useWireframe;
+
+            if(input.isKeyDown(Scancode.F6))
+                super.camera.viewport = RectangleI(0, 0, ivec2(input.mousePosition));
+
+            this.circle.position = super.camera.screenToWorldPos(input.mousePosition);
+
             super.camera.center = this.tahn.position + (this.tahn.bounds.size / 2);
 
             super.updateScene(deltaTime);
@@ -221,9 +251,14 @@ class Test : Scene, IPostBox
 
         void onRender(Window window)
         {
+            window.renderer.scissorRect = this.scissorRect;
             super.renderScene(window);
             window.renderer.drawCircleShape(this.circle);
+            window.renderer.scissorRect = RectangleI.init;
+
+            window.renderer.useWireframe = this.useWireframe;
             super.renderUI(window);
+            window.renderer.useWireframe = false;
 
             window.renderer.camera = super.guiCamera;
             foreach(shape; this.centerLines)

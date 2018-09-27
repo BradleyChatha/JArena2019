@@ -20,14 +20,16 @@ private
 final class Camera
 {
     /// If this is passed as the camera's view area, then it will select a default area for itself.
-    static const DEFAULT_CAMERA_RECT = RectangleF(float.nan, float.nan, float.nan, float.nan);
-    
+    static const DEFAULT_RECTF = RectangleF(-1, -1, -1, -1);
+    static const DEFAULT_RECTI = RectangleI(-1, -1, -1, -1);
+
     private
     {
-        Transform _view;
-        vec2      _size;
-        mat4      _ortho;
-        mat4      _viewInverted;
+        Transform  _view;
+        RectangleI _viewport;
+        vec2       _size;
+        mat4       _ortho;
+        mat4       _viewInverted;
 
         @trusted
         void updateProjection() nothrow
@@ -47,12 +49,13 @@ final class Camera
          +  rect = The view area to use.
          + ++/
         @safe
-        this(RectangleF rect = DEFAULT_CAMERA_RECT) nothrow
+        this(RectangleF rect = DEFAULT_RECTF) nothrow
         {
-            if(rect == DEFAULT_CAMERA_RECT)
+            if(rect == DEFAULT_RECTF)
                 rect = RectangleF(0, 0, vec2(Systems.window.size));
 
             this.reset(rect);
+            this.viewport = DEFAULT_RECTI;
         }
 
         /++
@@ -67,10 +70,15 @@ final class Camera
          + Returns:
          +  `screenPos` as a world position.
          + ++/
-        @safe @nogc
-        inout(vec2) screenToWorldPos(vec2 screenPos) nothrow pure inout
+        @safe
+        vec2 screenToWorldPos(vec2 screenPos)
         {
-            return this._view.translation + screenPos;
+            auto pv = this._ortho * this.viewMatrix;
+            return (pv.invert * vec4( 2.0 * screenPos.x / this.size.x - 1.0, 
+                                     -2.0 * (screenPos.y - this.size.y) / this.size.y - 1.0, 
+                                     1, 
+                                     1)
+                    ).xy;
         }
 
         /++
@@ -145,15 +153,15 @@ final class Camera
         @property @safe @nogc
         const(AngleDegrees) rotation() nothrow const
         {
-            return AngleDegrees(0);
-            //return typeof(return)(sfView_getRotation(this.handle));
+            return this._view.rotation;
         }
 
         ///
         @property @safe @nogc
         void rotation(float degrees) nothrow
         {
-            //sfView_setRotation(this.handle, degrees);
+            this._view.rotation = AngleDegrees(degrees);
+            this._view.markDirty();
         }
 
         ///
@@ -185,17 +193,16 @@ final class Camera
 
         ///
         @property @safe @nogc
-        const(RectangleF) viewport() nothrow const
+        RectangleI viewport() nothrow
         {
-            return RectangleF(0, 0, 0, 0);
-            //return sfView_getViewport(this.handle).to!RectangleF;
+            return this._viewport;
         }
         
         ///
         @property @safe @nogc
-        void viewport(RectangleF port) nothrow
+        void viewport(RectangleI port) nothrow
         {
-            //sfView_setViewport(this.handle, port.toSF!sfFloatRect);
+            this._viewport = port;
         }
 
         /++
@@ -255,8 +262,9 @@ final class Renderer
         // we have to store it in a struct before the actual rendering, otherwise the camera info may be incorrect.
         struct CameraInfo
         {
-            mat4 view;
-            mat4 projection;
+            mat4       view;
+            mat4       projection;
+            RectangleI viewport;
         }
 
         struct BufferInfo
@@ -269,13 +277,17 @@ final class Renderer
         enum BucketCommand
         {
             Quads,
-            Buffer
+            Buffer,
+            Scissor,
+            UseWireframe
         }
 
         union BucketData
         {
-            Slice quadVerts;    // [Quads] Slice into _vertBuffer
-            BufferInfo buffer;  // [Buffer] The buffer to draw
+            Slice      quadVerts;    // [Quads]        Slice into _vertBuffer
+            BufferInfo buffer;       // [Buffer]       The buffer to draw
+            RectangleI scissorRect;  // [Scissor]      The rect to scissor
+            bool       useWireframe; // [UseWireframe] The value to set the wireframe flag to
         }
 
         // Used for batching.
@@ -365,6 +377,13 @@ final class Renderer
                     previousShader = bucket.shader;
                     previousCam    = bucket.camera;
 
+                    if(bucket.camera.viewport == Camera.DEFAULT_RECTI)
+                        bucket.camera.viewport = RectangleI(0, 0, ivec2(this._window.size));
+                    glViewport(bucket.camera.viewport.position.x, 
+                               this._window.size.y - bucket.camera.viewport.position.y - bucket.camera.viewport.size.y,
+                               bucket.camera.viewport.size.x,     
+                               bucket.camera.viewport.size.y);
+
                     // Textureless renders can be used for things like shapes
                     if(bucket.texture !is null && bucket.texture != previousTexture && !bucket.texture.isDisposed)
                     {
@@ -381,6 +400,21 @@ final class Renderer
                 {
                     case BucketCommand.Buffer:
                         this.displayBuffer(bucket.data.buffer);
+                        break;
+
+                    case BucketCommand.Scissor:
+                        if(bucket.data.scissorRect == RectangleI.init)
+                            glDisable(GL_SCISSOR_TEST);
+                        else
+                        {
+                            auto r = bucket.data.scissorRect;
+                            glEnable(GL_SCISSOR_TEST);
+                            glScissor(r.position.x, this._window.size.y - (r.position.y + r.size.y), r.size.x, r.size.y);
+                        }
+                        break;
+
+                    case BucketCommand.UseWireframe:
+                        glPolygonMode(GL_FRONT_AND_BACK, (bucket.data.useWireframe) ? GL_LINE : GL_FILL);
                         break;
 
                     case BucketCommand.Quads:
@@ -505,7 +539,7 @@ final class Renderer
             auto bucket = RenderBucket(
                 texture,
                 shader,
-                CameraInfo(this.camera.viewMatrix, this.camera._ortho),
+                CameraInfo(this.camera.viewMatrix, this.camera._ortho, this.camera.viewport),
                 BucketCommand.Buffer
             );
             bucket.data.buffer = BufferInfo(buffer.vao, cast(uint)(buffer.eboSize / uint.sizeof), buffer.dataType);
@@ -532,11 +566,27 @@ final class Renderer
             this.addToBucket(texture, vertSlice, shader);
         }
 
+        /++
+         + Sets the rectangle of where on screen rendering should be limited to.
+         +
+         + For example, a rect of (0, 0, 200, 200) means only the first 200x200 pixels can be rendered to,
+         + and anything outside of that rectangle is discarded.
+         + ++/
+        @property @safe
+        void scissorRect(RectangleI rect) nothrow
+        {
+            BucketData data;
+            data.scissorRect = rect;
+            this.addCommandBucket(BucketCommand.Scissor, data);
+        }
+
         /// Sets whether to draw in wireframe or not.
-        @property @nogc
+        @property @safe
         void useWireframe(bool use) nothrow
         {
-            glPolygonMode(GL_FRONT_AND_BACK, (use) ? GL_LINE : GL_FILL);
+            BucketData data;
+            data.useWireframe = use;
+            this.addCommandBucket(BucketCommand.UseWireframe, data);
         }
 
         /// Returns: The current `Camera` being used.
@@ -555,6 +605,19 @@ final class Renderer
         }
     }
 
+    @safe
+    private void addCommandBucket(BucketCommand command, BucketData data) nothrow
+    {
+        auto bucket = RenderBucket(
+            null,
+            this._colourShader, // dummy, we just need to not crash
+            CameraInfo(mat4.init, mat4.init, Camera.DEFAULT_RECTI),
+            command
+        );
+        bucket.data = data;
+        this._buckets ~= bucket;
+    }
+
     pragma(inline, true)
     private void displayBuffer(BufferInfo info)
     {
@@ -568,7 +631,7 @@ final class Renderer
         // When 'sprite' has a different texture or shader than the last one, a new bucket is created
         // Even there is a bucket that already has 'sprite''s texture and shader, it won't be added into that bucket unless it's the latest one
         // This preserves draw order, while also being a slight optimisation.
-        auto camera     = CameraInfo(this.camera.viewMatrix, this.camera._ortho);
+        auto camera     = CameraInfo(this.camera.viewMatrix, this.camera._ortho, this.camera.viewport);
         auto lastBucket = (this._buckets.length == 0) ? RenderBucket.init : this._buckets[$-1];
         if(this._buckets.length == 0
         || lastBucket.texture != texture
