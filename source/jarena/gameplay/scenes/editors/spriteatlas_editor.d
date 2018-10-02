@@ -12,6 +12,7 @@ private
     enum ATLAS_PICKER_SIZE              = vec2(210, 731);
     enum ATLAS_PICKER_BUTTON_POSITION   = vec2(0, 400);
     enum SELECTION_RECTANGLE_COLOUR     = Colour(248, 221, 92, 128);
+    enum ZOOM_STEP                      = 0.10;
 }
 
 @SceneName("Sprite Atlas Editor")
@@ -62,6 +63,9 @@ class SpriteAtlasEditorScene : Scene
         size_t          _spriteCount;
         SpriteRect[]    _spriteRects;
         SpriteRect      _selectedSpriteRect;
+
+        // etc.
+        vec2 _lastMousePos;
 
         void addToolButton(Texture image, string name, string description, Scancode hotkey, RectMode mode)
         {
@@ -164,6 +168,11 @@ class SpriteAtlasEditorScene : Scene
         {
             auto spriteRect = this._selectedSpriteRect;
             this._windows[WindowType.SpriteInfo].as!EditorSpriteInfo.useSprite(spriteRect.metadata.spriteName);
+
+            foreach(rect; this._spriteRects)
+                rect.yLevel = 1;
+
+            spriteRect.yLevel = 2;
         }
 
         void onSpriteRectSelected(SpriteRect rect)
@@ -232,6 +241,14 @@ class SpriteAtlasEditorScene : Scene
             // If the mouse is over any of the GUI, then don't bother trying to process it.
             if(this.isMouseOverGUI(input))
                 return;
+
+            if(input.wheelDelta != 0 && input.isShiftDown && this._mode != RectMode.Resize)
+                super.camera.scale = super.camera.scale + (vec2(ZOOM_STEP) * vec2(-input.wheelDelta));
+
+            if(input.isMouseButtonDown(MouseButton.Middle))
+                super.camera.move(-(vec2(input.mousePosition) - vec2(this._lastMousePos)));
+
+            this._lastMousePos = input.mousePosition;
         }
     }
 

@@ -763,6 +763,10 @@ class EditorRectangle(MetadataT) : DrawableObject
                         this._rect.position = vec2(this._rect.position.x, oldPos.y);
                         this._rect.size     = vec2(this._rect.size.x, oldSize.y);
                     }
+                    if(this._rect.position.x < this._allowedArea.position.x)
+                        this._rect.position = vec2(this._allowedArea.position.x, this._rect.position.y);
+                    if(this._rect.position.y < this._allowedArea.position.y)
+                        this._rect.position = vec2(this._rect.position.x, this._allowedArea.position.y);
                     if(this._rect.area.topRight.x > this._allowedArea.topRight.x)
                         this._rect.size = vec2(this._allowedArea.topRight.x - this._rect.position.x, this._rect.size.y);
                     if(this._rect.area.botRight.y > this._allowedArea.botRight.y)
