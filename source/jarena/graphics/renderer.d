@@ -192,6 +192,19 @@ final class Camera
         }
 
         ///
+        void scale(vec2 sc)
+        {
+            this._view.scale = sc;
+            this._view.markDirty();
+        }
+
+        ///
+        vec2 scale()
+        {
+            return this._view.scale;
+        }
+
+        ///
         @property @safe @nogc
         RectangleI viewport() nothrow
         {
