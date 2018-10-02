@@ -185,6 +185,16 @@ final class StackContainer : Container
 
         public void onRender(Window window)
         {
+            auto oldClip = window.renderer.scissorRect;
+            scope(exit) window.renderer.scissorRect = oldClip;
+
+            window.renderer.scissorRect = RectangleI(
+                cast(int)(this.position.x - this._rect.borderSize),
+                cast(int)(this.position.y - this._rect.borderSize),
+                cast(int)(this.size.x     + (this._rect.borderSize * 2)),
+                cast(int)(this.size.y     + (this._rect.borderSize * 2))
+            );
+
             if(super.colour != Colour.transparent)
                 window.renderer.drawRectShape(this._rect);
 
@@ -221,9 +231,6 @@ class FreeFormContainer : Container
             import std.algorithm : countUntil;
             this._children.removeAt(this._children.countUntil(child));
         }
-        
-        protected void onPositionChanged(vec2 oldPos, vec2 newPos){}
-        protected void onColourChanged(Colour oldColour, Colour newColour){}
 
         public void onUpdate(InputManager input, Duration deltaTime)
         {
@@ -235,180 +242,6 @@ class FreeFormContainer : Container
         {
             foreach(child; this.children)
                 child.onRender(window);
-        }
-
-        @property
-        inout(UIElement[]) children() inout
-        {
-            return this._children;
-        }
-    }
-}
-
-/++
- + 
- + ++/
-deprecated("This is still heavily WIP and probably won't be worked on for quite a while. Don't use it.")
-final class GridContainer : Container
-{
-    // TODO: Add some common functionality so other containers can make use of anchoring.
-    enum Anchor
-    {
-        None,
-
-        TopLeft = None,
-        Top,
-        TopRight,
-        Left,
-        Middle,
-        Right,
-        BottomLeft,
-        Bottom,
-        BottomRight
-    }
-    
-    enum SizeType
-    {
-        Pixels // Offset = Space between this definition and previous definition, in pixels.
-    }
-    
-    private
-    {
-        alias IsRow = Flag!"isRow";
-        
-        // To make it easier to tell the difference between when they're used.
-        alias RowDef = Definition;
-        alias ColumnDef = Definition;
-        struct Definition
-        {
-            SizeType type;
-            float offset;
-        }
-
-        struct GridSlot
-        {
-            RectangleF rect;
-        }
-
-        struct ElementInfo
-        {
-            UIElement element;
-            ivec2     slot;
-        }
-        
-        UIElement[]     _children;
-        ElementInfo[]   _childrenInfo; // Need two arrays, since I need a UIElement[] for Container.children to return.
-        GridSlot[]      _slots;
-        RowDef[]        _rows;
-        ColumnDef[]     _columns;
-
-        @safe
-        void calculateGrid() nothrow
-        {
-            size_t getSlotIndex(size_t column, size_t row)
-            {
-                return (this._columns.length * row) + column;
-            }
-            
-            this._slots.length = getSlotIndex(this._columns.length, this._rows.length);
-            vec2 previous = this.position;
-            foreach(rowIndex, currentRow; this._rows)
-            {
-                previous.x = this.position.x;
-                foreach(columnIndex, currentColumn; this._columns)
-                {
-                    auto slotIndex = getSlotIndex(columnIndex, rowIndex);
-
-                    GridSlot slot;
-                    slot.rect = RectangleF(previous.x,
-                                           previous.y,
-                                           currentColumn.offset,
-                                           currentRow.offset
-                                          );
-
-                    this._slots[slotIndex] = slot;
-                    
-                    previous.x = slot.rect.topRight.x + 1;
-                    if(columnIndex == this._columns.length - 1)
-                        previous.y = slot.rect.botRight.y + 1;
-                }
-            }
-        }
-    }
-
-    public
-    {
-        bool drawGrid = false;
-
-        this(vec2 position, vec2 size = vec2(float.nan, float.nan))
-        {
-            this.position = position;
-            this.size     = (size == vec2(float.nan, float.nan))
-                            ? vec2(Systems.window.size)
-                            : size;
-        }
-        
-        @safe
-        void addRow(SizeType type, float offset) nothrow
-        {
-            this._rows ~= RowDef(type, offset);
-            this.calculateGrid();
-        }
-        
-        @safe
-        void addColumn(SizeType type, float offset) nothrow
-        {
-            this._columns ~= ColumnDef(type, offset);
-            this.calculateGrid();
-        }
-    }
-    
-    override
-    {        
-        protected void onNewParent(UIElement newParent, UIElement oldParent){}
-        protected void onSizeChanged(vec2 oldSize, vec2 newSize){}
-        protected void onChildStateChanged(UIElement child, StateChange change){}
-        protected void onColourChanged(Colour oldColour, Colour newColour){}
-
-        protected void onPositionChanged(vec2 oldPos, vec2 newPos)
-        {
-            auto diff = newPos - oldPos;
-
-            foreach(ref slot; this._slots)
-                slot.rect.position += diff;
-        }
-        
-        protected void onAddChild(UIElement child)
-        {
-            this._children ~= child;
-            this._childrenInfo.length += 1;
-        }
-
-        protected void onRemoveChild(UIElement child)
-        {
-            import std.algorithm : countUntil;
-
-            auto index = this._children.countUntil(child);
-            this._children.removeAt(index);
-            this._childrenInfo.removeAt(index);
-        }
-
-        public void onUpdate(InputManager input, Duration deltaTime)
-        {
-            foreach(child; this.children)
-                child.onUpdate(input, deltaTime);
-        }
-
-        public void onRender(Window window)
-        {
-            foreach(child; this.children)
-                child.onRender(window);
-
-            if(this.drawGrid)
-            {
-                foreach(slot; this._slots)
-                    window.renderer.drawRect(slot.rect.position, slot.rect.size, Colours.blossom);
-            }
         }
 
         @property
