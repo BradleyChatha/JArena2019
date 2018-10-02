@@ -311,6 +311,7 @@ final class Renderer
         Shader              _colourShader;
         Shader              _textShader;
         RectangleShape      _rect;
+        RectangleI          _scissorRect;
 
         // Despite having very similar names, they're used for different purposes.
         // VertexBuffer is used to store the data that is uploaded to the GPU
@@ -403,6 +404,7 @@ final class Renderer
                         break;
 
                     case BucketCommand.Scissor:
+                        this._scissorRect = bucket.data.scissorRect;
                         if(bucket.data.scissorRect == RectangleI.init)
                             glDisable(GL_SCISSOR_TEST);
                         else
@@ -571,13 +573,25 @@ final class Renderer
          +
          + For example, a rect of (0, 0, 200, 200) means only the first 200x200 pixels can be rendered to,
          + and anything outside of that rectangle is discarded.
+         +
+         + Note that if the `rect`'s size on either axis is below 0, it will be clamped to 0.
          + ++/
         @property @safe
         void scissorRect(RectangleI rect) nothrow
         {
+            if(rect.size.x < 0) rect.size.x = 0;
+            if(rect.size.y < 0) rect.size.y = 0;
+
             BucketData data;
             data.scissorRect = rect;
             this.addCommandBucket(BucketCommand.Scissor, data);
+        }
+
+        ///
+        @property @safe
+        inout(RectangleI) scissorRect() nothrow inout
+        {
+            return this._scissorRect;
         }
 
         /// Sets whether to draw in wireframe or not.

@@ -197,6 +197,15 @@ class SimpleTextButton : SimpleButton
 
         public void onRender(Window window)
         {
+            auto oldClip = window.renderer.scissorRect;
+            scope(exit) window.renderer.scissorRect = oldClip;
+            window.renderer.scissorRect = RectangleI(
+                cast(int)(this.position.x - this._rect.borderSize),
+                cast(int)(this.position.y - this._rect.borderSize),
+                cast(int)(this.size.x     + (this._rect.borderSize * 2)),
+                cast(int)(this.size.y     + (this._rect.borderSize * 2))
+            );
+
             window.renderer.drawRectShape(this._rect);
             window.renderer.drawText(this._text);
         }
@@ -325,6 +334,15 @@ class SimpleTextBox : TextInput
 
         public void onRender(Window window)
         {
+            auto oldClip = window.renderer.scissorRect;
+            scope(exit) window.renderer.scissorRect = oldClip;
+            window.renderer.scissorRect = RectangleI(
+                cast(int)(this.position.x - this._rect.borderSize),
+                cast(int)(this.position.y - this._rect.borderSize),
+                cast(int)(this.size.x     + (this._rect.borderSize * 2)),
+                cast(int)(this.size.y     + (this._rect.borderSize * 2))
+            );
+
             window.renderer.drawRectShape(this._rect);
             super.onRender(window);
         }
