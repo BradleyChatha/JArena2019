@@ -1127,13 +1127,6 @@ struct AnimationInfo
     bool repeat;
 }
 
-/// A class wrapper around `AnimationInfo`, used by loaders.
-class AnimationInfoClass
-{
-    alias info this;
-    AnimationInfo info;
-}
-
 /++
  + Adds the ability for a `Sprite` to be animated.
  +

@@ -37,6 +37,7 @@ final class Camera
             import std.exception : assumeWontThrow;
             import dlsl.projection;
             this._ortho = glOrthographic(0, this.size.x, this.size.y, 0, -1, 1).assumeWontThrow;
+            this._view.origin = this.worldToScreenPos(this.center);
         }
     }
 

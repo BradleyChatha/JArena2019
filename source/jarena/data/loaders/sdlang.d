@@ -569,13 +569,13 @@ class AnimationExtensionSDL : LoaderExtensionSDLFile
             assert(atlas !is null);
 
             // Then create the object.
-            auto info = new AnimationInfoClass();
+            AnimationInfo info;
             info.name          = name;
             info.spriteSheet   = atlas.getSpriteSheet(spriteSheetName);
             info.delayPerFrame = frameDelayMS;
             info.repeat        = repeat;
 
-            return [PackageAsset(name, info)];
+            return [PackageAsset(name, new StructWrapperAsset!AnimationInfo(info))];
         }
     }
 
