@@ -62,7 +62,7 @@ final class AnimationViewerScene : ViewerScene
             import std.array : array;
             import std.algorithm : map;
 
-            this._animations = Systems.assets.byKeyValueFiltered!AnimationInfoClass.map!(v => v.value.info).array;
+            this._animations = Systems.assets.byKeyValueFiltered!AnimationInfo.map!(v => v.value).array;
         }
     }
 

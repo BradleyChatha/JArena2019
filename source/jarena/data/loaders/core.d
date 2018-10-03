@@ -136,6 +136,23 @@ class DelayedLoadAsset
     }
 }
 
+/++
+ + This class is wrapped around a struct, and has special support in the `AssetManager`.
+ +
+ + Anytime a struct needs to be loaded as an asset, use this class instead of a custom one.
+ + ++/
+class StructWrapperAsset(T)
+if(is(T == struct))
+{
+    alias value this;
+    T value;
+
+    this()(T value)
+    {
+        this.value = value;
+    }
+}
+
 package struct Package
 {
     string name;
@@ -379,7 +396,7 @@ abstract class Loader
                     this.executeTask(task);
                 catch(Exception ex)
                 {
-                    import std.algorithm : map;
+                    import std.algorithm : map, filter, canFind;
                     import std.array     : array;
 
                     PackageLoadFailedException.Info info;
@@ -387,7 +404,9 @@ abstract class Loader
                     info.failedInfo  = task.debugInfo;
                     info.waitingInfo = this._waitingForAssetList.map!(waiting => PackageLoadFailedException.WaitingInfo(waiting.info.debugInfo, waiting.assetName))
                                                                 .array;
-                    info.loadedInfo  = this._loadingList[0..taskI].map!(task => task.debugInfo).array;
+                    info.loadedInfo  = this._loadingList[0..taskI].filter!(task => !this._waitingForAssetList.canFind!"a.info == b"(task))
+                                                                  .map!(task => task.debugInfo)
+                                                                  .array;
                     info.notExecutedInfo = (taskI == this._loadingList.length - 1) ? null : this._loadingList[taskI+1..$].map!(task => task.debugInfo).array;
 
                     throw new PackageLoadFailedException(info, ex.message.idup);

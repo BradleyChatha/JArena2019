@@ -241,6 +241,9 @@ class Test : Scene, IPostBox
             if(input.isKeyDown(Scancode.F6))
                 super.camera.viewport = RectangleI(0, 0, ivec2(input.mousePosition));
 
+            if(input.wasKeyTapped(Scancode.F7))
+                Systems.assets.unloadPackage("Debug");
+
             this.circle.position = super.camera.screenToWorldPos(input.mousePosition);
 
             super.camera.center = this.tahn.position + (this.tahn.bounds.size / 2);
