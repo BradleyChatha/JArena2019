@@ -548,9 +548,9 @@ final class Renderer
             this.drawQuadMultiple(text.texture, text.verts, this._textShader);
         }
 
-        /// Draws a VertexBuffer
+        /// Draws a BufferObject
         void drawBuffer(VB)(ref VB buffer, TextureBase texture, Shader shader)
-        if(isVertexBuffer!VB)
+        if(isBufferObject!VB)
         {
             auto bucket = RenderBucket(
                 texture,
@@ -558,7 +558,7 @@ final class Renderer
                 CameraInfo(this.camera.viewMatrix, this.camera._ortho, this.camera.viewport),
                 BucketCommand.Buffer
             );
-            bucket.data.buffer = BufferInfo(buffer.vao, cast(uint)(buffer.eboSize / uint.sizeof), buffer.dataType);
+            bucket.data.buffer = BufferInfo(buffer.vao, cast(uint)(buffer.eboSizeBytes / uint.sizeof), buffer.dataType);
             this._buckets ~= bucket;
         }
 
@@ -589,6 +589,8 @@ final class Renderer
          + and anything outside of that rectangle is discarded.
          +
          + Note that if the `rect`'s size on either axis is below 0, it will be clamped to 0.
+         +
+         + `RectangleI.init` can be used to disable the limited rendering.
          + ++/
         @property @safe
         void scissorRect(RectangleI rect) nothrow

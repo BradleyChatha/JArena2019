@@ -163,8 +163,8 @@ final class SpritePool
             // Update array/buffer sizes
             auto oldSize = this._sprites.length;
             this._sprites.length = newSize;
-            this._verts.vboSize = newSize * Vertex.sizeof * VPS;
-            this._verts.eboSize = newSize * uint.sizeof * IPS;
+            this._verts.vboSizeBytes = newSize * Vertex.sizeof * VPS;
+            this._verts.eboSizeBytes = newSize * uint.sizeof * IPS;
 
             // Generate the EBO indicies for each new sprite, as well as the sprite itself.
             uint[] eboUpdater;
