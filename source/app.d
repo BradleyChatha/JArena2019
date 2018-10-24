@@ -1,6 +1,6 @@
 import std.stdio, std.experimental.logger;
 import derelict.sdl2.sdl, derelict.freeimage.freeimage, derelict.freetype, derelict.fmod.fmod;
-import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jarena.gameplay.gui, jarena.gameplay.scenes;
+import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jarena.data.serialisation, jarena.gameplay.gui, jarena.gameplay.scenes;
 
 void main()
 {

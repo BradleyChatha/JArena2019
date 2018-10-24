@@ -1,34 +1,33 @@
-type "Animation:list"
+type "Animation:list" // Legacy
 
-value {
-    type "Animation:spriteSheet"
-    name "Test Animation"
+Animation:list {
+    spriteSheet {
+        name "Test Animation"
 
-    atlasRef "Test Atlas"
-    spriteSheetRef "TahnAnimation"
+        atlasRef "Test Atlas"
+        spriteSheetRef "TahnAnimation"
 
-    frameDelayMS 500
-    repeat true
-}
+        frameDelayMS 500
+        repeat true
+    }
 
-value {
-    type "Animation:spriteSheet"
-    name "Tile Animation"
+    spriteSheet {
+        name "Tile Animation"
 
-    atlasRef "Test Atlas"
-    spriteSheetRef "TileAnimation"
+        atlasRef "Test Atlas"
+        spriteSheetRef "TileAnimation"
 
-    frameDelayMS 1500
-    repeat false
-}
+        frameDelayMS 1500
+        repeat false
+    }
 
-value {
-	type "Animation:spriteSheet"
-	name "Explosion Animation"
-	
-	atlasRef "Explosion Atlas"
-	spriteSheetRef "ExplosionFrames"
-	
-	frameDelayMS 25
-	repeat false
+    spriteSheet {
+        name "Explosion Animation"
+        
+        atlasRef "Explosion Atlas"
+        spriteSheetRef "ExplosionFrames"
+        
+        frameDelayMS 25
+        repeat false
+    }
 }

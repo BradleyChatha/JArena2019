@@ -15,6 +15,7 @@ jarena.*
 *.o
 *.obj
 *.lst
+*.cg
 trace.log
 trace.def
 trace.html

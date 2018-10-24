@@ -1,35 +1,38 @@
-type "Sprite:atlas"
-textureRef "tex_TestAtlas"
-name "Test Atlas"
+type "Sprite:atlas" // Legacy, just here so it works for the time being
 
-sprite "Jash" {
-	position 0 0
-	size 256 256
-}
+Sprite:atlas {
+	textureRef "tex_TestAtlas"
+	name "Test Atlas"
 
-sprite "TahnBig" {
-	position 256 0
-	size 256 256
-}
+	sprite "Jash" {
+		position 0 0
+		size 256 256
+	}
 
-sprite "Tahn" {
-	position 512 0
-	size 32 32
-}
+	sprite "TahnBig" {
+		position 256 0
+		size 256 256
+	}
 
-sprite "Sword" {
-	position 513 32
-	size 21 74
-}
+	sprite "Tahn" {
+		position 512 0
+		size 32 32
+	}
 
-spriteSheet "TahnAnimation" {
-    position 512 106
-    size 160 64
-    frameSize 32 32
-}
+	sprite "Sword" {
+		position 513 32
+		size 21 74
+	}
 
-spriteSheet "TileAnimation" {
-	position 512 170
-	size 96 32
-	frameSize 32 32
+	spriteSheet "TahnAnimation" {
+		position 512 106
+		size 160 64
+		frameSize 32 32
+	}
+
+	spriteSheet "TileAnimation" {
+		position 512 170
+		size 96 32
+		frameSize 32 32
+	}
 }

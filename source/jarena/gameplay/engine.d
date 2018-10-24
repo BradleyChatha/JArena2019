@@ -57,15 +57,16 @@ final class Engine
         ///
         void onInit()
         {
-            import sdlang;
             import std.file : exists;
             
             // Read in the config
             if(exists(ENGINE_CONFIG_PATH))
             {
                 tracef("Loading config file from '%s'", ENGINE_CONFIG_PATH);
-                this._config.updateFromSdlTag(parseFile(ENGINE_CONFIG_PATH));
-                trace(this._config.saveToSdlTag().toSDLDocument());
+                auto archive = new ArchiveSDL();
+                archive.loadFromFile(ENGINE_CONFIG_PATH);
+
+                this._config = Serialiser.deserialise!Config(archive.root);
             }
             else
                 tracef("No config file exists. Please create one at '%s'", ENGINE_CONFIG_PATH);
@@ -187,11 +188,8 @@ final class Engine
     }
 
     ///
-    @Serialisable
     struct Config
     {
-        mixin SerialisableInterface;
-
         Nullable!uvec2 windowSize;
         Nullable!int   targetFPS;
         Nullable!bool  showDebugText;
