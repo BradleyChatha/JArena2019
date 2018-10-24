@@ -5,7 +5,7 @@ private
 {
     import std.experimental.logger, std.exception, std.format;
     import sdlang;
-    import jarena.audio, jarena.core, jarena.graphics, jarena.gameplay, jarena.data.serialise, jarena.data.loaders.core;
+    import jarena.audio, jarena.core, jarena.graphics, jarena.gameplay, jarena.data.serialisation, jarena.data.loaders.core;
 }
 
 /++
@@ -442,28 +442,40 @@ class SpriteAtlasExtensionSDL : LoaderExtensionSDLFile
 {
     private
     {
-        @Serialisable
-        struct SdlangSprite
+        @Name("Sprite:atlas")
+        struct AtlasData
         {
-            mixin SerialisableInterface;
-            
-            ivec2 position;
-            ivec2 size;
+            string name;
+            string textureRef;
+            SpriteData[] sprites;
+            SpriteSheetData[] spriteSheets;
         }
 
-        @Serialisable
-        struct SdlangSpriteSheet
+        @Name("sprite")
+        struct SpriteData
         {
-            mixin SerialisableInterface;
+            @MainValue
+            string name;
 
-            ivec2 position;
-            ivec2 size;
-            ivec2 frameSize;
+            int[2] position;
+            int[2] size;
+        }
+
+        @Name("spriteSheet")
+        struct SpriteSheetData
+        {
+            @MainValue
+            string name;
+
+            int[2] position;
+            int[2] size;
+            int[2] frameSize;
         }
     }
 
     override PackageAsset[] onLoadFileAssets(Loader loader, Tag sdl)
     {
+        sdl = sdl.expectTag("Sprite:atlas");
         auto name = sdl.expectTagValue!string("name");
         infof("Loading SpriteAtlas called '%s'", name);
 
@@ -471,34 +483,21 @@ class SpriteAtlasExtensionSDL : LoaderExtensionSDLFile
         auto texture     = super.waitForAsset!Texture(loader, textureName);
         auto atlas       = new SpriteAtlas(texture);
 
-        foreach(tag; sdl.tags)
+        auto archive = new ArchiveSDL();
+        archive.loadFromTag(sdl);
+
+        auto data = Serialiser.deserialise!AtlasData(archive.root);
+
+        foreach(sprite; data.sprites)
         {
-            switch(tag.name)
-            {
-                case "type":
-                case "name":
-                case "textureRef":
-                    break;
+            infof("Loading sprite named '%s'", sprite.name);
+            atlas.register(sprite.name, RectangleI(ivec2(sprite.position), ivec2(sprite.size)));
+        }
 
-                case "sprite":
-                    auto spriteName = tag.expectValue!string;
-                    infof("Loading sprite named '%s'", spriteName);
-
-                    auto info = SdlangSprite.createFromSdlTag(tag);
-                    atlas.register(spriteName, RectangleI(info.position, info.size));
-                    break;
-
-                case "spriteSheet":
-                    auto sheetName = tag.expectValue!string;
-                    infof("Loading sprite sheet named '%s'", sheetName);
-
-                    auto info = SdlangSpriteSheet.createFromSdlTag(tag);
-                    atlas.registerSpriteSheet(sheetName, RectangleI(info.position, info.size), info.frameSize);
-                    break;
-
-                default:
-                    throw new Exception(tag.name);
-            }
+        foreach(sheet; data.spriteSheets)
+        {
+            infof("Loading sprite sheet named '%s'", sheet.name);
+            atlas.registerSpriteSheet(sheet.name, RectangleI(ivec2(sheet.position), ivec2(sheet.size)), ivec2(sheet.frameSize));
         }
 
         return [PackageAsset(name, atlas)];
@@ -510,56 +509,32 @@ class AnimationExtensionSDL : LoaderExtensionSDLFile
 {
     private
     {
-        PackageAsset[] handleTag(Loader loader, Tag sdl)
+        @Name("Animation:list")
+        struct ListData
         {
-            auto type = sdl.expectTagValue!string("type");
-
-            switch(type)
-            {
-                case "Animation:list":
-                    return this.onLoadList(loader, sdl);
-
-                case "Animation:spriteSheet":
-                    return this.onLoadSpriteSheet(loader, sdl);
-
-                default:
-                    throw new Exception(type);
-            }
+            SpriteSheetData[] sheets;
         }
 
-        PackageAsset[] onLoadList(Loader loader, Tag tag)
+        @Name("spriteSheet")
+        struct SpriteSheetData
         {
-            PackageAsset[] assets;
-
-            foreach(child; tag.tags)
-            {
-                switch(child.name)
-                {
-                    case "value":
-                        assets ~= this.handleTag(loader, child);
-                        break;
-
-                    case "type":
-                        break;
-
-                    default:
-                        throw new Exception(child.name);
-                }
-            }
-
-            return assets;
+            string name;
+            string atlasRef;
+            string spriteSheetRef;
+            uint frameDelayMS;
+            bool repeat;
         }
 
-        PackageAsset[] onLoadSpriteSheet(Loader loader, Tag tag)
+        PackageAsset[] onLoadSpriteSheet(Loader loader, SpriteSheetData sheet)
         {
             // Read in SDLang data
-            auto name = tag.expectTagValue!string("name");
+            auto name = sheet.name;
             infof("Loading SpriteSheet animation called '%s'", name);
 
-            auto atlasName       = tag.expectTagValue!string("atlasRef");
-            auto spriteSheetName = tag.expectTagValue!string("spriteSheetRef");
-            auto frameDelayMS    = tag.expectTagValue!int("frameDelayMS").msecs;
-            auto repeat          = tag.expectTagValue!bool("repeat");
+            auto atlasName       = sheet.atlasRef;
+            auto spriteSheetName = sheet.spriteSheetRef;
+            auto frameDelayMS    = sheet.frameDelayMS.msecs;
+            auto repeat          = sheet.repeat;
 
             infof("[Name='%s'|Atlas='%s'|FrameDelay=%s ms|Repeating=%s]",
                   name, atlasName, frameDelayMS, repeat);
@@ -581,6 +556,16 @@ class AnimationExtensionSDL : LoaderExtensionSDLFile
 
     override PackageAsset[] onLoadFileAssets(Loader loader, Tag fileTag)
     {
-        return this.handleTag(loader, fileTag);
+        fileTag = fileTag.expectTag("Animation:list");
+        auto archive = new ArchiveSDL();
+        archive.loadFromTag(fileTag);
+
+        PackageAsset[] assets;
+        auto data = Serialiser.deserialise!ListData(archive.root);
+
+        foreach(sheet; data.sheets)
+            assets ~= this.onLoadSpriteSheet(loader, sheet);
+
+        return assets;
     }
 }

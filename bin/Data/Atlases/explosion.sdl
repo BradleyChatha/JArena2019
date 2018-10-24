@@ -1,9 +1,12 @@
-type "Sprite:atlas"
-textureRef "tex_Explosion"
-name "Explosion Atlas"
+type "Sprite:atlas" // Legacy
 
-spriteSheet "ExplosionFrames" {
-    position 0 0
-    size 256 256
-    frameSize 64 64
+Sprite:atlas {
+    textureRef "tex_Explosion"
+    name "Explosion Atlas"
+
+    spriteSheet "ExplosionFrames" {
+        position 0 0
+        size 256 256
+        frameSize 64 64
+    }
 }
