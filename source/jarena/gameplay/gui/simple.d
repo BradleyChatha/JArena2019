@@ -3,7 +3,7 @@ module jarena.gameplay.gui.simple;
 
 private
 {
-    import jarena.core, jarena.gameplay, jarena.graphics;
+    import jarena.core, jarena.gameplay, jarena.graphics, jarena.maths;
 }
 
 /// The base calss for all buttons.

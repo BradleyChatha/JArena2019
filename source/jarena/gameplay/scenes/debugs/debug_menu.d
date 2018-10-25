@@ -2,7 +2,7 @@ module jarena.gameplay.scenes.debugs.debug_menu;
 
 private
 {
-    import jarena.audio, jarena.core, jarena.gameplay, jarena.graphics, jarena.gameplay.scenes;
+    import jarena.audio, jarena.core, jarena.gameplay, jarena.graphics, jarena.gameplay.scenes, jarena.maths;
 }
 
 @SceneName("Debug Menu")

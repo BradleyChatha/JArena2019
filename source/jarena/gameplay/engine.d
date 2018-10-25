@@ -4,7 +4,7 @@ private
 {
     import std.experimental.logger;
     import std.typecons;
-    import jarena.audio, jarena.core, jarena.graphics, jarena.gameplay, jarena.data;
+    import jarena.audio, jarena.core, jarena.graphics, jarena.gameplay, jarena.data, jarena.maths;
     import opengl;
 
     const ENGINE_CONFIG_PATH       = "data/engineConf.sdl";

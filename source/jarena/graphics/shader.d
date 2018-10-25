@@ -3,7 +3,7 @@ module jarena.graphics.shader;
 
 private
 {
-    import jarena.core, jarena.graphics;
+    import jarena.core, jarena.graphics, jarena.maths;
     import opengl;
 }
 /// Code for the default vertex shader.
@@ -167,7 +167,7 @@ class Shader
             else static if(is(T == int))    glUniform1i(location, data);
             else static if(is(T == vec2))   glUniform2f(location, data.x, data.y);
             else static if(is(T == vec3))   glUniform3f(location, data.x, data.y, data.z);
-            else static if(is(T == mat4))   glUniformMatrix4fv(location, 1, GL_FALSE, data.ptr);
+            else static if(is(T == mat4))   glUniformMatrix4fv(location, 1, GL_FALSE, &data.columns[0].components[0]);
             else static if(is(T == Colour)) glUniform4f(location, data.r, data.g, data.b, data.a);
             else static assert(false, "Unsupported uniform value: " ~ T.stringof);
         }

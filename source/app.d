@@ -2,6 +2,9 @@ import std.stdio, std.experimental.logger;
 import derelict.sdl2.sdl, derelict.freeimage.freeimage, derelict.freetype, derelict.fmod.fmod;
 import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jarena.data.serialisation, jarena.gameplay.gui, jarena.gameplay.scenes;
 
+version(unittest){}
+else
+{
 void main()
 {
     sharedLog = new ConsoleLogger(LogLevel.all);
@@ -55,4 +58,5 @@ void main()
     engine.doLoop();
 
     SDL_Quit();
+}
 }

@@ -6,23 +6,7 @@ private
     import std.experimental.logger;
     import resusage;
     import derelict.sdl2.sdl;
-    import jarena.core.maths;
-}
-
-private enum isDLSLVector(T) = isVector!T;
-private enum isJArenaRect(T) = (is(T == RectangleF) || is(T == RectangleI)); // TODO : Generic test for rects, instead of a hard coded one
-
-/// Implementation of the `to` function for - DLSL Vector -> SFML Vector
-sfVect toSF(sfVect, dlslVect)(dlslVect vect)
-if(isSFMLVector!sfVect && isDLSLVector!dlslVect)
-{
-    static assert(dlslVect.dimension == 2, "Since the SFML vectors we're using are all 2D, we go off the assumption that the DLSL one is also 2D");
-    return sfVect(vect.x, vect.y);
-}
-///
-unittest
-{
-    assert(ivec2(20, 40).toSF!sfVector2i == sfVector2i(20, 40));
+    import jarena.maths;
 }
 
 /// Returns: A verison of `colour` that is suitable for certain OpenGL functions (such as glClear)

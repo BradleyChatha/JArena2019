@@ -6,7 +6,7 @@ module opengl;
 private 
 {
     import std.typecons : Flag;
-    import jarena.core.maths : uvec2;
+    import jarena.maths.maths : uvec2;
 
     import derelict.opengl.extensions.khr;
 }

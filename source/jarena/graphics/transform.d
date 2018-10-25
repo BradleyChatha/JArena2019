@@ -5,7 +5,7 @@ module jarena.graphics.transform;
 
 private
 {
-    import jarena.core, jarena.graphics;
+    import jarena.core, jarena.graphics, jarena.maths;
     import opengl;
 }
 
@@ -126,7 +126,7 @@ struct Transform
         {
             auto matrix = this.matrix;
             foreach(ref vert; verts)
-                vert.position = vec2(matrix * vec4(vert.position, 0, 1.0));
+                vert.position = vec2((matrix * vec4(vert.position, 0, 1.0)).xy);
 
             return verts;
         }
@@ -219,7 +219,7 @@ struct Transform
                 this._matrix = mat4.identity;
                 this._matrix.translate(-this.origin.x, -this.origin.y, 0);
                 this._matrix.scale(this._scale.x, this._scale.y, 1);
-                this._matrix.rotateZ(this._rotation.angle);
+                this._matrix.rotateZ(this._rotation);
                 this._matrix.translate(this.origin.x, this.origin.y, 0);
                 this._matrix.translate(this._translation.x, this._translation.y, 0);
 

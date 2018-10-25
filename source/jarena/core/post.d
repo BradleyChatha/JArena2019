@@ -286,7 +286,7 @@ final class PostOffice
             office.mailCommand(Command.IncrementI);
             assert(i == 2);
 
-            office.unsubscribe(subscriber);
+            proxy.unsubscribe(subscriber);
             office.mailCommand(Command.IncrementI);
             assert(i == 2);
         }

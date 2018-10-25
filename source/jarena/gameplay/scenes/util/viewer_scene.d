@@ -3,7 +3,7 @@ module jarena.gameplay.scenes.util.viewer_scene;
 
 private
 {
-    import jarena.core, jarena.gameplay, jarena.graphics;
+    import jarena.core, jarena.gameplay, jarena.graphics, jarena.maths;
 
     const DEFAULT_FONT_KEY      = "Calibri";
     const GUI_BACKGROUND_COLOUR = Colours.azure;

@@ -7,7 +7,7 @@ private
 {
     import std.experimental.logger;
     import sdlang;
-    import jarena.core, jarena.gameplay, jarena.graphics;
+    import jarena.core, jarena.gameplay, jarena.graphics, jarena.maths;
     import opengl, derelict.opengl.versions.base;
 
     const TEXTURE_DUMP_DIRECTORY = "data/debug/compound/";
@@ -241,8 +241,8 @@ class MutableTexture : TextureBase
             // Figure out the size
             ivec2 size;
             glBindTexture(GL_TEXTURE_2D, texID);
-            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH,  &size.data[0]);
-            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &size.data[1]);
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH,  &size.components[0]);
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &size.components[1]);
             tracef("The texture has a size of %s", size);
 
             // Allocate enough memory to load it from the GPU

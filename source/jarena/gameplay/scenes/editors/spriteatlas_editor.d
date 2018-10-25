@@ -2,7 +2,7 @@ module jarena.gameplay.scenes.editors.spriteatlas_editor;
 
 private
 {
-    import jarena.core, jarena.data, jarena.gameplay, jarena.graphics, jarena.gameplay.scenes.editors.controls;
+    import jarena.core, jarena.data, jarena.gameplay, jarena.graphics, jarena.gameplay.scenes.editors.controls, jarena.maths;
 
     enum TOOL_LIST_POSITION             = vec2(0, 20);
     enum TOOL_LIST_FILL                 = Colour(128, 128, 128, 128);

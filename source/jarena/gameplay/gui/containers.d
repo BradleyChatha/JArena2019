@@ -4,7 +4,7 @@ module jarena.gameplay.gui.containers;
 private
 {
     import std.typecons : Flag;
-    import jarena.core, jarena.gameplay, jarena.graphics;
+    import jarena.core, jarena.gameplay, jarena.graphics, jarena.maths;
 }
 
 /++

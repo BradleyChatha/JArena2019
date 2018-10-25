@@ -3,7 +3,7 @@ module jarena.gameplay.scenes.util.animation_viewer;
 
 private
 {
-    import jarena.core, jarena.gameplay, jarena.graphics;
+    import jarena.core, jarena.gameplay, jarena.graphics, jarena.maths;
 }
 
 @SceneName("Animation Viewer")

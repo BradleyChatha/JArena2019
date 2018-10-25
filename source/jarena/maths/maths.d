@@ -1,10 +1,10 @@
 ///
-module jarena.core.maths;
+module jarena.maths.maths;
 
 public
 {
-    import dlsl.vector, dlsl.matrix;
     import arsd.colour; // This is where the other modules got Colour from, which was previously used for colours.
+    import jarena.maths.vector;
 }
 
 /++
@@ -59,7 +59,7 @@ struct Rectangle(T)
 
     ///
     bool contains(Vect)(Vect point) const
-    if(isVector!Vect && Vect.dimension == 2)
+    if(isVector!Vect && Vect.Dimension == 2)
     {
         return point.x >= this.position.x
             && point.y >= this.position.y

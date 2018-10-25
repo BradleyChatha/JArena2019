@@ -5,7 +5,7 @@ module jarena.graphics.shape;
 
 private
 {
-    import jarena.core, jarena.graphics;
+    import jarena.core, jarena.graphics, jarena.maths;
 }
 
 /// Describes a rectangle (or square) which can be rendered to the screen.

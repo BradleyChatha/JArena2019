@@ -4,7 +4,7 @@ module jarena.gameplay.scenes.debugs.menu;
 private
 {
     import std.typetuple;
-    import jarena.core, jarena.gameplay, jarena.graphics, jarena.gameplay.scenes;
+    import jarena.core, jarena.gameplay, jarena.graphics, jarena.gameplay.scenes, jarena.maths;
 
     const TEXT_SIZE = 18;
     const TEXT_COLOUR = Colours.rockSalt;
