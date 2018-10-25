@@ -6,7 +6,7 @@ module jarena.graphics.vertex;
 private
 {
     import std.traits;
-    import jarena.core, jarena.graphics;
+    import jarena.core, jarena.graphics, jarena.maths;
     import opengl;
 }
 

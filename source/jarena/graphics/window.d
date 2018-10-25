@@ -9,7 +9,7 @@ private
     import std.experimental.logger;
     import derelict.sdl2.sdl;
     import opengl;
-    import jarena.core, jarena.graphics;
+    import jarena.core, jarena.graphics, jarena.maths;
 }
 
 public
@@ -326,7 +326,7 @@ final class Window
         const(uvec2) size() nothrow const
         {
             ivec2 value;
-            SDL_GetWindowSize(cast(SDL_Window*)this.handle, &value.data[0], &value.data[1]);
+            SDL_GetWindowSize(cast(SDL_Window*)this.handle, &value.components[0], &value.components[1]);
             return uvec2(value);
         }
 

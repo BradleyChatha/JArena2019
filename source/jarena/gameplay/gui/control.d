@@ -4,7 +4,7 @@ private
 {
     import std.traits    : isSomeString;
     import std.algorithm : equal;
-    import jarena.core, jarena.graphics;
+    import jarena.core, jarena.graphics, jarena.maths;
 }
 
 abstract class UIElement

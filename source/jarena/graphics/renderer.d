@@ -6,7 +6,7 @@ private
     import std.experimental.logger, std.typecons;
     import derelict.sdl2.sdl;
     import opengl;
-    import jarena.core, jarena.graphics;
+    import jarena.core, jarena.graphics, jarena.maths;
 
     const COMPOUNT_TEXTURE_DIRECTORY = "data/debug/compound/";
 }
@@ -35,7 +35,6 @@ final class Camera
         void updateProjection() nothrow
         {
             import std.exception : assumeWontThrow;
-            import dlsl.projection;
             this._ortho = glOrthographic(0, this.size.x, this.size.y, 0, -1, 1).assumeWontThrow;
             this._view.origin = this.worldToScreenPos(this.center);
         }
@@ -75,10 +74,10 @@ final class Camera
         vec2 screenToWorldPos(vec2 screenPos)
         {
             auto pv = this._ortho * this.viewMatrix;
-            return (pv.invert * vec4( 2.0 * screenPos.x / this.size.x - 1.0, 
-                                     -2.0 * (screenPos.y - this.size.y) / this.size.y - 1.0, 
-                                     1, 
-                                     1)
+            return (pv.inverted * vec4( 2.0 * screenPos.x / this.size.x - 1.0, 
+                                       -2.0 * (screenPos.y - this.size.y) / this.size.y - 1.0, 
+                                        1, 
+                                        1)
                     ).xy;
         }
 
@@ -226,7 +225,7 @@ final class Camera
         mat4 viewMatrix()
         {
             if(this._view.isDirty)
-                this._viewInverted = this._view.matrix.invert; // Note: ".matrix" updates it from being dirty.
+                this._viewInverted = this._view.matrix.inverted; // Note: ".matrix" updates it from being dirty.
 
             return this._viewInverted;
         }
@@ -769,8 +768,8 @@ final class RendererResources
             // No avaliable textures could stitch it, so make a new one.
             ivec2 sizei;
             glBindTexture(GL_TEXTURE_2D, texID);
-            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH,  &sizei.data[0]);
-            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &sizei.data[1]);
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH,  &sizei.components[0]);
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &sizei.components[1]);
 
             // Determine if the texture can even fit within our specified compound size.
             auto size = this._newCompoundSize;

@@ -6,7 +6,7 @@ module jarena.graphics.text;
 private
 {
     import std.experimental.logger, std.typecons;
-    import jarena.core, jarena.graphics, jarena.gameplay;
+    import jarena.core, jarena.graphics, jarena.gameplay, jarena.maths;
 }
 
 /++

@@ -6,7 +6,7 @@ private
     import std.experimental.logger;
     import std.typecons : Flag;
 
-    import jarena.audio, jarena.core, jarena.graphics, jarena.gameplay.gui;
+    import jarena.audio, jarena.core, jarena.graphics, jarena.gameplay.gui, jarena.maths;
 
     const TOGGLE_EDITOR_KEY = Scancode.F12;
 }

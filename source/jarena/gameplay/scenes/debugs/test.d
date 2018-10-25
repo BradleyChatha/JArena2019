@@ -1,7 +1,7 @@
 /// Contains a test scene.
 module jarena.gameplay.scenes.debugs.test;
 import std.stdio;
-import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jarena.gameplay.gui, jarena.gameplay.scenes;
+import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jarena.gameplay.gui, jarena.gameplay.scenes, jarena.maths;
 import jarena.gameplay.scenes.editors.controls;
 
 @SceneName("Test")

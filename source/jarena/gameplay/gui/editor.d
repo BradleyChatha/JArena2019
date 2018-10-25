@@ -5,7 +5,7 @@ private
 {
     import std.traits;
     import std.typecons : Flag;
-    import jarena.core, jarena.gameplay, jarena.graphics;
+    import jarena.core, jarena.gameplay, jarena.graphics, jarena.maths;
 
     const PANEL_POSITION        = vec2(1, 50);
     const PANEL_COLOUR          = Colours.almondFrost;

@@ -2,7 +2,7 @@ module jarena.graphics.pool;
 
 private
 {
-    import jarena.graphics, jarena.core;
+    import jarena.graphics, jarena.core, jarena.maths;
 }
 
 /++
