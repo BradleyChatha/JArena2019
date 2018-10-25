@@ -181,11 +181,11 @@ static string getFieldName(alias F, UseArrayBaseType UseBase = UseArrayBaseType.
                && is(ElementType!(typeof(F)) == struct)
                && UseBase)
             return getFieldName!(ElementType!(typeof(F)));
-        else static if(is(typeof(F) == struct))
-        {
-            alias Type = typeof(F);
-            return getFieldName!Type;
-        }
+        // else static if(is(typeof(F) == struct))
+        // {
+        //     alias Type = typeof(F);
+        //     return getFieldName!Type;
+        // }
         else
             return F.stringof;
     }
@@ -444,7 +444,17 @@ final static class Serialiser
                        && !hasUDA!(mixin("T."~fieldName), Ignore))
                 {
                     mixin("alias FieldAlias = T.%s;".format(fieldName));
-                    alias FieldType = typeof(FieldAlias);
+
+                    static if(isInstanceOf!(Nullable, typeof(FieldAlias)))
+                    {
+                        alias FieldType = Unqual!(ReturnType!(FieldAlias.get));
+                        enum FieldGetter = fieldName~".get";
+                    }
+                    else
+                    {
+                        alias FieldType = typeof(FieldAlias);
+                        enum FieldGetter = fieldName;
+                    }
 
                     static if(hasUDA!(Symbol, InheritSettings))
                         enum ToInherit = InheritedSettings | getSettings!Symbol;
@@ -452,10 +462,14 @@ final static class Serialiser
                         enum ToInherit = InheritedSettings;
                         
                     auto func = () => doSerialise!(FieldType, MainSymbol, FieldAlias, cast(Settings)ToInherit)(mixin("data."~fieldName), obj);
-                    static if(isInstanceOf!(Nullable, FieldType))
+                    static if(isInstanceOf!(Nullable, typeof(FieldAlias)))
                     {
                         if(mixin("!data."~fieldName~".isNull"))
+                        {
+                            import std.stdio;
+                            writeln("booba");
                             func();
+                        }
                     }
                     else
                         func();
@@ -543,17 +557,37 @@ final static class Serialiser
                        && !hasUDA!(mixin("T."~fieldName), Ignore))
                 {
                     mixin("alias FieldAlias = T.%s;".format(fieldName));
-                    alias FieldType = typeof(FieldAlias);
+
+                    static if(isInstanceOf!(Nullable, typeof(FieldAlias)))
+                    {
+                        alias FieldType = Unqual!(ReturnType!(FieldAlias.get));
+                        enum FieldRef = "tempValue";
+                    }
+                    else
+                    {
+                        alias FieldType = typeof(FieldAlias);
+                        enum FieldRef = "data."~fieldName;
+                    }
 
                     static if(hasUDA!(Symbol, InheritSettings))
                         enum ToInherit = InheritedSettings | getSettings!Symbol;
                     else
                         enum ToInherit = InheritedSettings;
                     
-                    try doDeserialise!(FieldType, MainSymbol, FieldAlias, cast(Settings)ToInherit)(mixin("data."~fieldName), structObj);
+                    try
+                    {
+                        // We can't pass the nullable itself by ref, so we have to store it in a temp value first
+                        static if(isInstanceOf!(Nullable, typeof(FieldAlias)))
+                            FieldType tempValue;
+
+                        doDeserialise!(FieldType, MainSymbol, FieldAlias, cast(Settings)ToInherit)(mixin(FieldRef), structObj);
+                        
+                        static if(isInstanceOf!(Nullable, typeof(FieldAlias)))
+                            mixin("data."~fieldName~" = tempValue;");
+                    }
                     catch(Exception ex)
                     {
-                        static if(isInstanceOf!(Nullable, FieldType))
+                        static if(isInstanceOf!(Nullable, typeof(FieldAlias)))
                             mixin("data."~fieldName~".nullify();");
                         else
                             throw ex;
@@ -562,6 +596,35 @@ final static class Serialiser
             }
         }
     }
+}
+
+// Nullable test
+unittest
+{
+    import jarena.data.serialisation.sdlang;
+
+    struct A
+    {
+        Nullable!int a;
+        int b;
+        Nullable!int c;
+    }
+
+    A a;
+    a.a.nullify;
+    a.b = 200;
+    a.c = 400;
+
+    auto archive = new ArchiveSDL();
+    Serialiser.serialise(a, archive.root);
+
+    assert(archive.root.expectChild("A").getChild("a") is null);
+    assert(archive.root.expectChild("A").expectChild("b").expectValueAs!int(0) == 200);
+    assert(archive.root.expectChild("A").expectChild("c").expectValueAs!int(0) == 400);
+
+    A b = Serialiser.deserialise!A(archive.root);
+
+    assert(a == b);
 }
 
 // Best I can do at least...
