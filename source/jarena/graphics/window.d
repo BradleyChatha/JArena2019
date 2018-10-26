@@ -164,7 +164,7 @@ final class Window
 
             GL.createContextSDL(this.handle);
             GL.postContextLoad();
-            debug GL.debugLogEnable();
+            //debug GL.debugLogEnable();
 
             glEnable(GL_BLEND);               // Enable blending
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

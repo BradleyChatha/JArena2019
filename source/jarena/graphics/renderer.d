@@ -284,7 +284,7 @@ final class Renderer
         {
             uint vao;
             uint elementCount;
-            BufferDataType dataType;
+            VertexDataType dataType;
         }
 
         enum BucketCommand
@@ -547,9 +547,9 @@ final class Renderer
             this.drawQuadMultiple(text.texture, text.verts, this._textShader);
         }
 
-        /// Draws a BufferObject
+        /// Draws a VertexBufferObject
         void drawBuffer(VB)(ref VB buffer, TextureBase texture, Shader shader)
-        if(isBufferObject!VB)
+        if(isVertexBufferObject!VB)
         {
             auto bucket = RenderBucket(
                 texture,
