@@ -64,6 +64,18 @@ private
  + ++/
 final class SpritePool
 {
+    /++
+     + A handle for one of the sprites in this pool.
+     +
+     + Any function in this class that retrieves a sprite will return a handle.
+     +
+     + A handle has an `alias this` to the underlying sprite, and can be used as such.
+     +
+     + Passing a handle to certain functions (such as `SpritePool.flagForUpdate`) is faster than
+     + passing in the sprite on it's own, as the pool has to perform a lookup otherwise.
+     +
+     + In short, passing a handle is O(1), passing a sprite without a handle is O(n).
+     + ++/
     struct Handle
     {
         alias sprite this;
@@ -75,11 +87,12 @@ final class SpritePool
 
     private
     {
-        alias VertBuffer = VertexBuffer!(BufferFeatures.FullUploadSubData | BufferFeatures.PartialUploadSubData | BufferFeatures.MutableSize | BufferFeatures.CanMapBuffers);
+        alias VertBuffer = VertexBuffer!(BufferFeatures.PartialUploadSubData | BufferFeatures.MutableSize);
 
         Texture       _texture;
         Handle[]      _sprites;
         Buffer!Handle _needsUpdateSprites;
+        Buffer!Vertex _updateVerts;
         VertBuffer    _verts;
     }
 
@@ -94,11 +107,19 @@ final class SpritePool
 
             //this._sprites = new Buffer!Handle();
             this._needsUpdateSprites = new Buffer!Handle();
+            this._updateVerts = new Buffer!Vertex();
             this._verts.setup();
             this._texture = texture;
             this.size = initialSize;
         }
 
+        /++
+         + Flags a sprite to be updated.
+         +
+         + A sprite won't be updated on the GPU side until it has been flagged for an update.
+         +
+         + `prepareForRender` must be called to actually process all of the updates.
+         + ++/
         void flagForUpdate(Handle handle)
         {
             if(handle.owner != this)
@@ -107,6 +128,7 @@ final class SpritePool
             this._needsUpdateSprites ~= handle;
         }
 
+        ///
         void flagForUpdate(Sprite sprite)
         {
             import std.algorithm : countUntil;
@@ -120,16 +142,30 @@ final class SpritePool
 
         void prepareForRender()
         {
-            // TODO: Optimise this
-            //       Group handles that are side-by-side into a single update.
-            foreach(handle; this._needsUpdateSprites[0..$])
+            // All IDs that are next to eachother get batched into a single update call.
+            size_t    start = 0;
+            ptrdiff_t lastID = -2;
+            foreach(i, handle; this._needsUpdateSprites[0..$])
             {
-                // 4 = Verts per sprite
-                auto verts = handle.sprite.verts; // Stack variable, need to have a copy alive.
-                this.buffer.subUpload(handle.id * 4, verts[]);
+                auto verts = handle.sprite.verts;
+                if((handle.id - 1) != lastID || i == this._needsUpdateSprites.length - 1)
+                {
+                    this._updateVerts ~= verts[];
+                    this.buffer.subUpload(start * 4, this._updateVerts[0..$]);
+
+                    this._updateVerts.length = 0;
+                    lastID = handle.id;
+                    start += 1;
+                }
+                else
+                {
+                    this._updateVerts ~= verts[];
+                    lastID = handle.id;
+                }
             }
 
             this._needsUpdateSprites.length = 0;
+            this._updateVerts.length = 0;
         }
 
         /++
