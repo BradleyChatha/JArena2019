@@ -344,6 +344,13 @@ struct BufferObject(DataT, GLenum GLBufferType, BufferFeatures features)
             GL.checkForError();
         }
 
+        /// Binds this buffer object to it's respective OpenGL buffer type.
+        @nogc
+        void bind() nothrow
+        {
+            glBindBuffer(GLBufferType, this._handle);
+        }
+
         /// Returns: The name/handle of this buffer
         @property @safe @nogc
         uint handle() nothrow const
