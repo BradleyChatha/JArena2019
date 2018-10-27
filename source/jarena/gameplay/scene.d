@@ -147,7 +147,7 @@ abstract class Scene
         }
     }
 
-    protected
+    protected final
     {
         /++
          + Registers a `GameObject` to this scene.
@@ -237,6 +237,27 @@ abstract class Scene
         {
             assert(this.isRegistered(objectName), "Attempted to unregister an object with non-existant name: " ~ objectName);
             this.unregister(*(objectName in this._objects));
+        }
+
+        /++
+         + Gets a game object.
+         +
+         + Params:
+         +  objectName = The name of the object to get.
+         +
+         + Returns:
+         +  The object, or null if the object wasn't found.
+         + ++/
+        T get(T : GameObject = GameObject)(string objectName)
+        {
+            auto ptr = (objectName in this._objects);
+            if(ptr is null)
+                return null;
+
+            auto obj = cast(T)*ptr;
+            assert(obj !is null, "Cannot cast object '" ~ objectName ~ "' into a " ~ T.stringof);
+
+            return obj;
         }
 
         /++
