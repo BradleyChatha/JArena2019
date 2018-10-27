@@ -161,7 +161,7 @@ class Test : Scene, IPostBox
                 this.inputText.text.text = input.textInput;
 
             if(input.isKeyDown(Scancode.D))
-                this.tahn.move(speedHorizontal);
+                super.get!StaticObject("Tahn").move(speedHorizontal);
             if(input.isKeyDown(Scancode.A))
                 this.tahn.move(-speedHorizontal);
             if(input.isKeyDown(Scancode.W))
