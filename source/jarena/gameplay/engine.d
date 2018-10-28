@@ -243,20 +243,9 @@ class ShortTermScheduler
 
 private class EngineDebugControls
 {
-    import std.stdio;
-    import std.conv;
-
     // General variables.
     bool enabled = false;
     Engine engine;
-
-    // Average FPS over a duration.
-    bool   recordingFPS;
-    int[]  fpsRecorded; // 1 entry for each second.
-    size_t fpsLastIndex;
-    float  fpsDeltaSeconds;
-    SimpleLabel fpsAverageText;
-    const int FPS_LEEWAY_SECONDS = 5; // The readln freezes the game, which is messing with the FPS results. So this is just how many seconds to 'ghost'
 
     this(Engine engine, bool enabled)
     {
@@ -264,91 +253,11 @@ private class EngineDebugControls
         this.engine  = engine;
 
         if(!enabled) return;
-
-        this.fpsAverageText = new SimpleLabel(new Text(this.engine._debugFont, "", vec2(0), DEBUG_FONT_SIZE, DEBUG_TEXT_COLOUR), vec2(0));
-        this.engine._debugGui.addChild(this.fpsAverageText);
     }
 
     void onUpdate(InputManager input, Duration delta)
     {
         if(!this.enabled) return;
-
-        this.handleInput(input);
-
-        if(this.recordingFPS)
-            this.handleAverageFPS(delta);
-    }
-
-    void handleInput(InputManager input)
-    {
-        // F3 = Record the FPS over a certain amount of time, and then find the average FPS
-        if(input.wasKeyTapped(Scancode.F3) && !this.recordingFPS)
-        {
-            // Using the console for now, since there's no easy way to get on-screen input from this class.
-            write("How many seconds to record for: ");
-            auto inStr = readln();
-
-            int secondsToRecord = 0;
-            try
-            {
-                secondsToRecord = inStr[0..$-1].to!int;
-            }
-            catch(Exception)
-            {
-                writeln("ERROR: Not a valid integer.");
-                return;
-            }
-
-            this.recordingFPS = true;
-            this.fpsRecorded.length = secondsToRecord + FPS_LEEWAY_SECONDS;
-            this.fpsDeltaSeconds = 0;
-            this.fpsAverageText.updateText("");
-        }
-    }
-
-    void handleAverageFPS(Duration delta)
-    {
-        this.fpsDeltaSeconds += delta.asSeconds;
-        if(this.fpsDeltaSeconds < 1 || this.fpsLastIndex >= this.fpsRecorded.length)
-            return;
-
-        this.fpsDeltaSeconds -= 1;
-        this.fpsRecorded[this.fpsLastIndex++] = this.engine._fps.frameCount;
-
-        if(this.fpsLastIndex >= this.fpsRecorded.length)
-        {
-            // First, find the average
-            auto average = 0;
-            foreach(i, fps; this.fpsRecorded)
-            {
-                if(i < FPS_LEEWAY_SECONDS)
-                    continue;
-
-                average += fps;
-            }
-            average /= this.fpsRecorded.length;
-
-            // Then create all the text
-            import codebuilder;
-            auto text = new CodeBuilder();
-
-            text.putf("Average fps over %s seconds was %s fps:", this.fpsRecorded.length - FPS_LEEWAY_SECONDS, average);
-            foreach(i, fps; this.fpsRecorded)
-            {
-                if(i < FPS_LEEWAY_SECONDS) 
-                    continue;
-
-                text.putf("    Second %s: %s fps", (i + 1) - FPS_LEEWAY_SECONDS, fps);
-            }
-
-            this.fpsAverageText.updateText(text.data.idup.to!string);
-
-            // Reset some variables
-            this.recordingFPS = false;
-            this.fpsLastIndex = 0;
-            this.fpsRecorded.length = 0;
-            this.fpsDeltaSeconds = 0;
-        }
     }
 
     void onRender(Renderer renderer)
