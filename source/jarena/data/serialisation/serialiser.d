@@ -465,11 +465,7 @@ final static class Serialiser
                     static if(isInstanceOf!(Nullable, typeof(FieldAlias)))
                     {
                         if(mixin("!data."~fieldName~".isNull"))
-                        {
-                            import std.stdio;
-                            writeln("booba");
                             func();
-                        }
                     }
                     else
                         func();

@@ -20,6 +20,12 @@ configuration "default" {
     versions "DerelictGL3_CustomFreeFuncs"
 }
 
+configuration "library" {
+    targetType "library"
+    targetPath "bin"
+    versions "DerelictGL3_CustomFreeFuncs" "JArena_EngineOnly"
+}
+
 subPackage {
 	name "generator"
 	targetType "executable"
