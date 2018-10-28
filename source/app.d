@@ -2,7 +2,8 @@ import std.stdio, std.experimental.logger;
 import derelict.sdl2.sdl, derelict.freeimage.freeimage, derelict.freetype, derelict.fmod.fmod;
 import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jarena.data.serialisation, jarena.gameplay.gui, jarena.gameplay.scenes;
 
-version(unittest){}
+     version(unittest){}
+else version(JArena_EngineOnly){}
 else
 {
 void main()
@@ -35,9 +36,6 @@ void main()
     enforce(SDL_Init(SDL_INIT_EVERYTHING) == 0, "SDL was not able to initialise everything.");
     checkSDLError();
     FreeImage_Initialise();
-    
-    // Prepare all of the data loaders.
-    //SdlangLoader.setup();
     
     // Setup the engine.
     auto engine = new Engine();
