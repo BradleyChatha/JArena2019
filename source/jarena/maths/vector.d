@@ -125,7 +125,6 @@ struct Vector(T, size_t Dimension_)
         }
 
         /// The dot product between this vector and `vect`.
-        pragma(inline, true)
         T dot(VectT)(VectT vect) const
         if(isVector!VectT)
         {
