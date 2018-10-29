@@ -7,7 +7,7 @@ private
     import std.exception    : enforce;
     import std.format       : format;
     import std.variant      : Algebraic, This;
-    import std.traits       : isNumeric;
+    import std.traits       : isNumeric, allSameType;
 }
 
 /// An `Algebraic` which determines the types of data that archives can work with.
@@ -353,6 +353,15 @@ class ArchiveObject
             return this.convertFromValue!T(this.getValue(index, ArchiveValue.init), default_);
         }
 
+        /++
+         + Helper function to get a child, or throw an exception if the child doesn't exist.
+         +
+         + Params:
+         +  name = The name of the child to get.
+         +
+         + Returns:
+         +  The child.
+         + ++/
         ArchiveObject expectChild(string name)
         {
             auto obj = this.getChild(name, null);
@@ -361,6 +370,15 @@ class ArchiveObject
             return obj;
         }
 
+        /++
+         + Helper function to get a attribute, or throw an exception if the attribute doesn't exist.
+         +
+         + Params:
+         +  name = The name of the attribute to get.
+         +
+         + Returns:
+         +  The attribute.
+         + ++/
         ArchiveValue expectAttribute(string name)
         {
             auto attrib = this.getAttribute(name, ArchiveValue.init);
@@ -369,11 +387,21 @@ class ArchiveObject
             return attrib;
         }
 
+        /// ditto
         T expectAttributeAs(T)(string name)
         {
             return this.convertFromValue!T(this.expectAttribute(name), T.init);
         }
 
+        /++
+         + Helper function to get a value, or throw an exception if the value doesn't exist.
+         +
+         + Params:
+         +  index = The index of the value to get.
+         +
+         + Returns:
+         +  The value.
+         + ++/
         ArchiveValue expectValue(size_t index)
         {
             auto value = this.getValue(index, ArchiveValue.init);
@@ -382,9 +410,53 @@ class ArchiveObject
             return value;
         }
 
+        /// ditto
         T expectValueAs(T)(size_t index)
         {
             return this.convertFromValue!T(this.expectValue(index), T.init);
+        }
+    }
+
+    // ######################
+    // # OPERATOR OVERLOADS #
+    // ######################
+    public final
+    {
+        /// An operator version of `ArchiveObject.expectChild`.
+        ArchiveObject opIndex(string childName)
+        {
+            return this.expectChild(childName);
+        }
+        ///
+        unittest
+        {
+            auto obj = new ArchiveObject();
+            obj.addChild(new ArchiveObject("Foo"));
+
+            obj["Foo"].addValueAs!int(69);
+            assert(obj["Foo"].getValueAs!int(0) == 69);
+        }
+
+        /// An operator version of `ArchiveObject.expectChild` that takes multiple child names.
+        ArchiveObject opIndex(Names...)(Names childNames)
+        if(Names.length > 0 && is(Names[0] : const(char)[]) && allSameType!Names)
+        {
+            auto obj = this;
+            foreach(name; childNames)
+                obj = obj[name];
+
+            return obj;
+        }
+        ///
+        unittest
+        {
+            auto obj = new ArchiveObject();
+            obj.addChild(new ArchiveObject("Foo"));
+            obj["Foo"].addChild(new ArchiveObject("Bar"));
+            obj["Foo", "Bar"].addChild(new ArchiveObject("Baz"));
+            obj["Foo", "Bar", "Baz"].addValueAs!int(69);
+
+            assert(obj["Foo", "Bar", "Baz"].getValueAs!int(0) == 69);
         }
     }
 
