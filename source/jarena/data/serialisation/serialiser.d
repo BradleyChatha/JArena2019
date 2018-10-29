@@ -429,6 +429,21 @@ final static class Serialiser
         }
 
         void doSerialise(T, alias MainSymbol, alias Symbol, Settings InheritedSettings)(T data, ArchiveObject parent)
+        if(is(T == enum))
+        {
+            import std.conv : to;
+
+            static if(hasUDA!(Symbol, Attribute))
+                parent.setAttributeAs!string(getFieldName!Symbol, data.to!string);
+            else
+            {
+                auto obj = new ArchiveObject(getFieldName!Symbol);
+                obj.addValueAs!string(data.to!string);
+                parent.addChild(obj);
+            }
+        }
+
+        void doSerialise(T, alias MainSymbol, alias Symbol, Settings InheritedSettings)(T data, ArchiveObject parent)
         if(is(T == struct))
         {
             debug mixin(serialiseDebug("Struct"));
@@ -446,15 +461,9 @@ final static class Serialiser
                     mixin("alias FieldAlias = T.%s;".format(fieldName));
 
                     static if(isInstanceOf!(Nullable, typeof(FieldAlias)))
-                    {
                         alias FieldType = Unqual!(ReturnType!(FieldAlias.get));
-                        enum FieldGetter = fieldName~".get";
-                    }
                     else
-                    {
                         alias FieldType = typeof(FieldAlias);
-                        enum FieldGetter = fieldName;
-                    }
 
                     static if(hasUDA!(Symbol, InheritSettings))
                         enum ToInherit = InheritedSettings | getSettings!Symbol;
@@ -542,6 +551,17 @@ final static class Serialiser
         }
 
         void doDeserialise(T, alias MainSymbol, alias Symbol, Settings InheritedSettings)(ref T data, ArchiveObject obj)
+        if(is(T == enum))
+        {
+            import std.conv : to;
+
+            static if(hasUDA!(Symbol, Attribute))
+                data = obj.expectAttributeAs!string(getFieldName!Symbol).to!T;
+            else
+                data = obj.expectChild(getFieldName!Symbol).getValueAs!string(0).to!T;
+        }
+
+        void doDeserialise(T, alias MainSymbol, alias Symbol, Settings InheritedSettings)(ref T data, ArchiveObject obj)
         if(is(T == struct))
         {
             ArchiveObject structObj = (obj.name == getFieldName!Symbol) ? obj
@@ -619,8 +639,44 @@ unittest
     assert(archive.root.expectChild("A").expectChild("c").expectValueAs!int(0) == 400);
 
     A b = Serialiser.deserialise!A(archive.root);
-
     assert(a == b);
+}
+
+// Enum test
+unittest
+{
+    import jarena.data.serialisation.sdlang;
+    import fluent.asserts;
+
+    enum E
+    {
+        A,
+        B,
+        C
+    }
+
+    struct A
+    {
+        @Attribute
+        E a;
+        E b;
+        E c;
+    }
+
+    A a;
+    a.a = E.C;
+    a.b = E.A;
+    a.c = E.B;
+
+    auto archive = new ArchiveSDL();
+    Serialiser.serialise(a, archive.root);
+
+    archive.root.expectChild("A").expectAttributeAs!string("a").should.equal("C");
+    archive.root.expectChild("A").expectChild("b").expectValueAs!string(0).should.equal("A");
+    archive.root.expectChild("A").expectChild("c").expectValueAs!string(0).should.equal("B");
+
+    A b = Serialiser.deserialise!A(archive.root);
+    a.should.equal(b);
 }
 
 // Best I can do at least...
