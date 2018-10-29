@@ -52,7 +52,7 @@ struct Matrix(T, size_t Columns_, size_t Rows_)
             ]);
         }
 
-        pragma(inline, true) @safe @nogc
+        @safe @nogc
         T determinant() nothrow const pure
         {
             static if(Columns == 4)
@@ -90,7 +90,7 @@ struct Matrix(T, size_t Columns_, size_t Rows_)
             assert(mat.determinant == -8.0);
         }
 
-        pragma(inline, true) @safe @nogc
+        @safe @nogc
         ThisType inverted() nothrow const pure
         {
             auto d = this.determinant;
@@ -179,7 +179,7 @@ struct Matrix(T, size_t Columns_, size_t Rows_)
                 return data;
             }
 
-            pragma(inline, true) @safe @nogc
+            @safe @nogc
             ThisType translate(T x, T y, T z) nothrow pure
             {
                 this = ThisType.translation(x, y, z) * this;
@@ -207,7 +207,7 @@ struct Matrix(T, size_t Columns_, size_t Rows_)
                 return data;
             }
 
-            pragma(inline, true) @safe @nogc
+            @safe @nogc
             ThisType rotateZ(AngleDegrees degrees) nothrow pure
             {
                 this = ThisType.rotationZ(degrees) * this;
@@ -233,7 +233,7 @@ struct Matrix(T, size_t Columns_, size_t Rows_)
                 return data;
             }
 
-            pragma(inline, true) @safe @nogc
+            @safe @nogc
             ThisType scale(T x, T y, T z) nothrow pure
             {
                 this = ThisType.scaling(x, y, z) * this;
@@ -280,7 +280,7 @@ struct Matrix(T, size_t Columns_, size_t Rows_)
         }
 
         /// Matrix-Matrix multiplication
-        pragma(inline, true) @safe @nogc
+        @safe @nogc
         ThisType opBinary(string op)(ThisType rhs) nothrow const pure
         if(op == "*")
         {
@@ -320,7 +320,7 @@ struct Matrix(T, size_t Columns_, size_t Rows_)
         }
 
         /// Matrix-Vector multiplication
-        pragma(inline, true) @safe @nogc
+        @safe @nogc
         VectT opBinary(string op, VectT)(VectT rhs) nothrow const pure
         if(op == "*" && isVector!VectT)
         {
