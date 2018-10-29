@@ -634,9 +634,9 @@ unittest
     auto archive = new ArchiveSDL();
     Serialiser.serialise(a, archive.root);
 
-    assert(archive.root.expectChild("A").getChild("a") is null);
-    assert(archive.root.expectChild("A").expectChild("b").expectValueAs!int(0) == 200);
-    assert(archive.root.expectChild("A").expectChild("c").expectValueAs!int(0) == 400);
+    assert(archive.root["A"].getChild("a") is null);
+    assert(archive.root["A", "b"].expectValueAs!int(0) == 200);
+    assert(archive.root["A", "c"].expectValueAs!int(0) == 400);
 
     A b = Serialiser.deserialise!A(archive.root);
     assert(a == b);
@@ -671,9 +671,9 @@ unittest
     auto archive = new ArchiveSDL();
     Serialiser.serialise(a, archive.root);
 
-    archive.root.expectChild("A").expectAttributeAs!string("a").should.equal("C");
-    archive.root.expectChild("A").expectChild("b").expectValueAs!string(0).should.equal("A");
-    archive.root.expectChild("A").expectChild("c").expectValueAs!string(0).should.equal("B");
+    archive.root["A"].expectAttributeAs!string("a").should.equal("C");
+    archive.root["A", "b"].expectValueAs!string(0).should.equal("A");
+    archive.root["A", "c"].expectValueAs!string(0).should.equal("B");
 
     A b = Serialiser.deserialise!A(archive.root);
     a.should.equal(b);
