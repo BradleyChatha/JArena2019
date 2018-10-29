@@ -24,6 +24,7 @@ configuration "library" {
     targetType "library"
     targetPath "bin"
     versions "DerelictGL3_CustomFreeFuncs" "JArena_EngineOnly"
+    excludedSourceFiles "source/app.d"
 }
 
 subPackage {
