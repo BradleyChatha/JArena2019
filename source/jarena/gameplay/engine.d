@@ -113,14 +113,15 @@ final class Engine
             {
                 import std.format : sformat;
                 this._debugText.updateText(sformat(this._debugBuffer, "FPS: %s | Time: %sms | RAM: %sMB", 
-                                                        this._fps.frameCount, 
-                                                        this._fps.elapsedTime.total!"msecs",
-                                                        getMemInfo().usedRAM / (1024 * 1024)));
+                                                   this._fps.frameCount, 
+                                                   this._fps.elapsedTime.total!"msecs",
+                                                   getMemInfo().usedRAM / (1024 * 1024)));
             });
             this.events.subscribe(Window.Event.Close, (_,__) => this._window.close());
 
             // Load in assets
-            Systems.loaderSdlang.loadPackage("Data/data.sdl");
+            version(JArena_EngineOnly){}
+            else Systems.loaderSdlang.loadPackage("Data/data.sdl");
 
             // Debug stuff
             debug this._config.showDebugText = true;
