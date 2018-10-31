@@ -216,9 +216,6 @@ class Test : Scene, IPostBox
             }
 
             this.tooltip.showing = input.isKeyDown(Scancode.F3);
-            if(input.wasKeyTapped(Scancode.F1))
-                this.tahn.texture.dispose();
-
             if(input.wasKeyTapped(Scancode.F2))
             {
                 Systems.assets.get!Font("Calibri").dispose();

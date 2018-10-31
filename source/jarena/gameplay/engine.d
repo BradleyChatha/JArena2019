@@ -3,22 +3,25 @@ module jarena.gameplay.engine;
 private
 {
     import std.experimental.logger;
-    import std.typecons;
+    import std.typecons, std.datetime;
     import jarena.audio, jarena.core, jarena.graphics, jarena.gameplay, jarena.data, jarena.maths;
     import opengl;
 
-    const ENGINE_CONFIG_PATH       = "data/engineConf.sdl";
-    const ENGINE_DATA_PATH         = "data/data.sdl";
-    const DEFAULT_COMPOUND_SIZE    = uvec2(256, 256);
-    const WINDOW_NAME              = "JArena";
-    const WINDOW_DEFAULT_SIZE      = uvec2(860, 740);
-    const WINDOW_DEFAULT_FPS       = 60;
-    const WINDOW_DEFAULT_VSYNC     = true;
-    const DEBUG_FONT               = "Data/Fonts/Spaceport_2006.otf";
-    const DEBUG_FONT_SIZE          = 10;
-    const DEBUG_TEXT_COLOUR        = Colours.rockSalt;
-    const DEBUG_CONTAINER_COLOUR   = Colour(0, 0, 0, 128);
-    const DEBUG_CONTAINER_POSITION = vec2(1);
+    const ENGINE_CONFIG_PATH        = "data/engineConf.sdl";
+    const ENGINE_DATA_PATH          = "data/data.sdl";
+    const DEFAULT_COMPOUND_SIZE     = uvec2(256, 256);
+    const WINDOW_NAME               = "JArena";
+    const WINDOW_DEFAULT_SIZE       = uvec2(860, 740);
+    const WINDOW_DEFAULT_FPS        = 60;
+    const WINDOW_DEFAULT_VSYNC      = true;
+    const DEBUG_FONT                = "Data/Fonts/Spaceport_2006.otf";
+    const DEBUG_FONT_SIZE           = 10;
+    const DEBUG_TEXT_COLOUR         = Colours.rockSalt;
+    const DEBUG_CONTAINER_COLOUR    = Colour(0, 0, 0, 128);
+    const DEBUG_CONTAINER_POSITION  = vec2(1);
+    const STATISTIC_DISPLAY_CHANGES = "displayChanges";
+    const STATISTIC_FRAME_UPDATE    = "frameUpdate";
+    const STATISTIC_DEBUG_UPDATE    = "debugUpdate";
 }
 
 /++
@@ -97,8 +100,12 @@ final class Engine
             Systems.loaderSdlang        = new LoaderSDL();
             Systems.audio               = this._audio;
             Systems.shortTermScheduler  = new ShortTermScheduler();
+            Systems.statistics          = new EngineStatistics();
             Systems.finalise();
 
+            Systems.statistics.makeTimer(STATISTIC_DISPLAY_CHANGES, 60);
+            Systems.statistics.makeTimer(STATISTIC_FRAME_UPDATE, 60);
+            Systems.statistics.makeTimer(STATISTIC_DEBUG_UPDATE, 60);
             Systems.renderResources.compoundTextureSize = this._config.compoundTextureSize.get(DEFAULT_COMPOUND_SIZE);
 
             // Make sure the post office types are valid
@@ -132,27 +139,35 @@ final class Engine
         ///
         void onUpdate()
         {
-            this._fps.onUpdate();
-            this._input.onUpdate();
-            this._window.handleEvents(this._eventOffice);
-            
-            if(this._input.isKeyDown(Scancode.ESCAPE))
-                this._window.close();
+            Systems.statistics.timeFunction(STATISTIC_FRAME_UPDATE,
+            (){
+                this._fps.onUpdate();
+                this._input.onUpdate();
+                this._window.handleEvents(this._eventOffice);
+                
+                if(this._input.isKeyDown(Scancode.ESCAPE))
+                    this._window.close();
 
-            this._window.renderer.clear();
-            this._timers.onUpdate(this._fps.elapsedTime);
-            this._scenes.onUpdate(this._window, this._fps.elapsedTime);
-            this._audio.onUpdate();
+                this._window.renderer.clear();
 
-            auto old = this._window.renderer.camera;
-            this._window.renderer.camera = this._debugCamera; // So the debug UI doesn't fly off the screen.
-            this._debugGui.onUpdate(this.input, this._fps.elapsedTime);
-            this._debugControls.onUpdate(this.input, this._fps.elapsedTime);
-            this._debugGui.onRender(this._window);
-            this._debugControls.onRender(this._window.renderer);
-            this._window.renderer.camera = old;
+                this._timers.onUpdate(this._fps.elapsedTime);
+                this._scenes.onUpdate(this._window, this._fps.elapsedTime);
+                this._audio.onUpdate();
+            });
+
+            Systems.statistics.timeFunction(STATISTIC_DEBUG_UPDATE,
+            (){
+                auto old = this._window.renderer.camera;
+                this._window.renderer.camera = this._debugCamera; // So the debug UI doesn't fly off the screen.
+                this._debugGui.onUpdate(this.input, this._fps.elapsedTime);
+                this._debugControls.onUpdate(this.input, this._fps.elapsedTime);
+                this._debugGui.onRender(this._window);
+                this._debugControls.onRender(this._window.renderer);
+                this._window.renderer.camera = old;
+            });
             
-            this._window.renderer.displayChanges();
+            Systems.statistics.timeFunction(STATISTIC_DISPLAY_CHANGES, &this._window.renderer.displayChanges);
+
             checkSDLError();
             GL.checkForError();
 
@@ -242,27 +257,213 @@ class ShortTermScheduler
     }
 }
 
+/++
+ + A class that is used to keep track of performance statistics.
+ +
+ + This class is a system, so an instance can be accessed via the `Systems` class.
+ +
+ + To see the data contained in this class, make sure `debugControls` in the engine configuration is set to true,
+ + and then press F11+S to enable the visuals.
+ + ++/
+final class EngineStatistics
+{
+    /// A timer will keep track of how long something took over a certain amount of frames
+    struct Timer
+    {
+        /// The name of this statistic.
+        string name;
+
+        /// How many frames the timer values span through.
+        uint frameSpan;
+
+        /// The durations, this array will be the have a length of `frameSpan`.
+        Duration[] values;
+
+        private size_t currentIndex;
+
+        /++
+         + Returns:
+         +  The average of all the values in `value`.
+         + ++/
+        @property @safe
+        Duration average() nothrow const
+        {
+            import std.algorithm : reduce;
+            return reduce!"a + b"(0.seconds, this.values) / this.values.length;
+        }
+    }
+
+    private
+    {
+        Timer[string] _timers;
+    }
+
+    public
+    {
+        /++
+         + Creates a new timer to keep track of.
+         +
+         + Params:
+         +  name        = The name to give tht timer.
+         +  frameSpan   = How many frames to track the timer's values over.
+         + ++/
+        void makeTimer(string name, uint frameSpan = 60)
+        {
+            enforceAndLogf((name in this._timers) is null, "The timer '%s' already exists.", name);
+            enforceAndLogf(frameSpan > 0, "Parameter frameSpan cannot be 0.");
+
+            this._timers[name] = Timer(name, frameSpan, new Duration[frameSpan], 0);
+        }
+
+        /++
+         + Adds a value into a timer.
+         +
+         + Params:
+         +  name = The name of the timer to add a value to.
+         +  time = The time to add as a value.
+         + ++/
+        void addTimerValue(string name, Duration time)
+        {
+            auto ptr = (name in this._timers);
+            enforceAndLogf(ptr !is null, "The timer '%s' doesn't exist.", name);
+
+            ptr.values[ptr.currentIndex++] = time;
+            if(ptr.currentIndex >= ptr.values.length)
+                ptr.currentIndex = 0;
+        }
+
+        /++
+         + Times the execution time for a function, and adds it's execution time
+         + to the specified timer.
+         +
+         + Params:
+         +  timerName = The name of the timer to use.
+         +  func      = The function to time.
+         + ++/
+        void timeFunction(string timerName, scope void delegate() func)
+        {
+            auto start = Clock.currTime;
+            func();
+            this.addTimerValue(timerName, (Clock.currTime - start));
+        }
+
+        /++
+         + Returns:
+         +  An InputRange of all the timers.
+         + ++/
+        @safe @nogc
+        auto timers() nothrow inout pure
+        {
+            return this._timers.byValue;
+        }
+    }
+}
+
 private class EngineDebugControls
 {
     // General variables.
-    bool enabled = false;
+    bool _enabled = false;
+    bool statsEnabled = false;
     Engine engine;
 
     this(Engine engine, bool enabled)
     {
-        this.enabled = enabled;
-        this.engine  = engine;
-
         if(!enabled) return;
+
+        this.engine  = engine;
+        this.onInitStats();
+
+        this.enabled = enabled;
     }
 
     void onUpdate(InputManager input, Duration delta)
     {
-        if(!this.enabled) return;
+        if(!this._enabled) return;
+
+        if(input.isKeyDown(Scancode.F11) && input.wasKeyTapped(Scancode.S))
+        {
+            this.statsEnabled = !this.statsEnabled;
+            if(this.statsEnabled)
+                this.onEnableStats();
+            else
+                this.onDisableStats();
+        }
+
+        if(this.statsEnabled)
+            this.onUpdateStats();
     }
 
     void onRender(Renderer renderer)
     {
-        if(!this.enabled) return;
+        if(!this._enabled) return;
+    }
+
+    @property
+    void enabled(bool en)
+    {
+        this._enabled = en;
+        this.statsEnabled = false;
+    }
+
+    // ########################
+    // # ENGINE STATISTICS UI #
+    // ########################
+    private
+    {
+        SimpleLabel         statHeaderLabel;
+        SimpleLabel[string] statLabels;
+
+        void onInitStats()
+        {
+            this.statHeaderLabel = new SimpleLabel(
+                        new Text(
+                            engine._debugFont,
+                            "STATISTIC TIMERS:",
+                            vec2(0),
+                            DEBUG_FONT_SIZE,
+                            DEBUG_TEXT_COLOUR
+                        )
+                    );
+        }
+
+        void onDisableStats()
+        {
+            foreach(k, v; this.statLabels)
+                v.parent = null;
+
+            this.statHeaderLabel.parent = null;
+        }
+
+        void onEnableStats()
+        {
+            this.engine._debugGui.addChild(this.statHeaderLabel);
+            foreach(k, v; this.statLabels)
+                this.engine._debugGui.addChild(v);
+        }
+
+        void onUpdateStats()
+        {
+            foreach(timer; Systems.statistics.timers)
+            {
+                auto ptr = (timer.name in this.statLabels);
+                if(ptr is null)
+                {
+                    this.statLabels[timer.name] = new SimpleLabel(
+                        new Text(
+                            engine._debugFont,
+                            "",
+                            vec2(0),
+                            DEBUG_FONT_SIZE,
+                            DEBUG_TEXT_COLOUR
+                        )
+                    );
+                    ptr = (timer.name in this.statLabels);
+                    this.engine._debugGui.addChild(*ptr);
+                }
+
+                import std.format;
+                ptr.updateText(format("%s: avg. %s ms (%s s) per %s frames", timer.name, timer.average.total!"msecs", timer.average.asSeconds, timer.frameSpan));
+            }
+        }
     }
 }

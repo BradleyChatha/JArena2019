@@ -1,7 +1,7 @@
 Config {
     windowSize 860 740
     showDebugText true // Always set to true for debug builds
-    debugControls false 
+    debugControls true 
     vsync true
     compoundTextureSize 2048 2048
 }
