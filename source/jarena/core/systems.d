@@ -64,7 +64,8 @@ final class Systems
             _audio,
             _loaderSDL,
             _assets,
-            _scheduler
+            _scheduler,
+            _statistics
         );
 
         @Property("window")
@@ -89,6 +90,9 @@ final class Systems
 
         @Property("shortTermScheduler")
         ShortTermScheduler _scheduler;
+
+        @Property("statistics")
+        EngineStatistics _statistics;
     }
 
     public static final

@@ -374,7 +374,7 @@ final class Renderer
 
         /// Displays all rendered changes to the screen.
         void displayChanges()
-        {            
+        {
             Shader previousShader;
             CameraInfo previousCam;
             TextureBase previousTexture;
