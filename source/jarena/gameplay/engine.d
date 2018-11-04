@@ -177,7 +177,7 @@ final class Engine
         ///
         void doLoop()
         {
-            while(!this._window.shouldClose)
+            while(!this._window.isClosed)
                 this.onUpdate();
         }
 
