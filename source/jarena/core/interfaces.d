@@ -3,7 +3,8 @@ module jarena.core.interfaces;
 
 private
 {
-    import std.typecons : Flag;
+    import std.exception : basicExceptionCtors;
+    import std.typecons  : Flag;
 }
 
 alias ScheduledDispose = Flag!"scheduledDispose";
@@ -42,6 +43,32 @@ interface IDisposable
      + Returns:
      +  Whether this object's data has been disposed or not.
      + ++/
-     @property
-     bool isDisposed();
+    @property
+    bool isDisposed();
+
+    /++
+     + A helper function that throws an `DisposedException` if `isDisposed` returns `true`.
+     + ++/
+    final void enforceNotDisposed()
+    {
+        if(this.isDisposed)
+            throw new DisposedException("Attempted to use an object that has been disposed of.");
+    }
+
+    /++
+     + A helper function that fails an assert if `isDisposed` returns `true`.
+     + ++/
+    final void assertNotDisposed()
+    {
+        if(this.isDisposed)
+            assert(false, "Attempted to use an object that has been disposed of.");
+    }
+}
+
+/++
+ + This should be thrown whenever a disposed object was attempted to be used.
+ + ++/
+class DisposedException : Exception
+{
+    mixin basicExceptionCtors;
 }
