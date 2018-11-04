@@ -116,7 +116,7 @@ final class Window
         Renderer      _renderer;
         SDL_Window*   _handle;
         SDL_GLContext _context;
-        bool          _shouldClose;
+        bool          _isClosed;
         
         // Instead of making a bunch of different objects every frame where the user does something
         // we instead just reuse the objects.
@@ -289,10 +289,11 @@ final class Window
         }
 
         /// Closes the window
-        @safe @nogc
-        void close() nothrow pure
+        @nogc
+        void close() nothrow
         {
-            this._shouldClose = true;
+            this._isClosed = true;
+            SDL_HideWindow(this.handle);
         }
     }
 
@@ -300,11 +301,11 @@ final class Window
     public
     {
         /// Returns:
-        ///  If the window should close or not.
+        ///  If the window is closed or not.
         @property @safe @nogc
-        bool shouldClose() nothrow const
+        bool isClosed() nothrow const
         {
-            return this._shouldClose;
+            return this._isClosed;
         }
 
         /// Returns:
