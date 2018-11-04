@@ -289,10 +289,13 @@ final class Window
         }
 
         /// Closes the window
-        @safe @nogc
-        void close() nothrow pure
+        @nogc
+        void close() nothrow
         {
             this._shouldClose = true;
+            SDL_Event event;
+            event.type = SDL_QUIT;
+            SDL_PushEvent(&event);
         }
     }
 
