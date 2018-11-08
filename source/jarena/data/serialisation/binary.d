@@ -146,10 +146,10 @@ final class BinaryStream
          +
          +  Use this function if the [Easy] functions don't fit your use case.
          + ++/
-        void writeBytes(scope ubyte[] data)
+        void writeBytes(scope const ubyte[] data)
         {
             this.resizeIfNeeded(this.position + data.length);
-            this._data[this.position..this.position+data.length] = data[];
+            this._data[this.position..this.position+data.length] = cast(ubyte[])data[]; // This is a copy, so it's safe to cast away const.
             this._position += data.length;
         }
 

@@ -503,6 +503,7 @@ class SceneManager
         Scene           _currentScene;          // Current scene to update
         PostOffice      _eventOffice;           // Main event office.
         InputManager    _input;                 // Input Manager for the game's window.
+        Buffer!Scene    _sceneStack;            // Stack of scenes.
     }
 
     public
@@ -520,8 +521,9 @@ class SceneManager
             assert(eventOffice !is null);
 
             this._eventOffice = eventOffice;
-            this._scenes = new Cache!Scene;
-            this._input = (input is null) ? new InputManager(eventOffice) : input;
+            this._scenes      = new Cache!Scene;
+            this._sceneStack  = new Buffer!Scene;
+            this._input       = (input is null) ? new InputManager(eventOffice) : input;
         }
 		
 		/// Registers a `Scene` using it's `@SceneName` UDA.
@@ -631,6 +633,54 @@ class SceneManager
         void swap(S : Scene)()
         {
             this.swap(SceneName.getFrom!S);
+        }
+
+        /++
+         + Pushes a scene.
+         +
+         + Notes:
+         +  When a scene is pushed, the $(B current) scene is added onto a stack.
+         +
+         +  The given scene is then swapped into.
+         +
+         + Params:
+         +  sceneName = The name of the scene to push.
+         + ++/
+        void push(string sceneName)
+        {
+            tracef("Pushing scene '%s'", sceneName);
+
+            if(this._currentScene !is null)
+                this._sceneStack ~= this._currentScene;
+
+            this.swap(sceneName);
+        }
+
+        /// ditto
+        void push(S : Scene)()
+        {
+            this.push(SceneName.getFrom!S);
+        }
+
+        /++
+         + Pops the scene from the top of the stack and swaps to it.
+         +
+         + Returns:
+         +  `false` if the stack is empty.
+         + ++/
+        bool pop()
+        {
+            if(this._sceneStack.length == 0)
+            {
+                warning("Attempted to pop the scene stack when the stack is empty.");
+                return false;
+            }
+
+            trace("Popping scene stack.");
+            this.swap(this._sceneStack[$-1].name);
+            this._sceneStack.length = this._sceneStack.length - 1;
+
+            return true;
         }
 
         /// An `InputManager` provided for easy access for `Scene`s to get user input.

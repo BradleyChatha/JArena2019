@@ -44,7 +44,7 @@ final class MenuScene : Scene
             {
                 this._list.addChild(new SimpleTextButton(
                     new Text(font, SceneName.getFrom!item, vec2(), TEXT_SIZE, TEXT_COLOUR),
-                    btn => super.manager.swap!item,
+                    btn => super.manager.push!item,
                     vec2(0),
                     BUTTON_SIZE,
                     BUTTON_COLOUR

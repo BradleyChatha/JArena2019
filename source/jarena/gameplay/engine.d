@@ -383,11 +383,11 @@ private class EngineDebugControls
         if(input.isKeyDown(Scancode.F11) && input.wasKeyTapped(Scancode.S))
         {
             this.statsEnabled = !this.statsEnabled;
-            if(this.statsEnabled)
-                this.onEnableStats();
-            else
-                this.onDisableStats();
+            (this.statsEnabled) ? this.onEnableStats() : this.onDisableStats();
         }
+
+        if(input.isKeyDown(Scancode.F11) && input.wasKeyTapped(Scancode.LEFT))
+            this.engine.scenes.pop();
 
         if(this.statsEnabled)
             this.onUpdateStats();
