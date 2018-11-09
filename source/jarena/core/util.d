@@ -89,6 +89,24 @@ final class ConsoleLogger : Logger
                           time.fracSecs.split!"msecs".msecs
                          );
         }
+
+        @safe @nogc
+        Colour colourFromLevel(LogLevel level) nothrow
+        {
+            final switch(level) with(LogLevel)
+            {
+                case all:       return Colour(255, 255, 255);
+                case trace:     return Colour(128, 128, 128);
+                case info:      return Colour(255, 255, 255);
+                case warning:   return Colour(255, 204, 0);
+                case error:     return Colour(218, 20,  20);
+                case critical:  return Colour(109, 10,  10);
+                case fatal:     return Colour(54,  5,   5);
+                case off:       return Colour(0,   0,   0);
+            }
+
+            assert(false);
+        }
     }
     
     public
@@ -105,11 +123,12 @@ final class ConsoleLogger : Logger
             import std.range     : split;
             import std.conv      : to;
             import std.uni       : toUpper;
-            import std.stdio     : writefln;
+            import std.stdio     : writeln;
+            import std.format    : format;
 
             synchronized(this)
             {
-                writefln("[%s](%s$%s:%s)<%s> -> %s",
+                writeln("[%s](%s$%s:%s)<%s> -> %s".format(
                         this.formatSysTime(entry.timestamp),
                         entry.file.substitute!("source/",  "", 
                                                "source\\", "",
@@ -120,7 +139,8 @@ final class ConsoleLogger : Logger
                         entry.line,
                         entry.logLevel.to!string.map!toUpper,
                         entry.msg
-                        );
+                        ).ansiText(this.colourFromLevel(entry.logLevel))
+                );
             }
         }
     }
@@ -164,4 +184,36 @@ void enforceAndLogf(int line              = __LINE__,
     auto str = format(formatStr, args);
     errorf(str);
     throw new Exception(str);
+}
+
+/++
+ + Creates an ANSI Colour string.
+ +
+ + Params:
+ +  text    = The text to colour.
+ +  colour  = The colour to use (alpha has no effect).
+ +
+ + Returns:
+ +  The ANSI string.
+ + ++/
+@safe
+string ansiText(string text, Colour colour)
+{
+    import std.format;
+    return format("\033[38;2;%s;%s;%sm%s\033[0m", colour.r, colour.g, colour.b, text);
+}
+
+version(Windows)
+{
+    static this()
+    {
+        import core.sys.windows.windows;
+
+        // Enable ANSI support
+        DWORD mode;
+        HANDLE console;
+        console = GetStdHandle(STD_OUTPUT_HANDLE);
+        GetConsoleMode(console, &mode);
+        SetConsoleMode(console, mode | 0x0004);
+    }
 }
