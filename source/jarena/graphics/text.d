@@ -199,6 +199,32 @@ class Font : IDisposable
             );
         }
 
+        /++
+         + Loads a font from memory.
+         +
+         + Params:
+         +  fontBytes = The bytes to use.
+         + ++/
+        @trusted
+        this(const ubyte[] fontBytes)
+        {
+            trace("Loading font from memory");
+            
+            // Load an instance of FT for this font.
+            auto error = FT_Init_FreeType(&this._ft);
+            enforceAndLogf(error == 0,
+                "FreeType was unable to initialise. Error code = %s",
+                error
+            );
+
+            // Create a face for it.
+            error = FT_New_Memory_Face(this._ft, fontBytes.ptr, fontBytes.length, 0, &this._font);
+            enforceAndLogf(error == 0,
+                "Failed to load font. Error code = %s",
+                error
+            );
+        }
+
         /// Post Frame Dispose.
         ///
         /// Affects all `Text` objects using this font.
