@@ -276,7 +276,45 @@ final static class Serialiser
          +  }
          +  ```
          + ++/
-        ArrayAsObject = 1 << 0
+        ArrayAsObject = 1 << 0,
+
+        /++
+         + Tells the serialiser that the enum's value (instead of it's name) should be used as the serialised output.
+         +
+         + Notes:
+         +  This setting only affects fields that are of an enum type.
+         +
+         +  For enum types that are to be ORed together (such as an enum representing a set of flags),
+         +  this is the only way to correctly serialise the data.
+         +
+         + Example:
+         +  Take the given code:
+         +
+         +  ```
+         +  enum Flags
+         +  {
+         +      Flag1 = 1 // 0b01
+         +      Flag2 = 2 // 0b10
+         +  }
+         +
+         +  struct Foo
+         +  {
+         +      @Setting(Serialiser.Settings.EnumAsValue)
+         +      Flags firstFlag  = Flags.Flag1 | Flags.Flag2;
+         +      Flags secondFlag = Flags.Flag1;
+         +  }
+         +  ```
+         +
+         +  Using the SDLang archive, this would generate the following:
+         +
+         +  ```
+         +  Foo {
+         +      firstFlag 3
+         +      secondFlag "Flag1"
+         +  }
+         +  ```
+         + ++/
+        EnumAsValue = 1 << 1
     }
 
     public static final
@@ -433,12 +471,25 @@ final static class Serialiser
         {
             import std.conv : to;
 
+            enum settings = getSettings!Symbol;
+
+            static if(settings & Settings.EnumAsValue)
+            {
+                OriginalType!T value = data;
+                alias ValueType = OriginalType!T;
+            }
+            else
+            {
+                T value = data;
+                alias ValueType = string;
+            }
+
             static if(hasUDA!(Symbol, Attribute))
-                parent.setAttributeAs!string(getFieldName!Symbol, data.to!string);
+                parent.setAttributeAs!ValueType(getFieldName!Symbol, data.to!ValueType);
             else
             {
                 auto obj = new ArchiveObject(getFieldName!Symbol);
-                obj.addValueAs!string(data.to!string);
+                obj.addValueAs!ValueType(data.to!ValueType);
                 parent.addChild(obj);
             }
         }
@@ -555,10 +606,15 @@ final static class Serialiser
         {
             import std.conv : to;
 
-            static if(hasUDA!(Symbol, Attribute))
-                data = obj.expectAttributeAs!string(getFieldName!Symbol).to!T;
+            static if(getSettings!Symbol & Settings.EnumAsValue)
+                alias ValueType = OriginalType!T;
             else
-                data = obj.expectChild(getFieldName!Symbol).getValueAs!string(0).to!T;
+                alias ValueType = string;
+
+            static if(hasUDA!(Symbol, Attribute))
+                data = obj.expectAttributeAs!ValueType(getFieldName!Symbol).to!T;
+            else
+                data = obj.expectChild(getFieldName!Symbol).getValueAs!ValueType(0).to!T;
         }
 
         void doDeserialise(T, alias MainSymbol, alias Symbol, Settings InheritedSettings)(ref T data, ArchiveObject obj)
@@ -651,7 +707,7 @@ unittest
     enum E
     {
         A,
-        B,
+        B = 69,
         C
     }
 
@@ -660,6 +716,8 @@ unittest
         @Attribute
         E a;
         E b;
+
+        @Setting(Serialiser.Settings.EnumAsValue)
         E c;
     }
 
@@ -673,7 +731,7 @@ unittest
 
     archive.root["A"].expectAttributeAs!string("a").should.equal("C");
     archive.root["A", "b"].expectValueAs!string(0).should.equal("A");
-    archive.root["A", "c"].expectValueAs!string(0).should.equal("B");
+    archive.root["A", "c"].expectValueAs!int(0).should.equal(69);
 
     A b = Serialiser.deserialise!A(archive.root);
     a.should.equal(b);
