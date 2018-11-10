@@ -4,6 +4,7 @@ private
 {
     import std.experimental.logger;
     import std.typecons, std.datetime;
+    import derelict.sdl2.sdl, derelict.freeimage.freeimage, derelict.freetype, derelict.fmod.fmod;
     import jarena.audio, jarena.core, jarena.graphics, jarena.gameplay, jarena.data, jarena.maths;
     import opengl;
 
@@ -57,6 +58,37 @@ final class Engine
 
     public final
     {
+        ///
+        void onInitLibraries()
+        {
+            // The pre-compiled DLL for FreeType is missing some optional symbols we don't care about
+            // So this is to tell Derelict that we're fine with missing these select symbols.
+            DerelictFT.missingSymbolCallback = (symbol)
+            {
+                import derelict.util.exception;
+
+                if(symbol == "FT_Stream_OpenBzip2" 
+                || symbol == "FT_Get_CID_Registry_Ordering_Supplement" 
+                || symbol == "FT_Get_CID_Is_Internally_CID_Keyed" 
+                || symbol == "FT_Get_CID_From_Glyph_Index" )
+                    return ShouldThrow.No;
+                else
+                    return ShouldThrow.Yes;
+            };
+
+            /// Load all of the derelict libraries.
+            DerelictSDL2.load();
+            DerelictFmod.load();
+            DerelictFI.load();
+            DerelictFT.load();
+
+            // Initialise the libraries.
+            import std.exception : enforce;
+            enforce(SDL_Init(SDL_INIT_EVERYTHING) == 0, "SDL was not able to initialise everything.");
+            checkSDLError();
+            FreeImage_Initialise();
+        }
+
         ///
         void onInit()
         {
