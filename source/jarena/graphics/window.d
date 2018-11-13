@@ -567,6 +567,19 @@ final class InputManager
         }
 
         /++
+         + Voids the specified `key` for this frame's input so it
+         + always return `false` for all of it's related functions.
+         +
+         + Params:
+         +  key = The `Scancode` to void.
+         + ++/
+        @safe @nogc
+        void voidKey(Scancode key) nothrow
+        {
+            this._keyStates[key] = KeyState.init;
+        }
+
+        /++
          + Returns:
          +  `true` if the `key` has had it's input repeated by the OS (in the case that key repeation is enabled for the window).
          + ++/
@@ -576,6 +589,8 @@ final class InputManager
             assert(key < this._keyStates.length);
             return this._keyStates[key].wasRepeated;
         }
+
+
 
         /// Returns: Whether SHIFT is pressed down.
         @safe @nogc
@@ -614,6 +629,20 @@ final class InputManager
         bool wasMouseButtonTapped(MouseButton button) nothrow const
         {
             return (this._mouse.buttonTappedMask & button) > 0;
+        }
+
+        /++
+         + Voids the specified mouse `button` so it
+         + always return `false` for all of it's related functions.
+         +
+         + Params:
+         +  button = The `MouseButton` to void.
+         + ++/
+        @safe @nogc
+        void voidMouseButton(MouseButton button) nothrow
+        {
+            this._mouse.buttonTappedMask &= ~cast(int)button;
+            this._mouse.buttonMask       &= ~cast(int)button;
         }
 
         /// Returns: The last known position of the mouse.
