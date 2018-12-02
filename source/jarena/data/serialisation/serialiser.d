@@ -187,7 +187,7 @@ static string getFieldName(alias F, UseArrayBaseType UseBase = UseArrayBaseType.
         //     return getFieldName!Type;
         // }
         else
-            return F.stringof;
+            return __traits(identifier, F);
     }
 }
 

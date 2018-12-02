@@ -10,7 +10,7 @@ private
     import jarena.audio, jarena.core, jarena.data, jarena.gameplay, jarena.graphics;
 }
 
-private struct Property
+private struct Property2
 {
     string name;
 }
@@ -68,30 +68,30 @@ final class Systems
             _statistics
         );
 
-        @Property("window")
+        @Property2("window")
         @IsConst
         Window _window;
 
-        @Property("renderResources")
+        @Property2("renderResources")
         @WhitelistModules("jarena.graphics.renderer",
                           "jarena.graphics.sprite",
                           "jarena.gameplay.scenes.debugs.debug_menu",
                           "jarena.gameplay.engine")
         RendererResources _renderResources;
 
-        @Property("audio")
+        @Property2("audio")
         AudioManager _audio;
 
-        @Property("loaderSdlang")
+        @Property2("loaderSdlang")
         LoaderSDL _loaderSDL;
 
-        @Property("assets")
+        @Property2("assets")
         AssetManager _assets;
 
-        @Property("shortTermScheduler")
+        @Property2("shortTermScheduler")
         ShortTermScheduler _scheduler;
 
-        @Property("statistics")
+        @Property2("statistics")
         EngineStatistics _statistics;
     }
 
@@ -112,7 +112,7 @@ final class Systems
             {
                 // The extra scope is so the 'name' variable doesn't get redefined.
                 {
-                    auto name = getUDAs!(prop, Property)[0].name;
+                    auto name = getUDAs!(prop, Property2)[0].name;
                     if((name in _setFlags) is null)
                         assert(false, "Cannot finalise data - No value for '"~name~"' was set.");
                 }
@@ -128,7 +128,7 @@ final class Systems
     private static final
     {
         string generate(alias Prop)()
-        if(hasUDA!(Prop, Property))
+        if(hasUDA!(Prop, Property2))
         {
             import std.conv : to;
             auto code = new CodeBuilder();
@@ -137,7 +137,7 @@ final class Systems
             // = Get useful data =
             // ===================
             auto varName  = Prop.stringof;
-            auto propName = getUDAs!(Prop, Property)[0].name;
+            auto propName = getUDAs!(Prop, Property2)[0].name;
             auto typeName = typeof(Prop).stringof;
 
             static if(hasUDA!(Prop, IsConst))
@@ -186,7 +186,7 @@ final class Systems
             {
                 code.putf("assert(Systems._finalised, \"Attempted to get the value of '%s' before the data has been finalised.\");",
                           propName);
-                // The finalisation function will make sure that this property was set a value, so no need to check it here.
+                // The finalisation function will make sure that this Property2 was set a value, so no need to check it here.
 
                 code.putf("return Systems.%s;", varName);
             });

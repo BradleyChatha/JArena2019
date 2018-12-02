@@ -217,3 +217,34 @@ version(Windows)
         SetConsoleMode(console, mode | 0x0004);
     }
 }
+
+template getSymbolByName(alias T, string name)
+{
+    import std.meta : Filter;
+
+    enum AreEqual(string a) = a == name;
+
+    alias Members = Filter!(AreEqual, __traits(allMembers, T));
+    static if(Members.length > 1)
+        static assert(false, "Undefined");
+    else static if(Members.length == 0)
+        static assert(false, T.stringof~" does not contain a member called "~name);
+    else
+        mixin("alias getSymbolByName = T."~name~";");
+}
+///
+unittest
+{
+    import std.traits : hasUDA;
+
+    struct S {}
+    class C
+    {
+        string a;
+
+        @S
+        int b;
+    }
+
+    static assert(hasUDA!(getSymbolByName!(C, "b"), S));
+}

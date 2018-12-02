@@ -1,8 +1,7 @@
 /// Contains a test scene.
 module jarena.gameplay.scenes.debugs.test;
 import std.stdio;
-import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jarena.gameplay.gui, jarena.gameplay.scenes, jarena.maths;
-import jarena.gameplay.scenes.editors.controls;
+import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jarena.gameplay.scenes, jarena.maths;
 
 @SceneName("Test")
 class Test : Scene, IPostBox
@@ -16,14 +15,22 @@ class Test : Scene, IPostBox
     RectangleShape[2] centerLines;
     TextObject someText;
     TextObject inputText;
-    SimpleTextBox inputBox;
-    ButtonTooltip tooltip;
-    EditorButton tooltippedButton;
-    EditorScrollBoxContainer scrollbox;
+    BasicTextBox inputBox;
     CircleShape circle;
     RectangleI scissorRect;
     bool useWireframe;
     //GridContainer  grid;
+
+    void onMouseWheel(PostOffice _, Mail mail)
+    {
+        auto direction = cast(ValueMail!MouseWheelDirection)mail;
+        assert(direction !is null);
+        
+        if(direction.value == MouseWheelDirection.Up)
+            this.someText.charSize = this.someText.charSize + 2;
+        else
+            this.someText.charSize = this.someText.charSize - 2;
+    }
 
     public override
     {
@@ -65,8 +72,17 @@ class Test : Scene, IPostBox
             auto info = Systems.assets.get!AnimationInfo("Test Animation");
             super.register("AnimatedTahn", new AnimatedObject(new AnimatedSprite(info), vec2(500, 500)));
 
-            this.gui  = new StackContainer(vec2(10, 400), StackContainer.Direction.Vertical, Colour(0,0,0,128));
-            this.gui2 = new StackContainer(vec2(80, 400), StackContainer.Direction.Horizontal, Colour.transparent);
+            RectangleF f;
+            this.gui = new StackContainer();
+            this.gui.margin.value.position = vec2(10, 400);
+            this.gui.direction = StackContainer.Direction.Vertical;
+            this.gui.background.colour = Colour(0, 0, 0, 128);
+            this.gui2 = new StackContainer();
+            this.gui2.margin.value.position = vec2(80, 400);
+            this.gui2.direction = StackContainer.Direction.Horizontal;
+            this.gui2.background.colour = Colour.transparent;
+            this.gui.autoSize = StackContainer.AutoSize.yes;
+            this.gui2.autoSize = StackContainer.AutoSize.yes;
             //this.grid = new GridContainer(vec2(1, 570), vec2(200, 100));
             //this.grid.addRow(GridContainer.SizeType.Pixels, 50);
             //this.grid.addRow(GridContainer.SizeType.Pixels, 50);
@@ -74,15 +90,21 @@ class Test : Scene, IPostBox
             //this.grid.addColumn(GridContainer.SizeType.Pixels, 75);
             //this.grid.drawGrid = true;
 
-            super.gui.addChild(gui);
-            super.gui.addChild(gui2);
-            //super.gui.addChild(grid);
+            // super.oldGui.addChild(gui);
+            // super.oldGui.addChild(gui2);
+            //super.oldGui.addChild(grid);
 
-            gui.addChild(new TestControl(vec2(0,0), vec2(50, 30), Colour(128, 0, 128, 255)));
-            gui.addChild(new TestControl(vec2(0,0), vec2(25, 60), Colour(0, 128, 128, 255)));
+            gui.addChild(new TestControl(vec2(50, 30), Colour(128, 0, 128, 255)));
+            gui.addChild(new TestControl(vec2(25, 60), Colour(0, 128, 128, 255)));
 
-            gui2.addChild(new TestControl(vec2(0,0), vec2(50, 30), Colour(128, 0, 128, 255)));
-            gui2.addChild(new TestControl(vec2(0,0), vec2(25, 60), Colour(0, 128, 128, 255)));
+            gui2.addChild(new TestControl(vec2(50, 30), Colour(128, 0, 128, 255)));
+            gui2.addChild(new TestControl(vec2(25, 60), Colour(0, 128, 128, 255)));
+            
+            this.gui.arrangeInRect(RectangleF(0, 0, vec2(Systems.window.size)), f);
+            this.gui2.arrangeInRect(RectangleF(0, 0, vec2(Systems.window.size)), f);
+
+            super.gui.addChild(this.gui);
+            super.gui.addChild(this.gui2);
 
             auto font = Systems.assets.get!Font("Crackdown");
             this.someText  = new TextObject(font, "A B C D E F G 1 2 3", vec2(0,550), 14, Colour(128, 0, 128, 255));
@@ -90,8 +112,9 @@ class Test : Scene, IPostBox
             super.register("Some random text", this.someText);
             super.register("Changeable text", this.inputText);
 
-            this.inputBox = new SimpleTextBox(new Text(font, "", vec2(0), 14, Colour.black), vec2(0, 250), vec2(200, 50), vec2(2, 20));
-            super.gui.addChild(this.inputBox).textInput = "[Text Here]";
+            this.inputBox = new BasicTextBox();
+            this.inputBox.size = vec2(70, 25);
+            this.gui.addChild(this.inputBox);
 
             size_t i = 0;
             while(true)
@@ -103,29 +126,30 @@ class Test : Scene, IPostBox
                 writefln("Char #%s is at %s", i, rect);
                 i++;
             }
-            
-            auto btnText = new Text(font, "Click Me", vec2(0), 14, Colour(255, 255, 255, 255));
-            gui.addChild(new SimpleTextButton(btnText, btn => writeln("Button position: ", btn.position)));
-            gui.getChild!SimpleTextButton(gui.children.length - 1).fitToText();
+            auto b = new BasicButton();
+            b.size = vec2(70, 30);
+            b.text.value.text = "Click me!";
+            b.horizAlignment = HorizontalAlignment.Right;
+            b.onClick.connect(_ => writeln("BOOP"));
+            this.gui.addChild(b);
 
-            this.tooltip = new ButtonTooltip("Delete(D)", "Allows deletion of memes.\nPlease don't hurt me.\n");
-            this.tooltippedButton = new EditorButton(Systems.assets.get!Texture("tex_MouseIcon"), "Test Button", "Please ignore\n");
-            this.tooltippedButton.position = vec2(0, 20);
-            super.gui.addChild(this.tooltip);
-            super.gui.addChild(this.tooltippedButton);
-
-            this.scrollbox = new EditorScrollBoxContainer();
-            this.scrollbox.position = vec2(0, 540);
-            this.scrollbox.size     = vec2(150, 150);
-            foreach(___; 0..10)
-            {
-                this.scrollbox.addChild(new TestControl(vec2(0), vec2(100, 20), Colour.red));
-                this.scrollbox.addChild(new TestControl(vec2(0), vec2(80, 20), Colour.green));
-                this.scrollbox.addChild(new TestControl(vec2(0), vec2(40, 20), Colour.blue));
-            }
-            super.gui.addChild(this.scrollbox);
+            auto l = new BasicLabel();
+            l.text.value.text = "Hey there babbyy";
+            this.gui.addChild(l);
 
             this.circle = new CircleShape(vec2(0, -50), 15, Colour.red);
+
+            auto tempGui = new StackContainer();
+            tempGui.autoSize = StackContainer.AutoSize.yes;
+            tempGui.direction = StackContainer.Direction.Vertical;
+            tempGui.margin.value.position = vec2(300, 300);
+            tempGui.background.borderSize = 10;
+            tempGui.background.borderColour = Colour.black;
+            super.gui.addChild(tempGui);
+
+            tempGui.addChild(new TestControl(vec2(50, 75), Colour.red));
+            tempGui.addChild(new TestControl(vec2(50, 75), Colour.green));
+            tempGui.addChild(new TestControl(vec2(50, 75), Colour.blue));
         }
 
         void onSwap(PostOffice office)
@@ -138,17 +162,6 @@ class Test : Scene, IPostBox
         {
             office.unsubscribe(&this.onMouseWheel);
             super.manager.input.listenForText = false;
-        }
-
-        void onMouseWheel(PostOffice _, Mail mail)
-        {
-            auto direction = cast(ValueMail!MouseWheelDirection)mail;
-            assert(direction !is null);
-            
-            if(direction.value == MouseWheelDirection.Up)
-                this.someText.charSize = this.someText.charSize + 2;
-            else
-                this.someText.charSize = this.someText.charSize - 2;
         }
 
         void onUpdate(Duration deltaTime, InputManager input)
@@ -210,12 +223,11 @@ class Test : Scene, IPostBox
             if(input.wasKeyTapped(Scancode.G) && !input.wasKeyRepeated(Scancode.G))
             {
                 if(gui.children.length == 1)
-                    gui2.children[0].parent = gui;
+                    gui.addChild(gui2.removeChild(0));
                 else
-                    gui.children[0].parent = gui2;
+                    gui2.addChild(gui.removeChild(0));
             }
 
-            this.tooltip.showing = input.isKeyDown(Scancode.F3);
             if(input.wasKeyTapped(Scancode.F2))
             {
                 Systems.assets.get!Font("Calibri").dispose();
@@ -241,9 +253,8 @@ class Test : Scene, IPostBox
             if(input.wasKeyTapped(Scancode.F7))
                 Systems.assets.unloadPackage("Debug");
 
-            this.circle.position = super.camera.screenToWorldPos(input.mousePosition);
-
             super.camera.center = this.tahn.position + (this.tahn.bounds.size / 2);
+            this.circle.position = super.camera.screenToWorldPos(input.mousePosition);
 
             super.updateScene(deltaTime);
             super.updateUI(deltaTime);
@@ -257,6 +268,7 @@ class Test : Scene, IPostBox
             window.renderer.scissorRect = RectangleI.init;
 
             window.renderer.useWireframe = this.useWireframe;
+            window.renderer.camera = super.guiCamera;
             super.renderUI(window);
             window.renderer.useWireframe = false;
 

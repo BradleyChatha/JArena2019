@@ -194,6 +194,7 @@ class LoaderSDL : Loader
         super.setExtensionFor("Sprite:atlas",          new SpriteAtlasExtensionSDL());
         super.setExtensionFor("Animation:list",        animExt);
         super.setExtensionFor("Animation:spriteSheet", animExt);
+        super.setExtensionFor("UI:view",               new UIViewExtensionSDL());
     }
 
     public override
@@ -567,5 +568,21 @@ class AnimationExtensionSDL : LoaderExtensionSDLFile
             assets ~= this.onLoadSpriteSheet(loader, sheet);
 
         return assets;
+    }
+}
+
+class UIViewExtensionSDL : LoaderExtensionSDLFile
+{
+    override PackageAsset[] onLoadFileAssets(Loader loader, Tag fileTag)
+    {
+        fileTag = fileTag.expectTag("UI:view");
+        auto archive = new ArchiveSDL();
+        archive.loadFromTag(fileTag);
+
+        auto container = new ViewContainer();
+        foreach(child; DataBinder.parseUIObjectGeneric(archive.root))
+            container.addChild(child);
+
+        return [PackageAsset(fileTag.expectTagValue!string("name"), container)];
     }
 }

@@ -1,5 +1,5 @@
 import std.stdio, std.experimental.logger;
-import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jarena.data.serialisation, jarena.gameplay.gui, jarena.gameplay.scenes;
+import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jarena.data.serialisation, jarena.gameplay.scenes;
 
 version(unittest){}
 else
@@ -7,7 +7,7 @@ else
 void main()
 {
     sharedLog = new ConsoleLogger(LogLevel.all);
-    
+
     // Setup the engine.
     auto engine = new Engine();
     engine.onInitLibraries();
@@ -17,10 +17,8 @@ void main()
     engine.scenes.register(new Test());
     engine.scenes.register(new MenuScene());
     engine.scenes.register(new DebugMenuScene());
-    engine.scenes.register(new AnimationViewerScene());
-    engine.scenes.register(new SpriteAtlasViewerScene());
     engine.scenes.register(new JoshyClickerScene());
-    engine.scenes.register(new SpriteAtlasEditorScene());
+    engine.scenes.register(new AnimationViewerScene());
     //engine.scenes.register(new StressTest_Render1Scene());
     engine.scenes.register(new StressTest_Render2Scene());
     engine.scenes.swap!MenuScene;

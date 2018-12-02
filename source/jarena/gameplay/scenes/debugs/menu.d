@@ -21,10 +21,8 @@ final class MenuScene : Scene
     {
         alias SCENES = TypeTuple!(Test,
                                   DebugMenuScene,
-                                  AnimationViewerScene, 
-                                  SpriteAtlasViewerScene,
+                                  AnimationViewerScene,
                                   JoshyClickerScene,
-                                  SpriteAtlasEditorScene,
                                   StressTest_Render1Scene,
                                   StressTest_Render2Scene);
 
@@ -35,21 +33,32 @@ final class MenuScene : Scene
     {
         void onInit()
         {
-            this._list = new StackContainer(MENU_POSITION);
-            this._list.colour = MENU_COLOUR;
+            this._list                       = new StackContainer();
+            this._list.direction             = StackContainer.Direction.Vertical;
+            this._list.margin.value.position = MENU_POSITION;
+            this._list.background.colour     = MENU_COLOUR;
+            this._list.autoSize              = StackContainer.AutoSize.yes;
             super.gui.addChild(this._list);
 
             auto font = Systems.assets.get!Font("Calibri");
             foreach(item; SCENES)
             {
-                this._list.addChild(new SimpleTextButton(
-                    new Text(font, SceneName.getFrom!item, vec2(), TEXT_SIZE, TEXT_COLOUR),
-                    btn => super.manager.push!item,
-                    vec2(0),
-                    BUTTON_SIZE,
-                    BUTTON_COLOUR
-                )).fitToText();
+                auto btn                = new BasicButton();
+                btn.text.value.font     = font;
+                btn.text.value.text     = SceneName.getFrom!item;
+                btn.text.value.charSize = TEXT_SIZE;
+                btn.text.value.colour   = TEXT_COLOUR;
+                btn.size.value.y        = BUTTON_SIZE.y;
+                btn.shape.value.colour  = BUTTON_COLOUR;
+                btn.horizAlignment      = HorizontalAlignment.Stretch;
+                btn.onClick.connect(_ => super.manager.push!item);
+
+                this._list.addChild(btn);
             }
+            
+            this._list.autoSize = StackContainer.AutoSize.no;
+            this._list.size.value.x = 250;
+            this._list.size.onValueChanged.emit(this._list.size);
         }
 
         void onSwap(PostOffice office)

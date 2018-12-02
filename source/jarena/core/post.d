@@ -122,7 +122,8 @@ interface IPostBox
      + Params:
      +  T = The class to make the `onMail` function for.
      + ++/
-    public static final string generateOnMail(T : IPostBox)()
+    public static final string generateOnMail(T)()
+    if(is(T : IPostBox))
     {
         import std.meta;
         import std.traits;
@@ -133,38 +134,59 @@ interface IPostBox
         string output  = "void onMail(PostOffice office, Mail mail)\n{";
                output ~= "\tswitch(mail.type)\n\t{";
 
-        alias funcs = getSymbolsByUDA!(T, MailBox);
-        static assert(allSatisfy!(isSomeFunction, funcs), "@MailBox can only be used on functions.");
-
-        foreach(func; funcs)
+        foreach(member; __traits(derivedMembers, T))
         {
-            enum udas = getUDAs!(func, MailBox);
-            static assert(udas.length == 1, "Only 1 @MailBox may be used. Offender = " ~ func.stringof);
+            static if(__traits(compiles, hasUDA!(mixin("T."~member), MailBox))
+                   && hasUDA!(mixin("T."~member), MailBox))
+            {
+                mixin("alias func = T."~member~";");
+                enum udas = getUDAs!(func, MailBox);
+                static assert(udas.length == 1, "Only 1 @MailBox may be used. Offender = " ~ func.stringof);
 
-            enum  funcName    = fullyQualifiedName!func;
-            enum  uda         = udas[0];
-            alias paramTypes  = Parameters!func;
-            static assert(paramTypes.length == 2,           "An @MailBox function should only have 2 parameters.");
-            static assert(is(paramTypes[0]  == PostOffice), "The first parameter to an @MailBox function should be a PostOffice.");
-            static assert(is(paramTypes[1]   : Mail),       "The second parameter to an @MailBox function should be a class that inherits from Mail.");
+                enum  funcName    = fullyQualifiedName!func;
+                enum  uda         = udas[0];
+                alias paramTypes  = Parameters!func;
+                static assert(paramTypes.length == 2,           "An @MailBox function should only have 2 parameters.");
+                static assert(is(paramTypes[0]  == PostOffice), "The first parameter to an @MailBox function should be a PostOffice.");
+                static assert(is(paramTypes[1]   : Mail),       "The second parameter to an @MailBox function should be a class that inherits from Mail.");
 
-            output ~= format("\t\tcase %s:\n",                                                                    uda.type);
-            output ~= format("\t\t\tauto casted = cast(%s)mail;\n",                                               paramTypes[1].stringof);
-            output ~= format("\t\t\tassert(casted !is null, \"For mailbox %s, unable to cast mail to %s.\");\n",  funcName, paramTypes[1].stringof);
-            output ~= format("\t\t\t%s(office, casted);\n",                                                       funcName.splitter(".").array[$-1]);
-            output ~= format("\t\t\tbreak;\n");
+                output ~= format("\t\tcase %s:\n",                                                                    uda.type);
+                output ~= format("\t\t\tauto casted = cast(%s)mail;\n",                                               paramTypes[1].stringof);
+                output ~= format("\t\t\tassert(casted !is null, \"For mailbox %s, unable to cast mail to %s.\");\n",  funcName, paramTypes[1].stringof);
+                output ~= format("\t\t\t%s(office, casted);\n",                                                       funcName.splitter(".").array[$-1]);
+                output ~= format("\t\t\tbreak;\n");
+            }
         }
 
         output ~= "\t\tdefault: break;\n";
-        output ~= "\n\t}\n}";
+        output ~= "\n\t}\n";
+
+        alias Base = BaseClassesTuple!T[0];
+        static if(is(typeof({auto b = Base.init; b.onMail(new PostOffice(), new CommandMail(0));})))
+            output ~= "\tsuper.onMail(office, mail);\n";
+
+        output ~= "}";
         return output;
     }
     ///
     unittest
     {
-        static class C : IPostBox
+        static class B : IPostBox
         {
-            mixin(IPostBox.generateOnMail!C);
+            mixin(IPostBox.generateOnMail!B);
+
+            bool baseEventCalled = false;
+
+            @MailBox(69)
+            void on69(PostOffice office, CommandMail mail)
+            {
+                this.baseEventCalled = true;
+            }
+        }
+
+        static class C : B
+        {
+            override mixin(IPostBox.generateOnMail!C);
 
             bool eventCalled = false;
 
@@ -190,7 +212,9 @@ interface IPostBox
         assert(!myC.eventCalled);
         myC.onMail(office, new ValueMail!bool(1, true)); // This would end up calling "onSomeEvent"
         myC.onMail(office, new CommandMail(400));        // This would end up calling "onOtherEvent"
+        myC.onMail(office, new CommandMail(69));
         assert(myC.eventCalled);
+        assert(myC.baseEventCalled);
     }
 }
 

@@ -10,6 +10,9 @@ files {
     file "Atlases/test atlas.sdl"
     file "Atlases/explosion.sdl"
     //glob "Atlases/*.sdl"
+
+    // Views
+    file "UI/animation_viewer.sdl"
 }
 
 // Files that aren't stored in in SDLang files need to be given a type and name manually.

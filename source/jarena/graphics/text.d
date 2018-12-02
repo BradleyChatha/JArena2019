@@ -639,6 +639,15 @@ class Text : ITransformable
             return this._font;
         }
 
+        ///
+        @property
+        void font(Font font)
+        {
+            assert(font !is null);
+            this._font = font;
+            this.text = this.text;
+        }
+
         /// Internal use only
         @property @safe //@nogc
         Vertex[] verts() nothrow

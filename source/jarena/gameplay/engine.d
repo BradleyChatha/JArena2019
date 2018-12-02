@@ -50,7 +50,7 @@ final class Engine
         // Debug stuff
         char[512]           _debugBuffer;
         Font                _debugFont;
-        SimpleLabel         _debugText;
+        BasicLabel          _debugText;
         StackContainer      _debugGui;
         Camera              _debugCamera;
         EngineDebugControls _debugControls;
@@ -93,6 +93,7 @@ final class Engine
         void onInit()
         {
             import std.file : exists;
+            UIResources.setup();
             
             // Read in the config
             if(exists(ENGINE_CONFIG_PATH))
@@ -105,6 +106,13 @@ final class Engine
             }
             else
                 tracef("No config file exists. Please create one at '%s'", ENGINE_CONFIG_PATH);
+
+            // Register UI elements
+            DataBinder.registerClass!StackContainer;
+            DataBinder.registerClass!TestControl;
+            DataBinder.registerClass!BasicButton;
+            DataBinder.registerClass!BasicLabel;
+            DataBinder.registerClass!BasicTextBox;
                 
             // Setup variables
             // The window also sets up the OpenGL context.
@@ -116,13 +124,25 @@ final class Engine
             this._scenes        = new SceneManager(this._eventOffice, this._input);
             this._timers        = new Timers();
             this._debugFont     = new Font(DEBUG_FONT);
-            this._debugText     = new SimpleLabel(new Text(this._debugFont, "", vec2(0), DEBUG_FONT_SIZE, DEBUG_TEXT_COLOUR));
-            this._debugGui      = new StackContainer(DEBUG_CONTAINER_POSITION, StackContainer.Direction.Vertical, DEBUG_CONTAINER_COLOUR);
-            this._debugGui.addChild(this._debugText);
             this._debugCamera   = new Camera(RectangleF(0, 0, vec2(this._window.size)));
             this._debugControls = new EngineDebugControls(this, this._config.debugControls.get(false));
             this._frameTime     = (1000 / this._config.targetFPS.get(WINDOW_DEFAULT_FPS)).msecs;
             this._audio         = new AudioManager();
+
+            this._debugText                     = new BasicLabel();
+            this._debugText.text.value.font     = this._debugFont;
+            this._debugText.text.value.charSize = DEBUG_FONT_SIZE;
+            this._debugText.text.value.colour   = DEBUG_TEXT_COLOUR;
+            this._debugText.margin.value.size   = vec2(0, 5);
+
+            this._debugGui                          = new StackContainer();
+            this._debugGui.margin.value.position    = DEBUG_CONTAINER_POSITION;
+            this._debugGui.direction                = StackContainer.Direction.Vertical;
+            this._debugGui.background.colour        = DEBUG_CONTAINER_COLOUR;
+            this._debugGui.autoSize                 = StackContainer.AutoSize.yes;
+            this._debugGui.background.borderColour  = Colour.black;
+            this._debugGui.background.borderSize    = 1;
+            this._debugGui.addChild(this._debugText);
 
             this._window.vsync = this._config.vsync.get(WINDOW_DEFAULT_VSYNC);
 
@@ -151,10 +171,11 @@ final class Engine
             this.events.subscribe(Event.UpdateFPSDisplay, (_, __)
             {
                 import std.format : sformat;
-                this._debugText.updateText(sformat(this._debugBuffer, "FPS: %s | Time: %sms | RAM: %sMB", 
+                this._debugText.text.value.text(sformat(this._debugBuffer, "FPS: %s | Time: %sms | RAM: %sMB", 
                                                    this._fps.frameCount, 
                                                    this._fps.elapsedTime.total!"msecs",
                                                    getMemInfo().usedRAM / (1024 * 1024)));
+                this._debugText.onInvalidate.emit();
             });
             this.events.subscribe(Window.Event.Close, (_,__) => this._window.close());
 
@@ -193,7 +214,7 @@ final class Engine
                 this._window.renderer.camera = this._debugCamera; // So the debug UI doesn't fly off the screen.
                 this._debugGui.onUpdate(this.input, this._fps.elapsedTime);
                 this._debugControls.onUpdate(this.input, this._fps.elapsedTime);
-                this._debugGui.onRender(this._window);
+                this._debugGui.onRender(this._window.renderer);
                 this._debugControls.onRender(this._window.renderer);
                 this._window.renderer.camera = old;
             });
@@ -421,6 +442,9 @@ private class EngineDebugControls
         if(input.isKeyDown(Scancode.F11) && input.wasKeyTapped(Scancode.LEFT))
             this.engine.scenes.pop();
 
+        if(input.isKeyDown(Scancode.F11) && input.wasKeyTapped(Scancode.C))
+            this.engine._window.renderer.captureNextFrame();
+
         if(this.statsEnabled)
             this.onUpdateStats();
     }
@@ -442,28 +466,24 @@ private class EngineDebugControls
     // ########################
     private
     {
-        SimpleLabel         statHeaderLabel;
-        SimpleLabel[string] statLabels;
+        BasicLabel         statHeaderLabel;
+        BasicLabel[string] statLabels;
 
         void onInitStats()
         {
-            this.statHeaderLabel = new SimpleLabel(
-                        new Text(
-                            engine._debugFont,
-                            "STATISTIC TIMERS:",
-                            vec2(0),
-                            DEBUG_FONT_SIZE,
-                            DEBUG_TEXT_COLOUR
-                        )
-                    );
+            this.statHeaderLabel                     = new BasicLabel();
+            this.statHeaderLabel.text.value.font     = this.engine._debugFont;
+            this.statHeaderLabel.text.value.text     = "STATISTIC TIMERS:";
+            this.statHeaderLabel.text.value.charSize = DEBUG_FONT_SIZE;
+            this.statHeaderLabel.text.value.colour   = DEBUG_TEXT_COLOUR;
         }
 
         void onDisableStats()
         {
             foreach(k, v; this.statLabels)
-                v.parent = null;
+                this.engine._debugGui.removeChild(v);
 
-            this.statHeaderLabel.parent = null;
+            this.engine._debugGui.removeChild(this.statHeaderLabel);
         }
 
         void onEnableStats()
@@ -480,21 +500,20 @@ private class EngineDebugControls
                 auto ptr = (timer.name in this.statLabels);
                 if(ptr is null)
                 {
-                    this.statLabels[timer.name] = new SimpleLabel(
-                        new Text(
-                            engine._debugFont,
-                            "",
-                            vec2(0),
-                            DEBUG_FONT_SIZE,
-                            DEBUG_TEXT_COLOUR
-                        )
-                    );
+                    auto label                  = new BasicLabel();
+                    label.text.value.font       = engine._debugFont;
+                    label.text.value.charSize   = DEBUG_FONT_SIZE;
+                    label.text.value.colour     = DEBUG_TEXT_COLOUR;
+                    label.margin.value.size     = vec2(0, 2);
+                    this.statLabels[timer.name] = label;
+
                     ptr = (timer.name in this.statLabels);
                     this.engine._debugGui.addChild(*ptr);
                 }
 
                 import std.format;
-                ptr.updateText(format("%s: avg. %s ms (%s s) per %s frames", timer.name, timer.average.total!"msecs", timer.average.asSeconds, timer.frameSpan));
+                ptr.text.value.text = (format("%s: avg. %s ms (%s s) per %s frames", timer.name, timer.average.total!"msecs", timer.average.asSeconds, timer.frameSpan));
+                ptr.onInvalidate.emit();
             }
         }
     }

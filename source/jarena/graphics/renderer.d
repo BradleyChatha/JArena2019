@@ -3,12 +3,12 @@ module jarena.graphics.renderer;
 
 private
 {
-    import std.experimental.logger, std.typecons;
+    import std.experimental.logger, std.typecons, std.format;
     import derelict.sdl2.sdl;
     import opengl;
     import jarena.core, jarena.graphics, jarena.maths;
 
-    const COMPOUNT_TEXTURE_DIRECTORY = "data/debug/compound/";
+    const CAPTURED_SCENE_DIRECTORY = "data/debug/scene captures/";
 }
 
 /++
@@ -325,6 +325,7 @@ final class Renderer
         Shader              _textShader;
         RectangleShape      _rect;
         RectangleI          _scissorRect;
+        bool                _shouldCapture;
 
         // Despite having very similar names, they're used for different purposes.
         // VertexBuffer is used to store the data that is uploaded to the GPU
@@ -353,12 +354,6 @@ final class Renderer
             this._quadBuffer.setup();
         }
 
-        ~this()
-        {
-            //if(this._rect !is null)
-                //sfRectangleShape_destroy(this._rect);
-        }
-
         /++
          + Clears the screen to a certain colour.
          +
@@ -375,9 +370,16 @@ final class Renderer
         /// Displays all rendered changes to the screen.
         void displayChanges()
         {
+            char[] bucketCapture;
             Shader previousShader;
             CameraInfo previousCam;
             TextureBase previousTexture;
+
+            void addToCapture(string cap)
+            {
+                if(this._shouldCapture)
+                    bucketCapture ~= cap ~ "\n";
+            }
 
             foreach(bucket; this._buckets[0..$])
             {
@@ -413,11 +415,12 @@ final class Renderer
                 switch(bucket.command)
                 {
                     case BucketCommand.Buffer:
+                        addToCapture(format("Display Buffer: %s", bucket.data.buffer));
                         this.displayBuffer(bucket.data.buffer);
                         break;
 
                     case BucketCommand.Scissor:
-                        this._scissorRect = bucket.data.scissorRect;
+                        addToCapture(format("Scissor: %s", bucket.data.scissorRect));
                         if(bucket.data.scissorRect == RectangleI.init)
                             glDisable(GL_SCISSOR_TEST);
                         else
@@ -429,6 +432,7 @@ final class Renderer
                         break;
 
                     case BucketCommand.UseWireframe:
+                        addToCapture(format("Use Wireframe: %s", bucket.data.useWireframe));
                         glPolygonMode(GL_FRONT_AND_BACK, (bucket.data.useWireframe) ? GL_LINE : GL_FILL);
                         break;
 
@@ -453,6 +457,10 @@ final class Renderer
                         // Update the VBO with the new data
                         this._quadBuffer.verts    = this._vertBuffer[bucket.data.quadVerts.start..bucket.data.quadVerts.end];
                         this._quadBuffer.indicies = this._indexBuffer[0..$];
+
+                        addToCapture(       "Draw Quads:");
+                        addToCapture(format("           Verts:    %s", this._quadBuffer.verts));
+                        addToCapture(format("           Indicies: %s", this._quadBuffer.indicies));
                         
                         this._quadBuffer.upload();
                         debug GL.checkForError();
@@ -464,6 +472,16 @@ final class Renderer
                     default:
                         assert(false);
                 }
+            }
+
+            if(this._shouldCapture)
+            {
+                import std.datetime, std.file, std.path, std.string;
+                this._shouldCapture = false;
+
+                auto path = buildPath(CAPTURED_SCENE_DIRECTORY, Clock.currTime.toString().replace(":", "-"));
+                mkdirRecurse(path);
+                write(buildPath(path, "buckets.txt"), bucketCapture);
             }
 
             this._buckets.length = 0;
@@ -582,6 +600,16 @@ final class Renderer
         }
 
         /++
+         + Toggles a flag to indicate to the renderer that it should capture the next renderered frame's data.
+         +
+         + This is only useful for debugging.
+         + ++/
+        void captureNextFrame()
+        {
+            this._shouldCapture = true;
+        }
+
+        /++
          + Sets the rectangle of where on screen rendering should be limited to.
          +
          + For example, a rect of (0, 0, 200, 200) means only the first 200x200 pixels can be rendered to,
@@ -594,12 +622,15 @@ final class Renderer
         @property @safe
         void scissorRect(RectangleI rect) nothrow
         {
-            if(rect.size.x < 0) rect.size.x = 0;
-            if(rect.size.y < 0) rect.size.y = 0;
+            if(rect.position.x < 0) rect.position.x = 0;
+            if(rect.position.y < 0) rect.position.y = 0;
+            if(rect.size.x < 0)     rect.size.x = 0;
+            if(rect.size.y < 0)     rect.size.y = 0;
 
             BucketData data;
             data.scissorRect = rect;
             this.addCommandBucket(BucketCommand.Scissor, data);
+            this._scissorRect = rect;
         }
 
         ///

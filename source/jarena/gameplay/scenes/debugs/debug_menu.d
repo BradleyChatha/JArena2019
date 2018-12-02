@@ -18,12 +18,12 @@ final class DebugMenuScene : Scene
         Sound _bding;
         Sound _music;
 
-        void onDumpTextures(Button _)
+        void onDumpTextures(BasicButton _)
         {
             Systems.renderResources.dumpTextures();
         }
 
-        void onDumpFonts(Button _)
+        void onDumpFonts(BasicButton _)
         {
             import std.conv : to;
             uint count = 0;
@@ -36,19 +36,26 @@ final class DebugMenuScene : Scene
     {
         void onInit()
         {
-            this._list = new StackContainer(MENU_POSITION);
-            this._list.colour = MENU_COLOUR;
+            this._list                       = new StackContainer();
+            this._list.direction             = StackContainer.Direction.Vertical;
+            this._list.margin.value.position = MENU_POSITION;
+            this._list.background.colour     = MENU_COLOUR;
+            this._list.autoSize              = StackContainer.AutoSize.yes;
             super.gui.addChild(this._list);
 
             this._bding = Systems.assets.get!Sound("Bding");
             this._music = Systems.assets.get!Sound("Debug Music");
             auto font   = Systems.assets.get!Font("Calibri");
-            void addButton(string text, Button.OnClickFunc handler)
+            void addButton(string text, void delegate(BasicButton) handler)
             {
-                this._list.addChild(new SimpleTextButton(
-                    new Text(font, text, vec2(0), MENU_TEXT_SIZE),
-                    handler
-                )).fitToText();
+                auto btn = new BasicButton();
+                btn.text.value.font     = font;
+                btn.text.value.text     = text;
+                btn.text.value.charSize = MENU_TEXT_SIZE;
+                btn.size.value.y        = 23;
+                btn.horizAlignment      = HorizontalAlignment.Stretch;
+                btn.onClick.connect(handler);
+                this._list.addChild(btn);
             }
             
             addButton("Dump all Textures", &this.onDumpTextures);
@@ -56,6 +63,10 @@ final class DebugMenuScene : Scene
             addButton("Sound Test", (_){Systems.audio.play(this._bding);});
             addButton("Music Test", (_){Systems.audio.play(this._music);});
             addButton("Go back", _ => super.manager.swap!MenuScene);
+            
+            this._list.autoSize = StackContainer.AutoSize.no;
+            this._list.size.value.x = 250;
+            this._list.size.onValueChanged.emit(this._list.size);
         }
 
         void onSwap(PostOffice office)
