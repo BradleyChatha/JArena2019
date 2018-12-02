@@ -161,6 +161,20 @@ struct Vector(T, size_t Dimension_)
         {
             assert(ivec2(2, 5).length == 5);
         }
+
+        /// Determines whether all components of this vector are NaN
+        static if(isFloatingPoint!T)
+        @safe @nogc
+        bool isNaN() nothrow const pure
+        {
+            foreach(i; this.components)
+            {
+                if(!i.isNaN)
+                    return false;
+            }
+
+            return true;
+        }
     }
 
     // #############

@@ -6,7 +6,7 @@ private
     import std.experimental.logger;
     import std.typecons : Flag;
 
-    import jarena.audio, jarena.core, jarena.graphics, jarena.gameplay.gui, jarena.maths;
+    import jarena.audio, jarena.core, jarena.graphics, jarena.maths, jarena.gameplay.gui;
 
     const TOGGLE_EDITOR_KEY = Scancode.F12;
 }
@@ -52,7 +52,7 @@ abstract class Scene
         GameObject[string]  _objects;
         DrawableObject[]    _drawOrder;
         PostOffice          _proxyEventOffice; // GameObjects will subscribe to this proxy, so GameObjects don't need any knowledge of when a scene is swapped in and out.
-        EditorContainer     _gui;
+        FreeformContainer   _gui;
         Camera              _guiCamera;
         Camera              _sceneCamera;
         
@@ -122,7 +122,8 @@ abstract class Scene
         {
             auto cameraRect         = RectangleF(0, 0, vec2(Systems.window.size));
             this._proxyEventOffice  = new PostOffice();
-            this._gui               = new EditorContainer(this._proxyEventOffice);
+            this._gui               = new FreeformContainer();
+            this._gui.margin        = RectangleF(0, 0, 0, 0);
             this._guiCamera         = new Camera(cameraRect);
             this._sceneCamera       = new Camera(cameraRect);
         }
@@ -131,18 +132,18 @@ abstract class Scene
         {
             import std.stdio : writeln;
             
-            if(this.manager.input.wasKeyTapped(TOGGLE_EDITOR_KEY))
-            {
-                this._gui.canEdit = !this._gui.canEdit;
-                if(this._gui.canEdit)
-                    writeln("!!!<SCENE GUI EDITOR ENABLED>!!!");
-                else
-                    writeln("!!!<SCENE GUI EDITOR DISABLED>!!!");
-            }
+            // if(this.manager.input.wasKeyTapped(TOGGLE_EDITOR_KEY))
+            // {
+            //     this._oldGui.canEdit = !this._oldGui.canEdit;
+            //     if(this._oldGui.canEdit)
+            //         writeln("!!!<SCENE GUI EDITOR ENABLED>!!!");
+            //     else
+            //         writeln("!!!<SCENE GUI EDITOR DISABLED>!!!");
+            // }
 
-            if(this._gui.canEdit)
-                this.updateUI(deltaTime);
-            else
+            // if(this._oldGui.canEdit)
+            //     this.updateUI(deltaTime);
+            // else
                 this.onUpdate(deltaTime, input);
         }
     }
@@ -312,7 +313,7 @@ abstract class Scene
         /++
          + Renders the Scene's UI.
          +
-         + This means it also renders any `UIElement`s added to the scene's `Scene.gui` container.
+         + This means it also renders any `OldUIElement`s added to the scene's `Scene.gui` container.
          +
          + Unlike `renderScene`, this function does not get affected by a `Camera`.
          + When this function is called, it will store the current camera temporarily, set
@@ -329,14 +330,14 @@ abstract class Scene
             auto old = window.renderer.camera;
 
             window.renderer.camera = this._guiCamera;
-            this._gui.onRender(window);
+            this._gui.onRender(window.renderer);
             window.renderer.camera = old;
         }
 
         /++
          + Updates the Scene's UI.
          +
-         + This means it also updates any `UIElement`s added to the scene's `Scene.gui` container.
+         + This means it also updates any `OldUIElement`s added to the scene's `Scene.gui` container.
          +
          + Params:
          +  deltaTime = The amount of time the previous frame took.
@@ -346,18 +347,8 @@ abstract class Scene
             this._gui.onUpdate(this.manager.input, deltaTime);
         }
 
-        /++
-         + The main container for the scene's UI.
-         +
-         + Notes:
-         +  This container is actually an `EditorContainer`, meaning any supported UIElement that is a child to
-         +  this container can be edited on-screen.
-         +
-         +  It is suggested to always have your containers/individual elements be children of this gui,
-         +  so you can use the editing features to help with your development of a scene's gui.
-         + ++/
         @property
-        Container gui()
+        FreeformContainer gui()
         {
             return this._gui;
         }

@@ -401,7 +401,7 @@ final class InputManager
         {
             None, 
             Shift   = 1 << 0,
-            Control = 1 << 1,
+            OldControl = 1 << 1,
             Alt     = 1 << 2
         }
         
@@ -439,7 +439,7 @@ final class InputManager
             // Handle the special function keys.
             this._funcKeyMask  = FuncKeyMask.None;
             this._funcKeyMask |= (key.keysym.mod & KMOD_SHIFT) ? FuncKeyMask.Shift   : 0;
-            this._funcKeyMask |= (key.keysym.mod & KMOD_CTRL)  ? FuncKeyMask.Control : 0;
+            this._funcKeyMask |= (key.keysym.mod & KMOD_CTRL)  ? FuncKeyMask.OldControl : 0;
             this._funcKeyMask |= (key.keysym.mod & KMOD_ALT)   ? FuncKeyMask.Alt     : 0;
             
             if(key.keysym.scancode > this._keyStates.length)
@@ -603,7 +603,7 @@ final class InputManager
         @safe @nogc
         bool isControlDown() nothrow const
         {
-            return (this._funcKeyMask & FuncKeyMask.Control) > 0;
+            return (this._funcKeyMask & FuncKeyMask.OldControl) > 0;
         }
 
         /// Returns: Whether ALT is pressed down.

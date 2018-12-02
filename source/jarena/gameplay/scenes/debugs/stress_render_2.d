@@ -1,7 +1,7 @@
 /// Contains a test scene.
 module jarena.gameplay.scenes.debugs.stress_render_2;
 import std.stdio;
-import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jarena.gameplay.gui, jarena.gameplay.scenes, jarena.maths;
+import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jarena.gameplay.scenes, jarena.maths;
 
 @SceneName("Render test #2")
 class StressTest_Render2Scene : Scene

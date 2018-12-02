@@ -1,0 +1,79 @@
+type "UI:view" // Legacy, just here so it works for the time being
+
+UI:view {
+    name "AnimationViewer_View"
+
+    StackContainer {
+        size -1 75
+        horizAlignment "Stretch"
+        vertAlignment "Bottom"
+        direction "Horizontal"
+
+        background {
+            borderSize 1
+            borderColour "#000000"
+            colour "#0000FF"
+        }
+
+        TestControl {
+            name "Testicle"
+            margin 20 0 40 0
+            size 40 20
+            vertAlignment "Center"
+
+            shape {
+                borderSize 20
+                borderColour "#FFFFFF"
+                colour "#880000"
+            }
+        }
+
+        TestControl {
+            name "Testicle2"
+            margin 20 0 0 0
+            size 40 20
+            vertAlignment "Center"
+
+            shape {
+                borderSize 20
+                borderColour "#FFFFFF"
+                colour "#880000"
+            }
+        }
+
+        BasicButton {
+            name "btn"
+            margin 40 0 0 0
+            size 70 23
+            vertAlignment "Center"
+
+            shape {
+                boderSize 2
+                borderColour "#000000"
+                colour "#FFFFFF"
+            }
+
+            text {
+                text "Hey guuuuurl"
+            }
+        }
+
+        BasicLabel {
+            margin 80 0 0 0
+
+            text {
+                text "Hey guuuuulrllrlrl"
+                colour "#FFFFFF"
+            }
+        }
+
+        BasicTextBox {
+            margin 80 0 0 0
+            size 70 23
+
+            text {
+                colour "#888888"
+            }
+        }
+    }
+}
