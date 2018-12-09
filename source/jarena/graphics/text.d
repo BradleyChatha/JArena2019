@@ -122,7 +122,7 @@ class Font : IDisposable
         /// Ensures that the given CharCode has been generated for the given CharSize.
         void ensureGlyphIsGenerated(CharSize size, CharCode code)
         {
-            assert(!this.isDisposed, "This font as been disposed of.");
+            assert(!this.isDisposed, "This font has been disposed of.");
             auto set = this.getSetForSize(size);
 
             if((code in set.glyphs) is null)
@@ -138,7 +138,7 @@ class Font : IDisposable
             import std.utf       : byUTF;
             import opengl;
             
-            assert(!this.isDisposed, "This font as been disposed of.");
+            assert(!this.isDisposed, "This font has been disposed of.");
 
             auto set = this.getSetForSize(size);
 

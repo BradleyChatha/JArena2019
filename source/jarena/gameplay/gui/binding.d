@@ -29,6 +29,8 @@ struct DataBinding {}
  + Notes:
  +  This is the only way to specify what bindings to use for member properties of an object.
  +
+ +  This is only used for parsing an `ArchiveObject` into the attached object.
+ +
  + Params:
  +  B       = The binding to apply.
  +  target  = If left to it's default value, then the class itself is the target for the binding.
@@ -42,6 +44,45 @@ struct UsesBinding(B, alias target = NO_TARGET)
     
     ///
     alias BindT  = B;
+}
+
+/++
+ + Attach this UDA to any `UIBase` class to disable certain binding fields for a specific member.
+ +
+ + Example:
+ +  The `BasicButton` class uses a `baseColour` property to control it's colour, rather than going
+ +  off the colour of `BasicButton.shape`. However, users can still modify the colour of `BasicButton.shape`
+ +  when parsing an ArchiveObject, which won't work and will be percieved as a bug.
+ +
+ +  To get around this, `BasicButton` disables the `RectangleShapeBinding.colour` field from being applied to
+ +  it's `BasicButton.shape` field.
+ +
+ +  If the user attempts to modify it using an ArchiveObject then an exception is thrown using the given `Reason_`.
+ +
+ + Notes:
+ +  Due to limitations in the language, only one member field alias can be used, so `TargetField_` must be passed
+ +  as a string rather than an alias.
+ +
+ +  This is only used for parsing an `ArchiveObject` into a `UIBase` object. This will not prevent the user
+ +  from directly changing the value in code.
+ +
+ + Params:
+ +  BindingField_ = An alias to the field in the binding type to disable.
+ +  TargetField_  = The name of the accessor/field inside of the attached object to disable the binding field for.
+ +  Reason_       = The message to give the thrown exception on why this field was disabled.
+ + ++/
+struct DisableBinding(alias BindingField_, string TargetField_, string Reason_)
+{
+    static assert(isInstanceOf!(Nullable, typeof(BindingField_)), "Only Nullable types are supported right now.");
+
+    ///
+    alias BindingField = BindingField_;
+
+    ///
+    alias TargetField  = TargetField_;
+
+    ///
+    alias Reason       = Reason_;
 }
 
 /++
@@ -115,6 +156,9 @@ struct UIBaseBinding
     @BindingFor("name")
     Nullable!string name;
 
+    @BindingFor("isVisible")
+    Nullable!bool isVisible;
+
     @ConverterBindingFor!(RectangleF, float[4])("margin", &DataConverters.staticArrayToRect!float)
     Nullable!(float[4]) margin;
 
@@ -177,14 +221,17 @@ static abstract class DataBinder
 {
     private static
     {
-        alias ParserFunc = UIBase delegate(ArchiveObject);
+        alias ParserFunc = UIBase delegate(UIBase, ArchiveObject);
+        alias MakerFunc  = UIBase delegate();
 
         struct BindingInfo
         {
             ParserFunc parser;
+            MakerFunc  factory;
         }
 
-        BindingInfo[string] _classInfo; // Key is whatever getFieldName returns for each class.
+        ArchiveObject[string] _templates; // Key is template name.
+        BindingInfo[string]   _classInfo; // Key is whatever getFieldName returns for each class.
     }
 
     public static
@@ -228,7 +275,8 @@ static abstract class DataBinder
                    "This class (or one sharing the same name) has been registered already: " ~ getFieldName!C);
 
             BindingInfo info;
-            info.parser = DataBinder.generateParserFor!C;
+            info.parser     = DataBinder.generateParserFor!C;
+            info.factory    = DataBinder.generateFactoryFor!C;
             
             DataBinder._classInfo[getFieldName!C] = info;
         }
@@ -238,6 +286,10 @@ static abstract class DataBinder
          +
          + Notes:
          +  If `C` hasn't been registered yet, `null` is returned.
+         +
+         +  The function `enforceAllChildrenUsed` will be used on the obj, and all of it's children.
+         +  This will prevent a user from writing a typo or leaving some old features in the original
+         +  archive that `obj` came from.
          +
          + Params:
          +  obj = The object to parse.
@@ -251,7 +303,7 @@ static abstract class DataBinder
             if(ptr is null)
                 return null;
 
-            return cast(C)ptr.parser(obj);
+            return cast(C)ptr.parser(ptr.factory(), obj, null);
         }
 
         /++
@@ -277,7 +329,7 @@ static abstract class DataBinder
                 if(ptr is null)
                     continue;
                 
-                values ~= ptr.parser(child);
+                values ~= ptr.parser(ptr.factory(), child);
             }
 
             return values;
@@ -411,6 +463,67 @@ static abstract class DataBinder
             c.muhName.should.equal("Hello!");
             c.rect.value.should.equal(RectangleI(1, 2, 3, 4));
         }
+
+        /++
+         + Registers a template.
+         +
+         + Format:
+         +  The given `obj`'s name will be used as the templates name.
+         +
+         +  The `obj` must have a single child, which will be the same object one would
+         +  pass to `parseUIObject`.
+         +
+         + Params:
+         +  obj = The object that serves as the template.
+         + ++/
+        void addTemplate(ArchiveObject obj)
+        {
+            assert(obj !is null);
+            enforceAndLogf((obj.name in DataBinder._templates) is null, "The template '%s' already exists.", obj.name);
+            enforceAndLogf(obj.children.length == 1, "The template '%s' requires having *only* one child in it's root.", obj.name);
+
+            DataBinder._templates[obj.name] = obj.children[0];
+        }
+
+        /++
+         + Creates a new instance of a registered template.
+         +
+         + Params:
+         +  C         = The class to cast the result to.
+         +  override_ = An object (formatted the same as an object passed to `parseUIObject`) which will
+         +              override the values of the template.
+         +
+         + Returns:
+         +  Either the new instance of the template, or `null` if the cast to `C` fails.
+         + ++/
+        C factoryTemplate(C : UIBase = UIBase)(ArchiveObject override_ = null)
+        {
+            enforceAndLogf(DataBinder.canFindTemplate(override_.name), "Template '%s' could not be created as it doesn't exist.", override_.name);
+            enforceAndLogf((DataBinder._templates[override_.name].name in DataBinder._templates) is null,
+                "Template '%s' could not be created as it is a template of non-existant control '%s'."
+               ~" Do note that currently, creating a template of a template is not supported, if that is the current case.",
+               override_.name, DataBinder._templates[override_.name].name
+            );
+
+            auto info = DataBinder._classInfo[DataBinder._templates[override_.name].name];
+            auto obj  = info.factory();
+            info.parser(obj, DataBinder._templates[override_.name]); // Template
+            if(override_ !is null)
+                info.parser(obj, override_); // Override
+            return cast(C)obj;
+        }
+
+        /// ditto
+        C factoryTemplate(C : UIBase = UIBase)(string templateName)
+        {
+            return factoryTemplate!C(new ArchiveObject(templateName));
+        }
+
+        /// Returns: Whether a template called `templateName` exists.
+        bool canFindTemplate(string templateName)
+        {
+            return (templateName in DataBinder._templates) !is null;
+        }
     }
 
     // ###################
@@ -418,17 +531,28 @@ static abstract class DataBinder
     // ###################
     private static
     {
-       ParserFunc generateParserFor(C : UIBase)()
-       {
-           return (ArchiveObject obj)
-           {
-               C value = new C();
+        MakerFunc generateFactoryFor(C : UIBase)()
+        {
+            return () {
+                return new C();
+            };
+        }
 
-               static foreach(base; AliasSeq!(C, BaseClassesTuple!C))
-               static foreach(attrib; __traits(getAttributes, base))
-               {{
-                   static if(isInstanceOf!(UsesBinding, attrib))
-                   {
+        ParserFunc generateParserFor(C : UIBase)()
+        {
+            import std.meta      : Filter;
+            import std.algorithm : endsWith;
+            return (UIBase val, ArchiveObject obj)
+            {
+                auto value = cast(C)val;
+                assert(value !is null);
+                ArchiveObject[] usedForRoot;
+
+                static foreach(base; AliasSeq!(C, BaseClassesTuple!C))
+                static foreach(attrib; __traits(getAttributes, base))
+                {{
+                    static if(isInstanceOf!(UsesBinding, attrib))
+                    {
                         static assert(hasUDA!(attrib.BindT, DataBinding), 
                             attrib.BindT.stringof~" requires the @DataBinding UDA before it can be used as a binding. "
                            ~"While there is no practical reason for this as of now, it does make it clear what the purpose of the type is."
@@ -449,22 +573,69 @@ static abstract class DataBinder
 
                         if(mixin(Condition))
                         {
+                            UsedObjectsT used;
                             auto root             = mixin(ObjAccessor);
                             auto oldName          = root.name;
                             root.name             = getFieldName!(attrib.BindT);
                             scope(exit) root.name = oldName;
-                            attrib.BindT binding  = Serialiser.deserialise!(attrib.BindT)(root);
+                            usedForRoot          ~= root;
+                            attrib.BindT binding  = Serialiser.deserialise!(attrib.BindT)(root, used);
+
+                            // Check for disabled bindings.
+                            static foreach(attribDisabled; __traits(getAttributes, base))
+                            {{
+                                static if(isInstanceOf!(DisableBinding, attribDisabled) 
+                                       && attribDisabled.TargetField == __traits(identifier, attrib.Target))
+                                {
+                                    enforceAndLogf(
+                                        mixin("binding."~__traits(identifier, attribDisabled.BindingField)~".isNull"),
+                                        attribDisabled.Reason
+                                    );
+                                }
+                            }}
+
                             DataBinder.copyValues(mixin(ValueAccessor), binding);
+
+                            // If there was a specific target, then we should make sure that all of it's objects were used.
+                            static if(!is(attrib.Target == NO_TARGET))
+                                enforceAllChildrenUsed(used);
+                            else // Otherwise merge it into the used objects for this object.
+                            {
+                                auto ptr = (obj in used);
+                                if(ptr !is null)
+                                {
+                                    foreach(usedChild; *ptr)
+                                        usedForRoot ~= usedChild;
+                                }
+                            }
                         }
-                   }
-               }}
+                    }
+                }}
 
-               foreach(child; DataBinder.parseUIObjectGeneric(obj))
-                    value.addChild(child);
+                // Look for children that are actually other UI elements/templates
+                foreach(child; obj.children)
+                {
+                    if(DataBinder.canFindTemplate(child.name))
+                    {
+                        value.addChild(DataBinder.factoryTemplate(child));
+                        usedForRoot ~= child;
+                    }
+                    else
+                    {
+                        auto ptr = (child.name in DataBinder._classInfo);
+                        if(ptr is null)
+                            continue;
 
-               return value;
-           };
-       }
+                        usedForRoot ~= child;
+                        value.addChild(ptr.parser(ptr.factory(), child));
+                    }
+                }
+
+                enforceAllChildrenUsed([obj: usedForRoot]);
+
+                return value;
+            };
+        }
     }
 }
 
@@ -508,6 +679,12 @@ static abstract class DataConverters
         ///
         Colour stringToColour(string value)
         {
+            // See if it's in the Colours class.
+            auto ptr = (value in Colours.colours);
+            if(ptr !is null)
+                return *ptr;
+
+            // Otherwise try to parse it with the Colour struct
             return Colour.fromString(value);
         }
 

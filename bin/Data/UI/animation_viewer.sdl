@@ -3,8 +3,10 @@ type "UI:view" // Legacy, just here so it works for the time being
 UI:view {
     name "AnimationViewer_View"
 
+    // Contains the label for how to work the damn thing.
     StackContainer {
-        size -1 75
+        name "panelInstructions"
+        size -1 30
         horizAlignment "Stretch"
         vertAlignment "Bottom"
         direction "Horizontal"
@@ -12,68 +14,116 @@ UI:view {
         background {
             borderSize 1
             borderColour "#000000"
-            colour "#0000FF"
-        }
-
-        TestControl {
-            name "Testicle"
-            margin 20 0 40 0
-            size 40 20
-            vertAlignment "Center"
-
-            shape {
-                borderSize 20
-                borderColour "#FFFFFF"
-                colour "#880000"
-            }
-        }
-
-        TestControl {
-            name "Testicle2"
-            margin 20 0 0 0
-            size 40 20
-            vertAlignment "Center"
-
-            shape {
-                borderSize 20
-                borderColour "#FFFFFF"
-                colour "#880000"
-            }
-        }
-
-        BasicButton {
-            name "btn"
-            margin 40 0 0 0
-            size 70 23
-            vertAlignment "Center"
-
-            shape {
-                boderSize 2
-                borderColour "#000000"
-                colour "#FFFFFF"
-            }
-
-            text {
-                text "Hey guuuuurl"
-            }
+            colour "azure"
         }
 
         BasicLabel {
-            margin 80 0 0 0
+            vertAlignment "Center"
 
             text {
-                text "Hey guuuuulrllrlrl"
-                colour "#FFFFFF"
+                colour "rockSalt"
+                text "L = Show animation list; R = Reset Camera; Shift+R = Toggle Repeating"
+            }
+        }
+    }
+
+    // Contains the information labels.
+    StackContainer {
+        margin 25 25 0 0
+        name "panelData"
+        size -1 -1
+        direction "Vertical"
+        autoSize "yes"
+
+        background {
+            borderSize 1
+            borderColour "#000000"
+            colour "azure"
+        }
+
+        BasicLabel {
+            margin 0 0 0 10
+            name "lblData1"
+            text {
+                colour "rockSalt"
+            }
+        }
+    }
+
+    // Contains the list of animations.
+    StackContainer {
+        name "panelList"
+        size 200 -1
+        vertAlignment "Stretch"
+        horizAlignment "Right"
+        direction "Vertical"
+        isVisible false
+        
+        background {
+            borderSize 1
+            borderColour "#000000"
+            colour "azure"
+        }
+
+        // Container for the navigation controls.
+        StackContainer {
+            name "controlNavigation"
+            size 200 30
+            horizAlignment "Center"
+
+            AV_NavButton {
+                name "btnNavLeft"
+                text {
+                    text "<"
+                }
+            }
+
+            BasicLabel {
+                name "lblNavPages"
+                vertAlignment "Center"
+                margin 5 -3 0 0
+
+                text {
+                    colour "rockSalt"
+                    text "0/69"
+                }
+            }
+
+            AV_NavButton {
+                name "btnNavRight"
+                horizAlignment "Right"
+                text {
+                    text ">"
+                }
             }
         }
 
-        BasicTextBox {
-            margin 80 0 0 0
-            size 70 23
-
+        AV_ListButton {
             text {
-                colour "#888888"
+                text "Some sexy animation"
             }
+        }
+
+        AV_ListButton {
+            text {
+                text "Some sexy animation"
+            }
+        }
+    }
+
+    template:AV_NavButton {
+        BasicButton {
+            size 75 23
+            baseColour "flameRed"
+        }
+    }
+
+    template:AV_ListButton {
+        BasicButton {
+            margin 0 10 0 0
+            size -1 400
+            horizAlignment "Stretch"
+            baseColour "funGreen"
         }
     }
 }

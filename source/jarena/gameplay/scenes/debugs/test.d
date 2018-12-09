@@ -72,7 +72,6 @@ class Test : Scene, IPostBox
             auto info = Systems.assets.get!AnimationInfo("Test Animation");
             super.register("AnimatedTahn", new AnimatedObject(new AnimatedSprite(info), vec2(500, 500)));
 
-            RectangleF f;
             this.gui = new StackContainer();
             this.gui.margin.value.position = vec2(10, 400);
             this.gui.direction = StackContainer.Direction.Vertical;
@@ -100,8 +99,8 @@ class Test : Scene, IPostBox
             gui2.addChild(new TestControl(vec2(50, 30), Colour(128, 0, 128, 255)));
             gui2.addChild(new TestControl(vec2(25, 60), Colour(0, 128, 128, 255)));
             
-            this.gui.arrangeInRect(RectangleF(0, 0, vec2(Systems.window.size)), f);
-            this.gui2.arrangeInRect(RectangleF(0, 0, vec2(Systems.window.size)), f);
+            this.gui.arrangeInRect(RectangleF(0, 0, vec2(Systems.window.size)));
+            this.gui2.arrangeInRect(RectangleF(0, 0, vec2(Systems.window.size)));
 
             super.gui.addChild(this.gui);
             super.gui.addChild(this.gui2);
@@ -232,6 +231,11 @@ class Test : Scene, IPostBox
             {
                 Systems.assets.get!Font("Calibri").dispose();
                 Systems.assets.get!Font("Crackdown").dispose();
+            }
+
+            if(input.wasKeyTapped(Scancode.F3))
+            {
+                this.gui.children[0].isVisible = !this.gui.children[0].isVisible.value;
             }
 
             if(input.wasKeyTapped(Scancode.F4))

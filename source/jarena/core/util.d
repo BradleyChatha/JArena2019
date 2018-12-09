@@ -218,6 +218,9 @@ version(Windows)
     }
 }
 
+/++
+ + Gets a symbol from `T` called `name`.
+ + ++/
 template getSymbolByName(alias T, string name)
 {
     import std.meta : Filter;
@@ -247,4 +250,39 @@ unittest
     }
 
     static assert(hasUDA!(getSymbolByName!(C, "b"), S));
+}
+
+static string getSymbolParentFQN(alias Symbol)()
+{
+    import std.range  : iota;
+    import std.traits : fullyQualifiedName;
+    const fqn = fullyQualifiedName!Symbol;
+
+    foreach(i; iota(fqn.length-1, 0, -1))
+    {
+        if(fqn[i] == '.')
+            return fqn[0..i];
+    }
+
+    assert(false);
+}
+///
+unittest
+{
+    struct A
+    {
+        struct AA
+        {
+        }
+
+        int b;
+    }
+
+    struct B(alias T)
+    {
+        int b;
+    }
+
+    static assert(getSymbolParentFQN!(A.b)          == __FUNCTION__ ~ ".A");
+    static assert(getSymbolParentFQN!(B!(A.AA).b)   == __FUNCTION__ ~ ".B!(" ~ __FUNCTION__ ~ ".A.AA)");
 }

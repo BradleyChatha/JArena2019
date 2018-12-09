@@ -43,7 +43,7 @@ version(FileGenerator)
         code.put("abstract class Colours");
         code.putScope((_)
         {
-            code.put("public static @nogc @safe nothrow pure const:");
+            code.put("private static Colour[string] _colours;");
             code.genColours();
         });
 
@@ -88,6 +88,10 @@ version(FileGenerator)
         dataByLine.skipOver!(l => !l.startsWith(`"Colour Name"`));
         dataByLine.popFront(); // Skip over the "Colour Name" line.
 
+        auto coloursGetterCode = new CodeBuilder();
+        coloursGetterCode.put("static Colour[string] colours(){if(_colours is null) _colours = [");
+
+        code.put("public static @nogc @safe nothrow pure const{");
         foreach(line; dataByLine)
         {
             // Line format: "Renese [Name]"[tab]R[tab]G[tab]B
@@ -109,9 +113,15 @@ version(FileGenerator)
             foreach(nameComp; nameSplit)
                 name ~= nameComp;
         
-            code.putf("Colour %s() { return Colour(%s, %s, %s, 255); }",
+            code.putf("static Colour %s() { return Colour(%s, %s, %s, 255); }",
                       name, r, g, b);
+
+            coloursGetterCode.putf("\"%s\": Colours.%s,", name, name);
         }
+
+        code.put("}");
+        coloursGetterCode.put("]; return _colours; }");
+        code.put(coloursGetterCode.data);
     }
 
     private auto popReturn(R)(ref R range)
