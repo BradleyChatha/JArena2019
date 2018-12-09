@@ -32,16 +32,24 @@ final class StackContainer : UIBase
     {
         RectangleShape _background;
         RectangleF     _clip;
+        bool           _arrangeLock;
 
         void rearrangeChildren(bool doResize = true)
         {
+            if(this._arrangeLock)
+                return;
+            this._arrangeLock = true;
+            scope(exit) this._arrangeLock = false;
+
             vec2 largest  = vec2(0);
             vec2 cursor   = this._clip.position;
             vec2 sizeLeft = this._clip.size;
             foreach(child; super.children.value)
             {
-                RectangleF areaUsed;
-                child.arrangeInRect(RectangleF(cursor, sizeLeft), areaUsed);
+                if(!child.isVisible.value)
+                    continue;
+
+                auto areaUsed = child.arrangeInRect(RectangleF(cursor, sizeLeft));
                 
                 if(this.direction.value == Direction.Vertical)
                 {
@@ -83,6 +91,11 @@ final class StackContainer : UIBase
             this.rearrangeChildren();
         }
 
+        void onChildVisibleChanged(Property!bool)
+        {
+            this.rearrangeChildren();
+        }
+
         void onChildInvalidated()
         {
             super.onInvalidate.emit();
@@ -107,12 +120,14 @@ final class StackContainer : UIBase
             v.onInvalidate.connect(&this.onChildInvalidated);
             v.margin.onValueChanged.connect(&this.onChildMarginChanged);
             v.size.onValueChanged.connect(&this.onChildSizeChanged);
+            v.isVisible.onValueChanged.connect(&this.onChildVisibleChanged);
         });
         super.children.onItemRemoved.connect((_, i, v)
         {
             v.onInvalidate.disconnect(&this.onChildInvalidated);
             v.margin.onValueChanged.disconnect(&this.onChildMarginChanged);
             v.size.onValueChanged.disconnect(&this.onChildSizeChanged);
+            v.isVisible.onValueChanged.disconnect(&this.onChildVisibleChanged);
         });
 
         this._background        = new RectangleShape();
@@ -139,16 +154,16 @@ final class StackContainer : UIBase
 
         vec2 estimateSizeNeeded()
         {
-            return this._clip.size;
+            return this._clip.size + (this.background.borderSize * 2);
         }
         
-        void onUpdate(InputManager input, Duration dt)
+        void onUpdateImpl(InputManager input, Duration dt)
         {
             foreach(child; this.children.value)
                 child.onUpdate(input, dt);
         }
 
-        void onRender(Renderer renderer)
+        void onRenderImpl(Renderer renderer)
         {
             auto oldClip = renderer.scissorRect;
             scope(exit) renderer.scissorRect = oldClip;
@@ -179,11 +194,9 @@ class FreeformContainer : UIBase
             {
                 _arrangeLock = true;
 				scope(exit) _arrangeLock = false;
-                RectangleF f;
                 v.arrangeInRect(RectangleF(
-                    this.actualPosition, 
+                    this.areaArranged.position, 
                     (this.size.value.isNaN) ? vec2(Systems.window.size) : this.size.value), 
-                    f
                 );
             }
         }
@@ -235,13 +248,13 @@ class FreeformContainer : UIBase
             return vec2(5);
         }
         
-        void onUpdate(InputManager input, Duration dt)
+        void onUpdateImpl(InputManager input, Duration dt)
         {
             foreach(child; this.children.value)
                 child.onUpdate(input, dt);
         }
 
-        void onRender(Renderer renderer)
+        void onRenderImpl(Renderer renderer)
         {
             foreach(child; this.children.value)
                 child.onRender(renderer);
@@ -251,4 +264,5 @@ class FreeformContainer : UIBase
 
 class ViewContainer : FreeformContainer
 {
+    // In the future, views may get special functionality, which is why this class exists.
 }

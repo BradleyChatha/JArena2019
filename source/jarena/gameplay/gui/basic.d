@@ -8,6 +8,7 @@ private
 @UsesBinding!(ColourBinding!"baseColour")
 @UsesBinding!(RectangleShapeBinding, BasicButton.shape)
 @UsesBinding!(TextBinding, BasicButton.text)
+@DisableBinding!(RectangleShapeBinding.colour, "shape", "For BasicButtons, the 'BasicButton.baseColour' property should be used over 'BasicButton.shape.colour'")
 class BasicButton : UIBase
 {
     private
@@ -54,7 +55,7 @@ class BasicButton : UIBase
             return this.text.value.screenSize;
         }
 
-        void onUpdate(InputManager input, Duration dt)
+        void onUpdateImpl(InputManager input, Duration dt)
         {
             auto thisRect = this.shape.value.area;
             if(thisRect.contains(input.mousePosition)) // If the mouse is hovered over
@@ -79,7 +80,7 @@ class BasicButton : UIBase
             }
         }
 
-        void onRender(Renderer renderer)
+        void onRenderImpl(Renderer renderer)
         {
             renderer.drawRectShape(this.shape.value);
             renderer.drawText(this.text.value);
@@ -113,18 +114,18 @@ class BasicTextBox : UITextInputBase
             super.textArea                  = rect.size;
         }
 
-        void onUpdate(InputManager input, Duration dt)
+        void onUpdateImpl(InputManager input, Duration dt)
         {
             if(input.wasMouseButtonTapped(MouseButton.Left))
                 super.isActive = this.shape.value.area.contains(input.mousePosition);
                 
-            super.onUpdate(input, dt);
+            super.onUpdateImpl(input, dt);
         }
 
-        void onRender(Renderer renderer)
+        void onRenderImpl(Renderer renderer)
         {
             renderer.drawRectShape(this.shape.value);
-            super.onRender(renderer);
+            super.onRenderImpl(renderer);
         }
     }
 }
@@ -154,8 +155,8 @@ class BasicLabel : UIBase
             return this.text.value.screenSize;
         }
 
-        void onUpdate(InputManager input, Duration dt){}
-        void onRender(Renderer renderer)
+        void onUpdateImpl(InputManager input, Duration dt){}
+        void onRenderImpl(Renderer renderer)
         {
             renderer.drawText(this.text.value);
         }

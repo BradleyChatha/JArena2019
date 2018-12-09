@@ -575,9 +575,24 @@ class UIViewExtensionSDL : LoaderExtensionSDLFile
 {
     override PackageAsset[] onLoadFileAssets(Loader loader, Tag fileTag)
     {
+        import std.array : split;
+
         fileTag = fileTag.expectTag("UI:view");
         auto archive = new ArchiveSDL();
         archive.loadFromTag(fileTag);
+
+        foreach(child; archive.root.children)
+        {
+            auto splitted = child.name.split(":");
+            if(splitted.length != 2 || splitted[0] != "template")
+                continue;
+
+            // Template name is based off object name, so we need to remove the "template:" part.
+            auto oldName = child.name;
+            child.name = splitted[1];
+            scope(exit) child.name = oldName;
+            DataBinder.addTemplate(child);
+        }
 
         auto container = new ViewContainer();
         foreach(child; DataBinder.parseUIObjectGeneric(archive.root))

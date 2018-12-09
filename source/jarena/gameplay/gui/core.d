@@ -450,10 +450,10 @@ enum VerticalAlignment
 @UsesBinding!UIBaseBinding
 abstract class UIBase
 {
-    protected
+    private
     {
-        /// The actual position reached at the end of the `arrangeInRect` function.
-        vec2 actualPosition;
+        RectangleF _areaArranged;
+        RectangleF _areaUsed;
     }
 
     // ########################
@@ -486,6 +486,12 @@ abstract class UIBase
         ///
         Property!string name;
 
+        ///
+        Property!bool isVisible;
+
+        /// An object given by user code for whatever reasons they desire.
+        Object tag;
+
         /// Parents should connect to this signal so the child can inform the parent that it's
         /// layout needs to be updated.
         Signal!() onInvalidate;
@@ -494,13 +500,15 @@ abstract class UIBase
     ///
     this()
     {
+        this.isVisible      = new Property!bool(true);
         this.margin         = new Property!RectangleF(RectangleF(0, 0, 0, 0));
         this.children       = new Property!(UIBase[])([]);
         this.horizAlignment = new Property!HorizontalAlignment(HorizontalAlignment.Left);
         this.vertAlignment  = new Property!VerticalAlignment(VerticalAlignment.Top);
         this.size           = new Property!vec2(vec2(float.nan));
         this.name           = new Property!string(null);
-        this.actualPosition = vec2(0);
+        this._areaArranged  = RectangleF(0, 0, 0, 0);
+        this._areaUsed      = RectangleF(0, 0, 0, 0);
     }
 
     public final
@@ -553,10 +561,12 @@ abstract class UIBase
          +  This function automatically applies the margin, and both alignments.
          +
          + Params:
-         +  rect        = The rectangle to arrange the element in.
-         +  rectUsed    = The final area that will be used by the element.
+         +  rect = The rectangle to arrange the element in.
+         + 
+         + Returns:
+         +  The final area that will be used by the element, including padding and margin.
          + ++/
-        void arrangeInRect(RectangleF rect, out RectangleF rectUsed)
+        RectangleF arrangeInRect(RectangleF rect)
         {
             auto pos  = rect.position;
             auto size = this.getFinalSize(rect.size);
@@ -568,7 +578,7 @@ abstract class UIBase
                     break;
 
                 case Center:
-                    pos.x = rect.position.x + ((rect.topLeft.x - rect.topRight.x) / 2) - (size.x / 2);
+                    pos.x = rect.position.x + ((rect.topRight.x - rect.topLeft.x) / 2) - (size.x / 2);
                     break;
 
                 case Right:
@@ -592,11 +602,13 @@ abstract class UIBase
             }
 
             pos += this.margin.value.position;
-            this.actualPosition = pos;
-            this.arrange(RectangleF(pos, size));
+            this._areaArranged = RectangleF(pos, size);
+            this.arrange(this._areaArranged);
             
-            rectUsed.position = rect.position;
-            rectUsed.size     = this.margin.value.position + this.margin.value.size + size;
+            this._areaUsed.position = rect.position;
+            this._areaUsed.size     = this.margin.value.position + this.margin.value.size + size;
+
+            return this._areaUsed;
         }
 
         ///
@@ -683,9 +695,68 @@ abstract class UIBase
             this.children.removeAt(index);
             return true;
         }
+
+        ///
+        void onUpdate(InputManager input, Duration dt)
+        {
+            if(this.isVisible.value)
+                this.onUpdateImpl(input, dt);
+        }
+
+        ///
+        void onRender(Renderer renderer)
+        {
+            if(this.isVisible.value)
+                this.onRenderImpl(renderer);
+        }
+
+        /++
+         + Notes:
+         +  This will generally hold the actual position & size of the control.
+         +
+         +  This defaults to (0,0,0,0) if the control hasn't been arranged yet.
+         +
+         + Returns:
+         +  The last area passed to the `UIBase.arrange` function.
+         + ++/
+        @property @safe @nogc
+        const(RectangleF) areaArranged() nothrow const
+        {
+            return this._areaArranged;
+        }
+
+        /++
+         + Notes:
+         +  This defaults to (0,0,0,0) if the control hasn't been arranged yet.
+         +
+         +  This differs from `areaArranged` in that this also takes into account padding,
+         +  alignment, and margins.
+         +
+         +  This is generally only useful for containers, so they can properly space things out.
+         +
+         +  This is also the value returned by the latest `arrangeInRect`.
+         +
+         + Returns:
+         +  The last area calulated by `UIBase.arrangeInRect`.
+         + ++/
+        @property @safe @nogc
+        const(RectangleF) areaUsed() nothrow const
+        {
+            return this._areaUsed;
+        }
+
+        /++
+         + Returns:
+         +  This object's `tag` casted to `T`, or `null` if either the tag is null or the cast fails.
+         + ++/
+        @property
+        T tagAs(T)()
+        {
+            return cast(T)this.tag;
+        }
     }
 
-    public abstract
+    abstract
     {
         /++
          + Instructs the element to arrange itself within the given rect.
@@ -704,10 +775,10 @@ abstract class UIBase
         vec2 estimateSizeNeeded();
 
         ///
-        void onUpdate(InputManager input, Duration dt);
+        protected void onUpdateImpl(InputManager input, Duration dt);
 
         ///
-        void onRender(Renderer renderer);
+        protected void onRenderImpl(Renderer renderer);
     }
 }
 
@@ -743,11 +814,11 @@ final class TestControl : UIBase
             return this.shape.size + this.shape.borderSize;
         }
 
-        void onUpdate(InputManager input, Duration dt)
+        void onUpdateImpl(InputManager input, Duration dt)
         {
         }
         
-        void onRender(Renderer renderer)
+        void onRenderImpl(Renderer renderer)
         {
             renderer.drawRectShape(this.shape);
         }
@@ -801,7 +872,7 @@ abstract class UITextInputBase : UIBase
                 this._text ~= ch;
                 this.textObject.value.text = this._text;                
                 if(this.textObject.value.getRectForChar(this._text.length - 1).topRight.x
-                 > this._area.x + this.actualPosition.x)
+                 > this._area.x + this.areaArranged.position.x)
                 {
                     this._text.length -= 1;
                     this.textObject.value.text = this._text;
@@ -814,6 +885,8 @@ abstract class UITextInputBase : UIBase
     {
         @Name("text")
         Property!Text textObject;
+
+        @Name("cursor")
         Property!Text cursorObject;
         Property!bool isActive;
     }
@@ -846,7 +919,7 @@ abstract class UITextInputBase : UIBase
             return this.textObject.value.screenSize;
         }
 
-        public void onUpdate(InputManager input, Duration deltaTime)
+        public void onUpdateImpl(InputManager input, Duration deltaTime)
         {
             if(!this.isActive.value || !input.listenForText)
                 return;
@@ -885,7 +958,7 @@ abstract class UITextInputBase : UIBase
             }
         }
 
-        public void onRender(Renderer renderer)
+        public void onRenderImpl(Renderer renderer)
         {
             renderer.drawText(this.textObject.value);
 

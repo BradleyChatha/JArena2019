@@ -65,7 +65,7 @@ class ArchiveSDL : Archive
             foreach(attrib; tag.attributes)
                 object.setAttribute(attrib.name, this.sdlToArchive(attrib.value)[0]);
 
-            foreach(child; tag.tags)
+            foreach(child; tag.all.tags)
                 object.addChild(this.tagToObject(child));
 
             return object;

@@ -8,6 +8,7 @@ private
 }
 
 alias UseArrayBaseType = Flag!"useBaseType";
+alias UsedObjectsT = ArchiveObject[][ArchiveObject];
 
 //version = SERIALISER_DEBUG_OUTPUT;
 
@@ -387,7 +388,18 @@ final static class Serialiser
         {
             T toReturn = T.init;
 
-            doDeserialise!(T, T, T, Settings.None)(toReturn, root);
+            UsedObjectsT f;
+            doDeserialise!(T, T, T, Settings.None)(toReturn, root, f);
+
+            return toReturn;
+        }
+
+        /// ditto
+        T deserialise(T)(ArchiveObject root, out UsedObjectsT objectsUsed)
+        {
+            T toReturn = T.init;
+
+            doDeserialise!(T, T, T, Settings.None)(toReturn, root, objectsUsed);
 
             return toReturn;
         }
@@ -539,22 +551,26 @@ final static class Serialiser
     // ###################
     private static final
     {
-        void doDeserialise(T, alias MainSymbol, alias Symbol, Settings InheritedSettings)(ref T data, ArchiveObject obj)
+        void doDeserialise(T, alias MainSymbol, alias Symbol, Settings InheritedSettings)(ref T data, ArchiveObject obj, ref UsedObjectsT objectsUsed)
         if(ArchiveValue.allowed!T && !hasUDA!(Symbol, Attribute))
         {
             static if(hasUDA!(Symbol, MainValue))
                 data = obj.expectValueAs!T(0);
             else
-                data = obj.expectChild(getFieldName!Symbol).expectValueAs!T(0);
+            {
+                auto dataObj      = obj.expectChild(getFieldName!Symbol);
+                data              = dataObj.expectValueAs!T(0);
+                objectsUsed[obj] ~= dataObj;
+            }
         }
 
-        void doDeserialise(T, alias MainSymbol, alias Symbol, Settings InheritedSettings)(ref T data, ArchiveObject obj)
+        void doDeserialise(T, alias MainSymbol, alias Symbol, Settings InheritedSettings)(ref T data, ArchiveObject obj, ref UsedObjectsT objectsUsed)
         if(ArchiveValue.allowed!T && hasUDA!(Symbol, Attribute))
         {
             data = obj.expectAttributeAs!T(getFieldName!Symbol);
         }
 
-        void doDeserialise(T, alias MainSymbol, alias Symbol, Settings InheritedSettings)(ref T data, ArchiveObject parent)
+        void doDeserialise(T, alias MainSymbol, alias Symbol, Settings InheritedSettings)(ref T data, ArchiveObject parent, ref UsedObjectsT objectsUsed)
         if(isArray!T && !isSomeString!T)
         {            
             enum settings = getSettings!MainSymbol | getSettings!Symbol | InheritedSettings;
@@ -562,7 +578,10 @@ final static class Serialiser
             static if(ArchiveValue.allowed!(ElementType!T))
             {
                 static if(!hasUDA!(Symbol, MainValue))
+                {
                     auto obj = parent.expectChild(getFieldName!Symbol);
+                    objectsUsed[parent] ~= obj;
+                }
                 else
                     auto obj = parent;
 
@@ -583,7 +602,10 @@ final static class Serialiser
             else static if(is(ElementType!T == struct))
             {
                 static if(settings & Settings.ArrayAsObject)
+                {
                     auto obj = parent.expectChild(getFieldName!(Symbol, UseArrayBaseType.no));
+                    objectsUsed[parent] ~= obj;
+                }
                 else
                     auto obj = parent;
 
@@ -594,14 +616,15 @@ final static class Serialiser
 
                 foreach(child; obj.children.filter!(c => c.name == getFieldName!Symbol))
                 {
+                    objectsUsed[obj] ~= child;
                     data ~= typeof(data[0]).init;
-                    doDeserialise!(ElementType!T, MainSymbol, Symbol, cast(Settings)InheritedSettings)(data[$-1], child);
+                    doDeserialise!(ElementType!T, MainSymbol, Symbol, cast(Settings)InheritedSettings)(data[$-1], child, objectsUsed);
                 }
             }
             else static assert(false, "Unsupported type: " ~ T.stringof);
         }
 
-        void doDeserialise(T, alias MainSymbol, alias Symbol, Settings InheritedSettings)(ref T data, ArchiveObject obj)
+        void doDeserialise(T, alias MainSymbol, alias Symbol, Settings InheritedSettings)(ref T data, ArchiveObject obj, ref UsedObjectsT objectsUsed)
         if(is(T == enum))
         {
             import std.conv : to;
@@ -614,14 +637,21 @@ final static class Serialiser
             static if(hasUDA!(Symbol, Attribute))
                 data = obj.expectAttributeAs!ValueType(getFieldName!Symbol).to!T;
             else
-                data = obj.expectChild(getFieldName!Symbol).getValueAs!ValueType(0).to!T;
+            {
+                auto dataObj      = obj.expectChild(getFieldName!Symbol);
+                data              = dataObj.getValueAs!ValueType(0).to!T;
+                objectsUsed[obj] ~= dataObj;
+            }
         }
 
-        void doDeserialise(T, alias MainSymbol, alias Symbol, Settings InheritedSettings)(ref T data, ArchiveObject obj)
+        void doDeserialise(T, alias MainSymbol, alias Symbol, Settings InheritedSettings)(ref T data, ArchiveObject obj, ref UsedObjectsT objectsUsed)
         if(is(T == struct))
         {
             ArchiveObject structObj = (obj.name == getFieldName!Symbol) ? obj
-                                                                        : obj.expectChild(getFieldName!Symbol);
+                                                                        : () { auto o = obj.expectChild(getFieldName!Symbol);
+                                                                               objectsUsed[obj] ~= o;
+                                                                               return o;
+                                                                             }();
 
             foreach(fieldName; FieldNameTuple!T)
             {
@@ -652,7 +682,7 @@ final static class Serialiser
                         static if(isInstanceOf!(Nullable, typeof(FieldAlias)))
                             FieldType tempValue;
 
-                        doDeserialise!(FieldType, MainSymbol, FieldAlias, cast(Settings)ToInherit)(mixin(FieldRef), structObj);
+                        doDeserialise!(FieldType, MainSymbol, FieldAlias, cast(Settings)ToInherit)(mixin(FieldRef), structObj, objectsUsed);
                         
                         static if(isInstanceOf!(Nullable, typeof(FieldAlias)))
                             mixin("data."~fieldName~" = tempValue;");
@@ -673,6 +703,8 @@ final static class Serialiser
 // Nullable test
 unittest
 {
+    import fluent.asserts;
+    import std.algorithm : canFind;
     import jarena.data.serialisation.sdlang;
 
     struct A
@@ -690,12 +722,17 @@ unittest
     auto archive = new ArchiveSDL();
     Serialiser.serialise(a, archive.root);
 
-    assert(archive.root["A"].getChild("a") is null);
-    assert(archive.root["A", "b"].expectValueAs!int(0) == 200);
-    assert(archive.root["A", "c"].expectValueAs!int(0) == 400);
+    archive.root["A"].getChild("a").should.beNull;
+    archive.root["A", "b"].expectValueAs!int(0).should.equal(200);
+    archive.root["A", "c"].expectValueAs!int(0).should.equal(400);
 
-    A b = Serialiser.deserialise!A(archive.root);
-    assert(a == b);
+    UsedObjectsT used;
+    A b = Serialiser.deserialise!A(archive.root, used);
+    assert(a == b); // Fluent asserts doesn't like nullable
+    
+    assert(used[archive.root].canFind(archive.root["A"]));
+    assert(used[archive.root["A"]].canFind(archive.root["A", "b"]));
+    assert(used[archive.root["A"]].canFind(archive.root["A", "c"]));
 }
 
 // Enum test
@@ -735,6 +772,37 @@ unittest
 
     A b = Serialiser.deserialise!A(archive.root);
     a.should.equal(b);
+}
+
+/++
+ + Enforces that all objects used as keys have had all of their children used (based on the values in `used).
+ +
+ + Params:
+ +  used = A mapping of which children have been used for what objects.
+ + ++/
+void enforceAllChildrenUsed(UsedObjectsT used)
+{
+    import jarena.core : enforceAndLogf;
+
+    foreach(parent, usedChildren; used)
+    {
+        foreach(child; parent.children)
+        {
+            bool wasUsed = false;
+            foreach(usedChild; usedChildren)
+            {
+                if(child == usedChild)
+                {
+                    wasUsed = true;
+                    break;
+                }
+            }
+
+            enforceAndLogf(wasUsed, "Parent object '%s' has unused child object '%s'.",
+                           parent.name, child.name
+                          );
+        }
+    }
 }
 
 // Best I can do at least...
