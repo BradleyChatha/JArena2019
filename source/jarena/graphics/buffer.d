@@ -140,7 +140,7 @@ struct BufferObject(DataT, GLenum GLBufferType, BufferFeatures features)
 
         static dstring mutuallyExclusive(BufferFeatures[][BufferFeatures] exlusivity)
         {
-            import codebuilder;
+            import jaster.serialise.builder;
             auto builder = new CodeBuilder();
             foreach(feature, exclusiveWith; exlusivity)
             {

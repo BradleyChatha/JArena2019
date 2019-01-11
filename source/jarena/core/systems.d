@@ -6,7 +6,7 @@ private
     import std.traits    : allSatisfy, isSomeString, getSymbolsByUDA, getUDAs, hasUDA;
     import std.typetuple : AliasSeq;
     import derelict.sdl2.sdl;
-    import codebuilder;
+    import jaster.serialise.builder;
     import jarena.audio, jarena.core, jarena.data, jarena.gameplay, jarena.graphics;
 }
 

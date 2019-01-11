@@ -5,7 +5,7 @@ private
 {
     import std.experimental.logger, std.exception, std.format;
     import sdlang;
-    import jarena.audio, jarena.core, jarena.graphics, jarena.gameplay, jarena.data.serialisation, jarena.data.loaders.core, jarena.maths;
+    import jarena.audio, jarena.core, jarena.graphics, jarena.gameplay, jaster.serialise, jarena.data.loaders.core, jarena.maths;
 }
 
 /++
