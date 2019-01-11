@@ -1,5 +1,5 @@
 import std.stdio, std.experimental.logger;
-import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jarena.data.serialisation, jarena.gameplay.scenes;
+import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jaster.serialise, jarena.gameplay.scenes;
 
 version(unittest){}
 else

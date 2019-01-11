@@ -1,7 +1,7 @@
 version(FileGenerator)
 {
     import std.conv : to;
-    import codebuilder;
+    import jaster.serialise.builder;
     
     const COLOUR_DATA_FILE      = "autogen/colours.txt";
     const COLOUR_D_PATH         = "../source/jarena/graphics/colours.d";

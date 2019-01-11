@@ -11,6 +11,7 @@ dependency "derelict-sdl2" version="~>3.1.0-alpha.3" // For windowing
 dependency "derelict-fi" version="~>3.0.0-beta.1"    // For image loading
 dependency "derelict-ft" version="~>2.0.0-beta.4"    // For text loading.
 dependency "derelict-fmod" version="~>4.1.1"         // For audio
+dependency "jasterialise" version="~>0.0.4"          // Old jarena.data.serialise module
 
 //dflags "-vcg-ast"
 
@@ -33,6 +34,6 @@ subPackage {
     targetPath "bin"
 	sourcePaths "tools"
 	importPaths "tools"
-    sourceFiles "source/codebuilder/builder.d" "source/codebuilder/package.d"
+    sourceFiles "source/jaster.serialise.builder/builder.d" "source/jaster.serialise.builder/package.d"
     versions "FileGenerator"
 }

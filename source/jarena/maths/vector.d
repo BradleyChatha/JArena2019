@@ -197,7 +197,7 @@ struct Vector(T, size_t Dimension_)
         {
             import std.algorithm;
             import std.conv;
-            import codebuilder;
+            import jaster.serialise.builder;
 
             auto code = new CodeBuilder();
             code.putf("return ");
@@ -222,7 +222,7 @@ struct Vector(T, size_t Dimension_)
         {
             import std.algorithm;
             import std.conv;
-            import codebuilder;
+            import jaster.serialise.builder;
 
             static assert(VectT.Dimension == swizzle.length, 
                 "Swizzle is " ~ swizzle.length.to!string ~ " components long, but the "

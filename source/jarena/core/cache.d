@@ -175,7 +175,7 @@ if(allSatisfy!(isType, Types))
 
         dstring genConstructor()
         {
-            import codebuilder;
+            import jaster.serialise.builder;
             auto builder = new CodeBuilder();
 
             builder.putf("this()");
@@ -193,7 +193,7 @@ if(allSatisfy!(isType, Types))
 
         dstring genAddFunctions()
         {
-            import codebuilder;
+            import jaster.serialise.builder;
             auto builder = new CodeBuilder();
 
             foreach(type; Types)
@@ -215,7 +215,7 @@ if(allSatisfy!(isType, Types))
 
         dstring genCacheVariables()
         {
-            import codebuilder;
+            import jaster.serialise.builder;
             auto builder = new CodeBuilder();
 
             foreach(type; Types)
@@ -229,7 +229,7 @@ if(allSatisfy!(isType, Types))
 
         dstring genGetFunctions()
         {
-            import codebuilder;
+            import jaster.serialise.builder;
             auto builder = new CodeBuilder();
 
             foreach(type; Types)
@@ -251,7 +251,7 @@ if(allSatisfy!(isType, Types))
 
         dstring genGetCacheFunctions()
         {
-            import codebuilder;
+            import jaster.serialise.builder;
             auto builder = new CodeBuilder();
 
             foreach(type; Types)
@@ -273,7 +273,7 @@ if(allSatisfy!(isType, Types))
 
         dstring genRemoveFunctions()
         {
-            import codebuilder;
+            import jaster.serialise.builder;
             auto builder = new CodeBuilder();
             
             foreach(type; Types)

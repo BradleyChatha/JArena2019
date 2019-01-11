@@ -1,4 +1,4 @@
 ///
 module jarena.data;
 
-public import jarena.data.loaders, jarena.data.serialisation;
+public import jarena.data.loaders, jaster.serialise;
