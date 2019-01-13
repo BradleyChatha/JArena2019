@@ -627,6 +627,13 @@ final class Renderer
             if(rect.size.x < 0)     rect.size.x = 0;
             if(rect.size.y < 0)     rect.size.y = 0;
 
+            // Slight optimisation, scissors that are done side-by-side are trimmed into a single scissor.
+            if(this._buckets.length > 0 && this._buckets[$-1].command == BucketCommand.Scissor)
+            {
+                this._buckets[$-1].data.scissorRect = rect;
+                return;
+            }
+
             BucketData data;
             data.scissorRect = rect;
             this.addCommandBucket(BucketCommand.Scissor, data);

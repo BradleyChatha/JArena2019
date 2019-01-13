@@ -202,8 +202,10 @@ struct TextBinding
     Nullable!string font;
 }
 
-template ColourBinding(string varName)
+template ColourBinding(alias var)
 {
+    enum varName = __traits(identifier, var);
+
     @DataBinding
     struct ColourBinding
     {
@@ -405,9 +407,8 @@ static abstract class DataBinder
 
                         // TODO: Fix for properties
                         //alias SetterSymbol = getSymbolByName!(BaseT, attrib.varName); // This is here just to check the symbol exists.
-                        const SetterCode   = "base."~Accessor~" = value";
-
-                        auto value = attrib.converter(mixin("binding."~symbolName));
+                        const SetterCode = "base."~Accessor~" = value";
+                        auto value       = attrib.converter(mixin("binding."~symbolName));
                         
                         static assert(is(typeof(mixin(SetterCode))),
                             "Unable to use "~BaseT.stringof~"."~attrib.varName~" as a setter for the converted value of "~BindingT.stringof~"."~symbolName

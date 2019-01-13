@@ -3,7 +3,7 @@ description "A minimal D application."
 authors "Sealab"
 copyright "Copyright © 2018, Sealab"
 license "MIT"
-dependency "fluent-asserts" version="~>0.9.0"        // For unittests
+dependency "fluent-asserts" version="~>0.12.3"       // For unittests
 dependency "sdlang-d" version="~>0.10.2"             // For data files
 dependency "resusage" version="~>0.2.7"              // For getting memory usage
 dependency "derelict-gl3" version="~>2.0.0-beta.6"   // For rendering

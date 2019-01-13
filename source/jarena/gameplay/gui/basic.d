@@ -5,7 +5,7 @@ private
     import jarena.gameplay, jarena.graphics, jarena.core, jarena.maths;
 }
 
-@UsesBinding!(ColourBinding!"baseColour")
+@UsesBinding!(ColourBinding!(BasicButton.baseColour))
 @UsesBinding!(RectangleShapeBinding, BasicButton.shape)
 @UsesBinding!(TextBinding, BasicButton.text)
 @DisableBinding!(RectangleShapeBinding.colour, "shape", "For BasicButtons, the 'BasicButton.baseColour' property should be used over 'BasicButton.shape.colour'")
