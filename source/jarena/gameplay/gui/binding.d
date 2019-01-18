@@ -542,7 +542,7 @@ static abstract class DataBinder
         ParserFunc generateParserFor(C : UIBase)()
         {
             import std.meta      : Filter;
-            import std.algorithm : endsWith;
+            import std.algorithm : endsWith, filter, startsWith, splitter;
             return (UIBase val, ArchiveObject obj)
             {
                 auto value = cast(C)val;
@@ -595,7 +595,22 @@ static abstract class DataBinder
                                 }
                             }}
 
+                            // Copy the binding over.
                             DataBinder.copyValues(mixin(ValueAccessor), binding);
+
+                            // Read in all properties, and mark them as used.
+                            foreach(prop; root.children.filter!(c => c.name.startsWith("property:")))
+                            {
+                                auto nameRange = prop.name.splitter(":");
+                                nameRange.popFront();
+                                enforceAndLogf(!nameRange.empty, "Property without a name was found.");
+
+                                if(val.hasProperty(nameRange.front))
+                                    continue;
+
+                                val.addProperty!ArchiveObject(nameRange.front, prop);
+                                usedForRoot ~= prop;
+                            }
 
                             // If there was a specific target, then we should make sure that all of it's objects were used.
                             static if(!is(attrib.Target == NO_TARGET))

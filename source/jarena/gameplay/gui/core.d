@@ -702,11 +702,17 @@ abstract class UIBase
         ///
         Property!T addProperty(T)(string name, T value)
         {
-            enforceAndLogf((name in this.properties) is null, "The property '%s' already exists.", name);
+            enforceAndLogf(!this.hasProperty(name), "The property '%s' already exists.", name);
             auto prop = new Property!T(value);
             this.properties[name] = prop;
 
             return prop;
+        }
+        
+        ///
+        bool hasProperty(string name)
+        {
+            return (name in this.properties) !is null;
         }
 
         ///
@@ -727,6 +733,13 @@ abstract class UIBase
             );
 
             return obj;
+        }
+
+        ///
+        bool testPropertyType(T)(string name)
+        {
+            auto ptr = (name in this.properties);
+            return (ptr is null) ? false : (cast(Property!T)(*ptr)) !is null;
         }
 
         ///

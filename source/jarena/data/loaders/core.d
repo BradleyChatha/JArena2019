@@ -408,6 +408,7 @@ abstract class Loader
                                                                   .map!(task => task.debugInfo)
                                                                   .array;
                     info.notExecutedInfo = (taskI == this._loadingList.length - 1) ? null : this._loadingList[taskI+1..$].map!(task => task.debugInfo).array;
+                    info.trace = ex.info.toString();
 
                     throw new PackageLoadFailedException(info, ex.message.idup);
                 }
@@ -638,6 +639,7 @@ class PackageLoadFailedException : Exception
         WaitingInfo[]       waitingInfo;
         Loader.DebugInfo[]  notExecutedInfo;
         Loader.DebugInfo    failedInfo;
+        string              trace;
     }
 
     Info info;
@@ -655,6 +657,7 @@ class PackageLoadFailedException : Exception
         output.put("FAILED:\n");
         output.put("\tInfo: %s\n".format(this.info.failedInfo));
         output.put("\tReason: %s\n".format(reason));
+        output.put("\tTRACE:\n%s".format(this.info.trace));
         output.put("LOADED(Debug Info):\n\t");
         output.put(this.info.loadedInfo.map!(to!string).joiner("\n\t"));
         output.put("\nLOADED(Asset Names):\n\t");
