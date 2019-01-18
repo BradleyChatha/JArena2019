@@ -25,6 +25,10 @@ UI:view {
                 text "L = Show animation list; R = Reset Camera; Shift+R = Toggle Repeating"
             }
         }
+
+        property:Test {
+            description "This is a test property to simply check that the data binder doesn't crash. Please ignore."
+        }
     }
 
     // Contains the information labels.
