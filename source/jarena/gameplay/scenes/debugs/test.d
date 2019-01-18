@@ -149,6 +149,11 @@ class Test : Scene, IPostBox
             tempGui.addChild(new TestControl(vec2(50, 75), Colour.red));
             tempGui.addChild(new TestControl(vec2(50, 75), Colour.green));
             tempGui.addChild(new TestControl(vec2(50, 75), Colour.blue));
+
+            // Very quick, poorly made test that simply makes sure it *doesn't crash*
+            auto ttt = new StackContainer();
+            ttt.addProperty("Alter-ego", "FreeformContainer");
+            assert(ttt.getProperty!string("Alter-ego").value == "FreeformContainer");
         }
 
         void onSwap(PostOffice office)

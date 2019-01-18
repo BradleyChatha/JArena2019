@@ -474,10 +474,10 @@ abstract class UIBase
         ///
         Property!(UIBase[]) children;
 
-        /// NOTE: `HorizontalAlignment.Stretch` only applies if the `size` is set to `float.nan`
+        /// NOTE: `HorizontalAlignment.Stretch` only applies if the `size.x` is set to `float.nan`
         Property!HorizontalAlignment horizAlignment;
 
-        /// NOTE: `VerticalAlignment.Stretch` only applies if the `size` is set to `float.nan`
+        /// NOTE: `VerticalAlignment.Stretch` only applies if the `size.y` is set to `float.nan`
         Property!VerticalAlignment vertAlignment;
 
         ///
@@ -488,6 +488,9 @@ abstract class UIBase
 
         ///
         Property!bool isVisible;
+
+        /// Properties that are added at runtime, via `addProperty`.
+        private Object[string] properties; // `Property` doesn't support hashmaps :( ... yet!
 
         /// An object given by user code for whatever reasons they desire.
         Object tag;
@@ -694,6 +697,36 @@ abstract class UIBase
 
             this.children.removeAt(index);
             return true;
+        }
+
+        ///
+        Property!T addProperty(T)(string name, T value)
+        {
+            enforceAndLogf((name in this.properties) is null, "The property '%s' already exists.", name);
+            auto prop = new Property!T(value);
+            this.properties[name] = prop;
+
+            return prop;
+        }
+
+        ///
+        Property!T getProperty(T)(string name, lazy T default_ = T.init)
+        {
+            auto ptr = (name in this.properties);
+            
+            if(ptr is null)
+                return new Property!T(default_);
+
+            auto obj = cast(Property!T)(*ptr);
+            enforceAndLogf(
+                obj !is null, 
+                "Could not cast property '%s' of type '%s' to type '%s'",
+                name,
+                ptr.classinfo,
+                typeid(T)
+            );
+
+            return obj;
         }
 
         ///
