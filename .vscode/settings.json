@@ -1,6 +1,0 @@
-{
-    "d.betaStream": true,
-    "dscanner.ignoredKeys": [
-        "dscanner.style.long_line"
-    ]
-}
