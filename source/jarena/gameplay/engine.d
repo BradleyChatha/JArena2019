@@ -113,6 +113,7 @@ final class Engine
             DataBinder.registerClass!BasicButton;
             DataBinder.registerClass!BasicLabel;
             DataBinder.registerClass!BasicTextBox;
+            DataBinder.registerClass!GridContainer;
                 
             // Setup variables
             // The window also sets up the OpenGL context.

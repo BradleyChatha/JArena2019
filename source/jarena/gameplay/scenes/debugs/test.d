@@ -150,6 +150,34 @@ class Test : Scene, IPostBox
             tempGui.addChild(new TestControl(vec2(50, 75), Colour.green));
             tempGui.addChild(new TestControl(vec2(50, 75), Colour.blue));
 
+            auto grid = new GridContainer();
+            grid.size = vec2(300, 100);
+            grid.columns ~= GridContainer.Definition(GridContainer.Definition.Type.Pixels, 50);
+            grid.columns ~= GridContainer.Definition(GridContainer.Definition.Type.Star,   1);
+            grid.columns ~= GridContainer.Definition(GridContainer.Definition.Type.Star,   1);
+            grid.columns ~= GridContainer.Definition(GridContainer.Definition.Type.Star,   1);
+            grid.columns ~= GridContainer.Definition(GridContainer.Definition.Type.Pixels, 50);
+            grid.rows    ~= GridContainer.Definition(GridContainer.Definition.Type.Pixels, 20);
+            grid.rows    ~= GridContainer.Definition(GridContainer.Definition.Type.Pixels, 20);
+            grid.showDebugGrid = true;
+            this.gui.addChild(grid);
+
+            b = new BasicButton();
+            b.horizAlignment  = HorizontalAlignment.Stretch;
+            b.vertAlignment   = VerticalAlignment.Stretch;
+            b.text.value.text = "ABC";
+            GridContainer.setSlot(b, uvec2(0, 0));
+            GridContainer.setSlotSpan(b, uvec2(3, 1));
+            grid.addChild(b);            
+            
+            b = new BasicButton();
+            b.horizAlignment  = HorizontalAlignment.Stretch;
+            b.vertAlignment   = VerticalAlignment.Stretch;
+            b.text.value.text = "DEF";
+            GridContainer.setSlot(b,     uvec2(2, 1));
+            GridContainer.setSlotSpan(b, uvec2(2, 2));
+            grid.addChild(b);
+
             // Very quick, poorly made test that simply makes sure it *doesn't crash*
             auto ttt = new StackContainer();
             ttt.addProperty("Alter-ego", "FreeformContainer");
