@@ -491,6 +491,7 @@ abstract class UIBase
 
         /// Properties that are added at runtime, via `addProperty`.
         private Object[string] properties; // `Property` doesn't support hashmaps :( ... yet!
+        Signal!(string, Object) propertiesOnAdd; /// Work around.
 
         /// An object given by user code for whatever reasons they desire.
         Object tag;

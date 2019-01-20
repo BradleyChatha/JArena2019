@@ -218,7 +218,7 @@ class Font : IDisposable
             );
 
             // Create a face for it.
-            error = FT_New_Memory_Face(this._ft, fontBytes.ptr, fontBytes.length, 0, &this._font);
+            error = FT_New_Memory_Face(this._ft, fontBytes.ptr, cast(FT_Long)fontBytes.length, 0, &this._font);
             enforceAndLogf(error == 0,
                 "Failed to load font. Error code = %s",
                 error

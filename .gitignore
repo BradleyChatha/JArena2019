@@ -25,3 +25,5 @@ bin/data/debug/
 bin/*.log
 dcd.log
 ui.log
+.vs
+.vscode
