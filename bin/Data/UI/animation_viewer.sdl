@@ -3,6 +3,50 @@ type "UI:view" // Legacy, just here so it works for the time being
 UI:view {
     name "AnimationViewer_View"
 
+    GridContainer {
+        margin 300 100 0 0
+        size 300 100
+        showDebugGrid true
+        rows {
+            Definition {
+                type "Pixels"
+                amount 20
+            }
+
+            Definition {
+                type "Pixels"
+                amount 20
+            }
+        }
+        columns {
+            Definition {
+                type "Pixels"
+                amount 50
+            }
+            Definition {
+                type "Star"
+                amount 1
+            }
+            Definition {
+                type "Star"
+                amount 1
+            }
+            Definition {
+                type "Pixels"
+                amount 20
+            }
+        }
+        BasicButton {
+            horizAlignment "Stretch"
+            vertAlignment  "Stretch"
+            text {
+                text "ABC"
+            }
+            property:GridSlot 0 0
+            property:GridSlotSpan 3 2
+        }
+    }
+
     // Contains the label for how to work the damn thing.
     StackContainer {
         name "panelInstructions"

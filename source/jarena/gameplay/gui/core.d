@@ -2,9 +2,11 @@ module jarena.gameplay.gui.core;
 
 private
 {
-    import std.traits, std.meta, std.range, std.math;
+    import std.traits, std.meta, std.range, std.math, std.experimental.logger;
     import jarena.core, jarena.graphics, jarena.maths, jarena.data, jarena.gameplay;
 }
+
+//version = PROPERTY_DEBUG;
 
 /++
  + A signal is essentially an event callback.
@@ -182,7 +184,7 @@ final class Property(T)
      + Returns:
      +  Whether an element was removed or not.
      + ++/
-    static if(isArray!T && !is(T == immutable) && !is(ElementEncodingType!T == immutable))
+    static if(isDynamicArray!T && !is(T == immutable) && !is(ElementEncodingType!T == immutable))
     bool removeAt(size_t index)
     {
         if(index >= this.length || this.length == 0)
@@ -703,11 +705,20 @@ abstract class UIBase
         ///
         Property!T addProperty(T)(string name, T value)
         {
+            version(PROPERTY_DEBUG) tracef("Adding property '%s' of type %s with value of %s.", name, T.stringof, value);
+
             enforceAndLogf(!this.hasProperty(name), "The property '%s' already exists.", name);
             auto prop = new Property!T(value);
             this.properties[name] = prop;
 
             return prop;
+        }
+
+        ///
+        void removeProperty(string name)
+        {
+            version(PROPERTY_DEBUG) tracef("Removing property '%s'.", name);
+            this.properties.remove(name);
         }
         
         ///

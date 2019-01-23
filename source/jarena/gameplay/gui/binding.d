@@ -3,11 +3,14 @@ module jarena.gameplay.gui.binding;
 
 private
 {
-    import std.traits, std.typecons;
+    import std.traits, std.typecons, std.meta : AliasSeq;
     import jarena.core, jarena.graphics, jarena.gameplay, jarena.maths, jarena.data;
 
     alias NO_TARGET = DataBinding;
 }
+
+const PROPERTY_OBJECT_NAME = "__PROPERTY__";
+const PROPERTY_BIND_TARGET = "__jaster_prop";
 
 /// A flag used for certain `DataConverters` functions.
 alias NegativeAsNaN = Flag!"NegativeAsNaN";
@@ -149,6 +152,12 @@ struct ConverterBindingFor(T, MyTT)
     ValueT function(MyT) converter;
 }
 
+struct ChildProperty(string PropName_, BindT_)
+{
+    enum  PropName = PropName_;
+    alias BindT    = BindT_;
+}
+
 /// A binding that is used for all classes that inherit from `UIBase`.
 @DataBinding
 struct UIBaseBinding
@@ -165,11 +174,11 @@ struct UIBaseBinding
     @ConverterBindingFor!(vec2, float[2])("size", &DataConverters.staticArrayToVect!(float, 2, NegativeAsNaN.yes))
     Nullable!(float[2]) size;
     
-    @ConverterBindingFor!(HorizontalAlignment, string)("horizAlignment", &DataConverters.stringToEnum!HorizontalAlignment)
-    Nullable!string horizAlignment;
+    @BindingFor("horizAlignment")
+    Nullable!HorizontalAlignment horizAlignment;
 
-    @ConverterBindingFor!(VerticalAlignment, string)("vertAlignment", &DataConverters.stringToEnum!VerticalAlignment)
-    Nullable!string vertAlignment;
+    @BindingFor("vertAlignment")
+    Nullable!VerticalAlignment vertAlignment;
 }
 
 /// A binding that is used for the `RectangleShape` class, which is commonly used as a primitive part of UI objects.
@@ -212,6 +221,15 @@ template ColourBinding(alias var)
         @ConverterBindingFor!(Colour, string)(varName, &DataConverters.stringToColour)
         mixin("Nullable!string "~varName~";");
     }
+}
+
+@DataBinding
+@Name(PROPERTY_OBJECT_NAME)
+struct VectorProperty(T, size_t N)
+{
+    @ConverterBindingFor!(Vector!(T, N), T[N])(PROPERTY_BIND_TARGET, &DataConverters.staticArrayToVect!(T, N))
+    @MainValue
+    T[N] value;
 }
 
 /++
@@ -324,9 +342,6 @@ static abstract class DataBinder
             UIBase[] values;
             foreach(child; obj.children)
             {
-                import std.stdio;
-                writeln(child.name, " ", DataBinder._classInfo.byKey);
-
                 auto ptr = (child.name in DataBinder._classInfo);
                 if(ptr is null)
                     continue;
@@ -392,30 +407,27 @@ static abstract class DataBinder
             // Search for converter bindings
             foreach(symbolName; __traits(allMembers, BindingT))
             {
-                foreach(attrib; __traits(getAttributes, getSymbolByName!(BindingT, symbolName)))
+                foreach(attrib; GetAllUDAsInstanceOf!(ConverterBindingFor, getSymbolByName!(BindingT, symbolName)))
                 {
-                    static if(isInstanceOf!(ConverterBindingFor, typeof(attrib)))
-                    {
-                        static if(isInstanceOf!(Nullable, mixin("typeof(BindingT."~symbolName~")")))
-                            if(mixin("binding."~symbolName~".isNull"))
-                                continue;
+                    static if(isInstanceOf!(Nullable, mixin("typeof(BindingT."~symbolName~")")))
+                        if(mixin("binding."~symbolName~".isNull"))
+                            continue;
 
-                        static if(isInstanceOf!(Property, BaseT))
-                            const Accessor = "value."~attrib.varName;
-                        else
-                            const Accessor = attrib.varName;
+                    static if(isInstanceOf!(Property, BaseT))
+                        const Accessor = "value."~attrib.varName;
+                    else
+                        const Accessor = attrib.varName;
 
-                        // TODO: Fix for properties
-                        //alias SetterSymbol = getSymbolByName!(BaseT, attrib.varName); // This is here just to check the symbol exists.
-                        const SetterCode = "base."~Accessor~" = value";
-                        auto value       = attrib.converter(mixin("binding."~symbolName));
-                        
-                        static assert(is(typeof(mixin(SetterCode))),
-                            "Unable to use "~BaseT.stringof~"."~attrib.varName~" as a setter for the converted value of "~BindingT.stringof~"."~symbolName
-                        );
+                    // TODO: Fix for properties
+                    //alias SetterSymbol = getSymbolByName!(BaseT, attrib.varName); // This is here just to check the symbol exists.
+                    const SetterCode = "base."~Accessor~" = value";
+                    auto value       = attrib.converter(mixin("binding."~symbolName));
+                    
+                    static assert(is(typeof(mixin(SetterCode))),
+                        "Unable to use "~BaseT.stringof~"."~attrib.varName~" as a setter for the converted value of "~BindingT.stringof~"."~symbolName
+                    );
 
-                        mixin(SetterCode~";");
-                    }
+                    mixin(SetterCode~";");
                 }
             }
         }
@@ -463,6 +475,30 @@ static abstract class DataBinder
 
             c.muhName.should.equal("Hello!");
             c.rect.value.should.equal(RectangleI(1, 2, 3, 4));
+        }
+
+        ///
+        ViewContainer parseView(ArchiveObject root)
+        {
+            import std.array : split;
+            foreach(child; root.children)
+            {
+                auto splitted = child.name.split(":");
+                if(splitted.length != 2 || splitted[0] != "template")
+                    continue;
+
+                // Template name is based off object name, so we need to remove the "template:" part.
+                auto oldName = child.name;
+                child.name = splitted[1];
+                scope(exit) child.name = oldName;
+                DataBinder.addTemplate(child);
+            }
+
+            auto container = new ViewContainer();
+            foreach(child; DataBinder.parseUIObjectGeneric(root))
+                container.addChild(child);
+
+            return container;
         }
 
         /++
@@ -550,90 +586,90 @@ static abstract class DataBinder
                 ArchiveObject[] usedForRoot;
 
                 static foreach(base; AliasSeq!(C, BaseClassesTuple!C))
-                static foreach(attrib; __traits(getAttributes, base))
+                static foreach(attrib; GetAllUDAsInstanceOf!(UsesBinding, base))
                 {{
-                    static if(isInstanceOf!(UsesBinding, attrib))
+                    static assert(hasUDA!(attrib.BindT, DataBinding), 
+                        attrib.BindT.stringof~" requires the @DataBinding UDA before it can be used as a binding. "
+                        ~"While there is no practical reason for this as of now, it does make it clear what the purpose of the type is."
+                    );
+
+                    static if(is(attrib.Target == NO_TARGET))
                     {
-                        static assert(hasUDA!(attrib.BindT, DataBinding), 
-                            attrib.BindT.stringof~" requires the @DataBinding UDA before it can be used as a binding. "
-                           ~"While there is no practical reason for this as of now, it does make it clear what the purpose of the type is."
-                        );
+                        const ValueAccessor = "value";
+                        const ObjAccessor   = "obj";
+                        const Condition     = "true";
+                    }
+                    else
+                    {
+                        const ValueAccessor = "value."~__traits(identifier, attrib.Target);
+                        const ObjAccessor   = "obj.expectChild(\""~getFieldName!(attrib.Target)~"\")";
+                        const Condition     = "obj.getChild(\""~getFieldName!(attrib.Target)~"\") !is null";
+                    }
 
-                        static if(is(attrib.Target == NO_TARGET))
-                        {
-                            const ValueAccessor = "value";
-                            const ObjAccessor   = "obj";
-                            const Condition     = "true";
-                        }
-                        else
-                        {
-                            const ValueAccessor = "value."~__traits(identifier, attrib.Target);
-                            const ObjAccessor   = "obj.expectChild(\""~getFieldName!(attrib.Target)~"\")";
-                            const Condition     = "obj.getChild(\""~getFieldName!(attrib.Target)~"\") !is null";
-                        }
+                    if(mixin(Condition))
+                    {
+                        UsedObjectsT used;
+                        auto root             = mixin(ObjAccessor);
+                        auto oldName          = root.name;
+                        root.name             = getFieldName!(attrib.BindT);
+                        scope(exit) root.name = oldName;
+                        usedForRoot          ~= root;
+                        attrib.BindT binding  = Serialiser.deserialise!(attrib.BindT)(root, used);
 
-                        if(mixin(Condition))
-                        {
-                            UsedObjectsT used;
-                            auto root             = mixin(ObjAccessor);
-                            auto oldName          = root.name;
-                            root.name             = getFieldName!(attrib.BindT);
-                            scope(exit) root.name = oldName;
-                            usedForRoot          ~= root;
-                            attrib.BindT binding  = Serialiser.deserialise!(attrib.BindT)(root, used);
-
-                            // Check for disabled bindings.
-                            static foreach(attribDisabled; __traits(getAttributes, base))
-                            {{
-                                static if(isInstanceOf!(DisableBinding, attribDisabled) 
-                                       && attribDisabled.TargetField == __traits(identifier, attrib.Target))
-                                {
-                                    enforceAndLogf(
-                                        mixin("binding."~__traits(identifier, attribDisabled.BindingField)~".isNull"),
-                                        attribDisabled.Reason
-                                    );
-                                }
-                            }}
-
-                            // Copy the binding over.
-                            DataBinder.copyValues(mixin(ValueAccessor), binding);
-
-                            // Read in all properties, and mark them as used.
-                            foreach(prop; root.children.filter!(c => c.name.startsWith("property:")))
+                        // Check for disabled bindings.
+                        static foreach(attribDisabled; GetAllUDAsInstanceOf!(DisableBinding, base))
+                        {{
+                            static if(attribDisabled.TargetField == __traits(identifier, attrib.Target))
                             {
-                                auto nameRange = prop.name.splitter(":");
-                                nameRange.popFront();
-                                enforceAndLogf(!nameRange.empty, "Property without a name was found.");
-
-                                if(val.hasProperty(nameRange.front))
-                                    continue;
-
-                                val.addProperty!ArchiveObject(nameRange.front, prop);
-                                usedForRoot ~= prop;
+                                enforceAndLogf(
+                                    mixin("binding."~__traits(identifier, attribDisabled.BindingField)~".isNull"),
+                                    attribDisabled.Reason
+                                );
                             }
+                        }}
 
-                            // If there was a specific target, then we should make sure that all of it's objects were used.
-                            static if(!is(attrib.Target == NO_TARGET))
-                                enforceAllChildrenUsed(used);
-                            else // Otherwise merge it into the used objects for this object.
+                        // Copy the binding over.
+                        DataBinder.copyValues(mixin(ValueAccessor), binding);
+
+                        // Read in all properties, and mark them as used.
+                        foreach(prop; root.children.filter!(c => c.name.startsWith("property:")))
+                        {
+                            auto nameRange = prop.name.splitter(":");
+                            nameRange.popFront();
+                            enforceAndLogf(!nameRange.empty, "Property without a name was found.");
+
+                            if(val.hasProperty(nameRange.front))
+                                continue;
+
+                            val.addProperty!ArchiveObject(nameRange.front, prop);
+                            usedForRoot ~= prop;
+                        }
+
+                        // If there was a specific target, then we should make sure that all of it's objects were used.
+                        static if(!is(attrib.Target == NO_TARGET))
+                            enforceAllChildrenUsed(used);
+                        else // Otherwise merge it into the used objects for this object.
+                        {
+                            auto ptr = (obj in used);
+                            if(ptr !is null)
                             {
-                                auto ptr = (obj in used);
-                                if(ptr !is null)
-                                {
-                                    foreach(usedChild; *ptr)
-                                        usedForRoot ~= usedChild;
-                                }
+                                foreach(usedChild; *ptr)
+                                    usedForRoot ~= usedChild;
                             }
                         }
                     }
                 }}
 
                 // Look for children that are actually other UI elements/templates
+                static struct FinalValue(T) { mixin("T "~PROPERTY_BIND_TARGET~";"); }
+
                 foreach(child; obj.children)
                 {
+                    UIBase newChild;
+
                     if(DataBinder.canFindTemplate(child.name))
                     {
-                        value.addChild(DataBinder.factoryTemplate(child));
+                        newChild = DataBinder.factoryTemplate(child);
                         usedForRoot ~= child;
                     }
                     else
@@ -643,8 +679,35 @@ static abstract class DataBinder
                             continue;
 
                         usedForRoot ~= child;
-                        value.addChild(ptr.parser(ptr.factory(), child));
+                        newChild = ptr.parser(ptr.factory(), child);
                     }
+
+                    // Sort out any templates that are pre-defined by the parent
+                    static foreach(attrib; GetAllUDAsInstanceOf!(ChildProperty, C))
+                    {{
+                        alias ValueVar = getSymbolsByUDA!(attrib.BindT, MainValue)[0];
+                        static foreach(varAttrib; GetAllUDAsInstanceOf!(ConverterBindingFor, ValueVar))
+                        {
+                            alias FinalType = varAttrib.ValueT;
+
+                            if(newChild.hasProperty(attrib.PropName))
+                            {
+                                auto prop    = newChild.getProperty!ArchiveObject(attrib.PropName).value;
+                                auto oldName = prop.name;
+                                scope(exit) prop.name = oldName;
+                                prop.name = PROPERTY_OBJECT_NAME;
+                                
+                                FinalValue!FinalType finalValue;
+                                auto propValue = Serialiser.deserialise!(attrib.BindT)(prop);
+                                DataBinder.copyValues(finalValue, propValue);
+
+                                newChild.removeProperty(attrib.PropName);
+                                newChild.addProperty!FinalType(attrib.PropName, mixin("finalValue."~PROPERTY_BIND_TARGET));
+                            }
+                        }
+                    }}
+
+                    value.addChild(newChild);
                 }
 
                 enforceAllChildrenUsed([obj: usedForRoot]);
@@ -655,6 +718,32 @@ static abstract class DataBinder
     }
 }
 
+private template GetAllUDAs(C...)
+{
+    static if(C.length == 1)
+        alias GetAllUDAs = AliasSeq!(__traits(getAttributes, C));
+    else
+        alias GetAllUDAs = AliasSeq!(__traits(getAttributes, C[0]), GetAllUDAs!(C[1..$]));
+}
+
+private template GetAllUDAsInstanceOf(alias UDA, C...)
+{
+    import std.string    : indexOf;
+    import std.algorithm : canFind;
+    import std.meta      : Filter;
+
+    template FilterFunc(alias T)
+    {
+        static if(!isType!T)
+            alias Type = typeof(T);
+        else
+            alias Type = T;
+
+        enum FilterFunc = is(typeof(isInstanceOf!(UDA, Type))) && isInstanceOf!(UDA, Type);
+    }
+    alias GetAllUDAsInstanceOf = Filter!(FilterFunc, GetAllUDAs!C);
+}
+
 /++
  + A collection of useful data converters.
  + ++/
@@ -662,6 +751,11 @@ static abstract class DataConverters
 {
     public static
     {
+        T identity(T)(return T value)
+        {
+            return value;
+        }
+
         ///
         Rectangle!T staticArrayToRect(T)(T[4] values)
         {
@@ -686,6 +780,7 @@ static abstract class DataConverters
         }
 
         ///
+        deprecated("Jasterialise now has native support for enums, so this converter is no longer needed.") 
         E stringToEnum(E)(string value)
         {
             import std.conv : to;
