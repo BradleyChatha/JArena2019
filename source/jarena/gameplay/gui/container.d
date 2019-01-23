@@ -284,6 +284,8 @@ struct GridContainerBinding
 }
 
 @UsesBinding!GridContainerBinding
+@ChildProperty!("GridSlot", VectorProperty!(uint, 2))
+@ChildProperty!("GridSlotSpan", VectorProperty!(uint, 2))
 class GridContainer : UIBase
 {
     static struct Definition
