@@ -60,8 +60,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Serial\BindingDef.cs" />
+    <Compile Include="Serial\ControlDef.cs" />
+    <Compile Include="Serial\FieldDef.cs" />
+    <Compile Include="Serial\List_BindingDef_.cs" />
+    <Compile Include="Serial\List_FieldDef_.cs" />
     <Compile Include="Serial\Serialiser.cs" />
     <Compile Include="Serial\string.cs" />
+    <Compile Include="Serial\uint.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

@@ -59,5 +59,18 @@ namespace Editor_CSharp.Extern
 
             return binary.Root.GetChild("UI:view");
         }
+
+        public static ControlDef GetDefinitionFor(string controlName)
+        {
+            var data    = new ByteSlice();
+            var onError = new ByteSlice();
+            EditorRaw.jengine_editor_getDefinition(controlName, controlName.Length, ref data, ref onError);
+            onError.ThrowExceptionIfExists();
+
+            var binary = new ArchiveBinary();
+            binary.LoadFromMemory(data.Dup());
+
+            return Serialiser.Deserialise<ControlDef>(binary.Root);
+        }
     }
 }

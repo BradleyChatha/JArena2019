@@ -8,6 +8,12 @@ namespace Editor_CSharp.Serial
 		{
 			Serialiser.Register<ExceptionInfo>(new ExceptionInfoSerialiser());
 			Serialiser.Register<string>(new stringSerialiser());
+			Serialiser.Register<ControlDef>(new ControlDefSerialiser());
+			Serialiser.Register<List<BindingDef>>(new List_BindingDef_Serialiser());
+			Serialiser.Register<BindingDef>(new BindingDefSerialiser());
+			Serialiser.Register<List<FieldDef>>(new List_FieldDef_Serialiser());
+			Serialiser.Register<FieldDef>(new FieldDefSerialiser());
+			Serialiser.Register<uint>(new uintSerialiser());
 		}
 	}
 }

@@ -42,6 +42,7 @@ else version(generator)
 {
 	void main()
 	{
-		CSharpGenerator.genFilesForTypes!(ExceptionInfo)("../Editor_CSharp/Editor_CSharp/Serial", "Editor_CSharp.Serial");
+		import jarena.gameplay;
+		CSharpGenerator.genFilesForTypes!(ExceptionInfo, DataBinder.ControlDef)("../Editor_CSharp/Editor_CSharp/Serial", "Editor_CSharp.Serial");
 	}
 }

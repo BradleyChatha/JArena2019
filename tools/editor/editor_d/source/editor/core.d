@@ -179,3 +179,16 @@ void jengine_editor_openUIFile(char* path, uint pathLength, ubyte[]* data, ubyte
         throw new Exception("The file at '"~pathD.idup~"' does not contain a top-level 'UI:view' tag.");
     });
 }
+
+void jengine_editor_getDefinition(char* controlName, uint nameLength, ubyte[]* data, ubyte[]* onError)
+{
+    errorWrapper(onError, ()
+    {
+        auto nameD  = controlName[0..nameLength];
+        auto def    = DataBinder.getDefinitionFor(nameD.idup);
+        auto binary = new ArchiveBinary();
+
+        Serialiser.serialise!(DataBinder.ControlDef)(def, binary.root);
+        (*data) = cast(ubyte[])binary.saveToMemory();
+    });
+}

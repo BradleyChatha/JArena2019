@@ -41,6 +41,13 @@ namespace Editor_CSharp.Extern
                                                                                              ref ByteSlice data,
                                                                                              ref ByteSlice onError
                                                             );
+
+        [DllImport("editor.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void jengine_editor_getDefinition([MarshalAs(UnmanagedType.LPStr)] string controlName,
+                                                                                                int nameLength,
+                                                                                                ref ByteSlice data,
+                                                                                                ref ByteSlice onError
+                                                              );
     }
 
     public static class SliceExtension

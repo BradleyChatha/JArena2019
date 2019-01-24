@@ -269,12 +269,12 @@ static abstract class DataBinder
         string outputType;
 
         // For arrays.
-        Nullable!string inputSubtype;
-        Nullable!string outputSubtype;
+        string inputSubtype;
+        string outputSubtype;
 
         // For static arrays.
-        Nullable!uint   inputStaticLength;
-        Nullable!uint   outputStaticLength;
+        uint   inputStaticLength;
+        uint   outputStaticLength;
     }
 
     private static
@@ -290,7 +290,9 @@ static abstract class DataBinder
         }
 
         ArchiveObject[string] _templates; // Key is template name.
-        BindingInfo[string]   _classInfo; // Key is whatever getFieldName returns for each class.
+
+        // HACK: __gshared has been added *just* for the editor to work. The editor should implement promises to get around this at some point.
+        __gshared BindingInfo[string]   _classInfo; // Key is whatever getFieldName returns for each class.
     }
 
     public static
@@ -541,6 +543,15 @@ static abstract class DataBinder
             return container;
         }
 
+        ///
+        ControlDef getDefinitionFor(string name)
+        {
+            auto ptr = (name in this._classInfo);
+            enforceAndLogf(ptr !is null, "The control '%s' doesn't exist.", name);
+
+            return ptr.definition;
+        }
+
         /++
          + Registers a template.
          +
@@ -641,9 +652,9 @@ static abstract class DataBinder
                 }
 
                 static if(isInstanceOf!(Nullable, T))
-                    alias FieldT = ReturnType!(T.get);
+                    alias FieldT = Unqual!(ReturnType!(T.get));
                 else
-                    alias FieldT = T;
+                    alias FieldT = Unqual!(T);
 
                 static if(isArray!FieldT)
                 {
@@ -706,8 +717,6 @@ static abstract class DataBinder
 
             return def;
         }
-
-        pragma(msg, generateDefinitionFor!BasicButton);
 
         MakerFunc generateFactoryFor(C : UIBase)()
         {
