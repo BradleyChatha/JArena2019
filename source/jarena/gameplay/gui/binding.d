@@ -246,6 +246,37 @@ static abstract class DataBinder
         Replace
     }
 
+    /// Definition of a control's bindings/properties, designed to be able to be serialised.
+    /// Useful only for external programs that need to know these things.
+    struct ControlDef
+    {
+        string name;
+        BindingDef[] bindings;
+    }
+
+    /// ditto
+    struct BindingDef
+    {
+        string name;
+        FieldDef[] fields;
+    }
+
+    /// ditto
+    struct FieldDef
+    {
+        string name;
+        string inputType;
+        string outputType;
+
+        // For arrays.
+        Nullable!string inputSubtype;
+        Nullable!string outputSubtype;
+
+        // For static arrays.
+        Nullable!uint   inputStaticLength;
+        Nullable!uint   outputStaticLength;
+    }
+
     private static
     {
         alias ParserFunc = UIBase delegate(UIBase, ArchiveObject);
@@ -255,6 +286,7 @@ static abstract class DataBinder
         {
             ParserFunc parser;
             MakerFunc  factory;
+            ControlDef definition;
         }
 
         ArchiveObject[string] _templates; // Key is template name.
@@ -304,6 +336,7 @@ static abstract class DataBinder
             BindingInfo info;
             info.parser     = DataBinder.generateParserFor!C;
             info.factory    = DataBinder.generateFactoryFor!C;
+            info.definition = DataBinder.generateDefinitionFor!C;
             
             DataBinder._classInfo[getFieldName!C] = info;
         }
@@ -588,6 +621,94 @@ static abstract class DataBinder
     // ###################
     private static
     {
+        ControlDef generateDefinitionFor(C : UIBase)()
+        {
+            import std.range : ElementEncodingType;
+
+            void handleType(T, bool Input = true)(ref FieldDef fieldDef)
+            {
+                static if(Input)
+                {
+                    auto setType    = (string str){fieldDef.inputType = str;};
+                    auto setSubtype = (string str){fieldDef.inputSubtype = str;};
+                    auto setLength  = (uint l){fieldDef.inputStaticLength = l;};
+                }
+                else
+                {
+                    auto setType    = (string str){fieldDef.outputType = str;};
+                    auto setSubtype = (string str){fieldDef.outputSubtype = str;};
+                    auto setLength  = (uint l){fieldDef.outputStaticLength = l;};
+                }
+
+                static if(isInstanceOf!(Nullable, T))
+                    alias FieldT = ReturnType!(T.get);
+                else
+                    alias FieldT = T;
+
+                static if(isArray!FieldT)
+                {
+                    static if(isStaticArray!FieldT)
+                    {
+                        setType("StaticArray");
+                        setLength(cast(uint)T.length);
+                    }
+                    else
+                        setType("DynamicArray");
+
+                    setSubtype(Unqual!(ElementEncodingType!FieldT).stringof);
+                }
+                else
+                    setType(FieldT.stringof);
+            }
+
+            ControlDef def;
+            def.name = __traits(identifier, C);
+
+            static foreach(base; AliasSeq!(C, BaseClassesTuple!C))
+            static foreach(attrib; GetAllUDAsInstanceOf!(UsesBinding, base))
+            {{
+                BindingDef bindDef;
+                bindDef.name = __traits(identifier, attrib.BindT);
+
+                static foreach(field; getSymbolsByUDA!(attrib.BindT, BindingFor))
+                {{
+                    FieldDef fieldDef;
+                    fieldDef.name = getFieldName!field;
+
+                    handleType!(typeof(field))(fieldDef);
+
+                    fieldDef.outputType    = fieldDef.inputType;
+                    fieldDef.outputSubtype = fieldDef.inputSubtype;
+                    bindDef.fields        ~= fieldDef;
+                }}
+
+                static foreach(symbolName; __traits(allMembers, attrib.BindT))
+                static foreach(attrib2; GetAllUDAsInstanceOf!(ConverterBindingFor, getSymbolByName!(attrib.BindT, symbolName)))
+                {{
+                    alias Field = getSymbolByName!(attrib.BindT, symbolName);
+                    
+                    FieldDef fieldDef;
+                    fieldDef.name = getFieldName!Field;
+
+                    static if(isInstanceOf!(Nullable, typeof(Field)))
+                        alias FieldT = ReturnType!(Field.get);
+                    else
+                        alias FieldT = typeof(Field);
+
+                    handleType!FieldT(fieldDef);
+                    handleType!(attrib2.ValueT, false)(fieldDef);
+                    
+                    bindDef.fields ~= fieldDef;
+                }}
+
+                def.bindings ~= bindDef;
+            }}
+
+            return def;
+        }
+
+        pragma(msg, generateDefinitionFor!BasicButton);
+
         MakerFunc generateFactoryFor(C : UIBase)()
         {
             return () {

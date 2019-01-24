@@ -63,27 +63,39 @@ static class Editor
 
         void update()
         {
-            synchronized
+            try
             {
-                if(this._engine is null)
-                    return;
-
-                foreach(action; _actions)
+                synchronized
                 {
-                    final switch(action.type) with(ActionType)
+                    if(this._engine is null)
+                        return;
+
+                    foreach(action; _actions)
                     {
-                        case None: break;
+                        final switch(action.type) with(ActionType)
+                        {
+                            case None: break;
 
-                        case ChangeView:
-                            this._scene.changeView(action.value.changeViewValue);
-                            break;
+                            case ChangeView:
+                                this._scene.changeView(action.value.changeViewValue);
+                                break;
+                        }
                     }
+
+                    _actions.length = 0;
+
+                    enforce(Thread.getThis().id == this._engineThread, "Update was called outside of the engine thread.");
+                    this._engine.onUpdate();
                 }
+            }
+            catch(Error ex)
+            {
+                // I only catch errors since I need to get the message first.
+                import std.format, core.sys.windows.winuser, std.string;
 
-                _actions.length = 0;
+                MessageBoxA(null, format("Reason: %s\nTrace:\n%s", ex.msg, ex.info.toString()).toStringz, null, MB_ICONERROR);
 
-                enforce(Thread.getThis().id == this._engineThread, "Update was called outside of the engine thread.");
-                this._engine.onUpdate();
+                throw ex;
             }
         }
 
