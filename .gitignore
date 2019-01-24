@@ -20,9 +20,13 @@ trace.log
 trace.def
 trace.html
 profilegc.log
-bin/*.dll
-bin/data/debug/
-bin/*.log
+**/bin/*.pdb
+**/bin/*.exe.config
+**/bin/Test.txt
+**/bin/*.dll
+**/bin/data/debug/
+**/bin/*.log
+**/obj/
 dcd.log
 ui.log
 .vs

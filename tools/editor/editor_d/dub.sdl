@@ -1,0 +1,23 @@
+name "editor_d"
+description "A minimal D application."
+authors "Sealab"
+copyright "Copyright © 2019, Sealab"
+license "MIT"
+
+configuration "default" {
+    targetType "dynamicLibrary"
+    targetPath "../bin"
+    targetName "editor"
+    versions "dll"
+}
+
+configuration "generator" {
+    targetType "executable"
+    targetPath "../bin"
+    targetName "editor_csharp_generator"
+    versions "generator"
+}
+
+dependency "jasterialise" version="0.0.4"
+dependency "jarena" path="../../../"
+subconfiguration "jarena" "library"
