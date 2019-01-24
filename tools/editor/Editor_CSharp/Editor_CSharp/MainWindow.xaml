@@ -5,8 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Editor_CSharp"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="MainWindow" Height="350" Width="525" Closed="Window_Closed">
     <Grid>
-        
+        <ToolBarPanel HorizontalAlignment="Stretch" Height="26" VerticalAlignment="Top">
+            <Menu>
+                <MenuItem Header="_File">
+                    <MenuItem x:Name="menuOpen" Header="_Open" Click="menuOpen_Click"/>
+                </MenuItem>
+            </Menu>
+        </ToolBarPanel>
     </Grid>
 </Window>

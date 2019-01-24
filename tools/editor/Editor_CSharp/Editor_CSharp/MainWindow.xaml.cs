@@ -14,6 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Editor_CSharp.Extern;
 using Editor_CSharp.Serial;
+using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace Editor_CSharp
 {
@@ -28,6 +29,33 @@ namespace Editor_CSharp
 
             Jasterialise.RegisterSerialisers();
             Editor.Init();
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            Editor.CloseThreads();
+        }
+
+        private void menuOpen_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog              = new CommonOpenFileDialog();
+            dialog.Multiselect      = false;
+            dialog.EnsurePathExists = true;
+            dialog.EnsureFileExists = true;
+            var result = dialog.ShowDialog();
+
+            if(result == CommonFileDialogResult.Cancel || result == CommonFileDialogResult.None || String.IsNullOrEmpty(dialog.FileName))
+            {
+                MessageBox.Show(
+                    "Please select a valid file.",
+                    "Tsk tsk",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error
+                );
+                return;
+            }
+
+            var obj = Editor.OpenUIFile(dialog.FileName);
         }
     }
 }

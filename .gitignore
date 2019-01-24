@@ -31,3 +31,7 @@ dcd.log
 ui.log
 .vs
 .vscode
+Microsoft.*.xml
+*.nupkg
+Microsoft.*.dll
+.signature.p7s

@@ -20,7 +20,13 @@ namespace Editor_CSharp.Extern
             EditorRaw.jengine_editor_init(ref errorInfo);
             errorInfo.ThrowExceptionIfExists();
 
-            while(true) Thread.Sleep(1000);
+            while(true)
+            {
+                EditorRaw.jengine_editor_update(ref errorInfo);
+                errorInfo.ThrowExceptionIfExists();
+
+                Thread.Yield();
+            }
         }
 
         public static void Init()
@@ -33,6 +39,25 @@ namespace Editor_CSharp.Extern
 
             _engineThread = new Thread(Editor.ThreadMain);
             _engineThread.Start();
+        }
+
+        public static void CloseThreads()
+        {
+            if(_engineThread != null && _engineThread.IsAlive)
+                _engineThread.Abort();
+        }
+
+        public static ArchiveObject OpenUIFile(string path)
+        {
+            var data    = new ByteSlice();
+            var onError = new ByteSlice();
+            EditorRaw.jengine_editor_openUIFile(path, path.Length, ref data, ref onError);
+            onError.ThrowExceptionIfExists();
+
+            var binary = new ArchiveBinary();
+            binary.LoadFromMemory(data.Dup());
+
+            return binary.Root.GetChild("UI:view");
         }
     }
 }

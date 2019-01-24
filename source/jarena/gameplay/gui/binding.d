@@ -556,6 +556,12 @@ static abstract class DataBinder
             return factoryTemplate!C(new ArchiveObject(templateName));
         }
 
+        ///
+        void removeTemplate(string templateName)
+        {
+            DataBinder._templates.remove(templateName);
+        }
+
         /// Returns: Whether a template called `templateName` exists.
         bool canFindTemplate(string templateName)
         {

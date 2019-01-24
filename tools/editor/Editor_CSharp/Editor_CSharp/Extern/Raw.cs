@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using Editor_CSharp.Serial;
 
 namespace Editor_CSharp.Extern
@@ -31,7 +32,15 @@ namespace Editor_CSharp.Extern
         [DllImport("editor.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern void jengine_editor_init(ref ByteSlice onError);
 
+        [DllImport("editor.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void jengine_editor_update(ref ByteSlice onError);
 
+        [DllImport("editor.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void jengine_editor_openUIFile([MarshalAs(UnmanagedType.LPStr)] string path,
+                                                                                             int pathLength,
+                                                                                             ref ByteSlice data,
+                                                                                             ref ByteSlice onError
+                                                            );
     }
 
     public static class SliceExtension
@@ -44,7 +53,9 @@ namespace Editor_CSharp.Extern
                 archive.LoadFromMemory(slice.Dup());
                 var error = Serialiser.Deserialise<ExceptionInfo>(archive.Root);
 
-                throw new EditorException($"{error.message}\nTrace:\n{error.stackTrace}");
+                var message = $"{error.message}\nTrace:\n{error.stackTrace}";
+                MessageBox.Show(message, "Exception", MessageBoxButton.OK, MessageBoxImage.Error);
+                throw new EditorException(message);
             }
         }
     }
