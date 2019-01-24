@@ -299,7 +299,7 @@ abstract class Loader
 
             assert(extension == this._currentTask.extension, "This function was called with the wrong extension.");
 
-            // Check if it's already cached.
+            // Check if it's already cached in the package assets.
             if(this._currentPackage.assets !is null)
             {
                 auto cached = this._currentPackage.assets.get(assetName);
@@ -308,6 +308,13 @@ abstract class Loader
                     infof("No need to wait for asset '%s' as it's already cached.", assetName);
                     return cached.value;
                 }   
+            }
+
+            // Check if it's an asset that's from another package.
+            if(Systems.assets.exists(assetName))
+            {
+                infof("No need to wait for asset '%s' as it's already cached.", assetName);
+                return Systems.assets.get!Object(assetName);
             }
 
             // Otherwise add it to the waiting list.
