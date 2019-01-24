@@ -265,6 +265,8 @@ static abstract class DataBinder
     struct FieldDef
     {
         string name;
+        bool isNullable;
+
         string inputType;
         string outputType;
 
@@ -686,6 +688,9 @@ static abstract class DataBinder
                     FieldDef fieldDef;
                     fieldDef.name = getFieldName!field;
 
+                    static if(isInstanceOf!(Nullable, typeof(field)))
+                        fieldDef.isNullable = true;
+
                     handleType!(typeof(field))(fieldDef);
 
                     fieldDef.outputType    = fieldDef.inputType;
@@ -702,11 +707,9 @@ static abstract class DataBinder
                     fieldDef.name = getFieldName!Field;
 
                     static if(isInstanceOf!(Nullable, typeof(Field)))
-                        alias FieldT = ReturnType!(Field.get);
-                    else
-                        alias FieldT = typeof(Field);
+                        fieldDef.isNullable = true;
 
-                    handleType!FieldT(fieldDef);
+                    handleType!(typeof(Field))(fieldDef);
                     handleType!(attrib2.ValueT, false)(fieldDef);
                     
                     bindDef.fields ~= fieldDef;

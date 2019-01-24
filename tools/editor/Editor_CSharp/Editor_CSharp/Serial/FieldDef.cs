@@ -14,6 +14,7 @@ namespace Editor_CSharp.Serial
 		public string name;
 		public string inputType;
 		public uint outputStaticLength;
+		public bool isNullable;
 		public string inputSubtype;
 	}
 	public class FieldDefSerialiser : ITypeSerialiser
@@ -28,6 +29,7 @@ namespace Editor_CSharp.Serial
 			Serialiser.Serialise(retObj, value.name, new TypeChildInfo(){ Name = "name", Flags = TypeFlags.None });
 			Serialiser.Serialise(retObj, value.inputType, new TypeChildInfo(){ Name = "inputType", Flags = TypeFlags.None });
 			Serialiser.Serialise(retObj, value.outputStaticLength, new TypeChildInfo(){ Name = "outputStaticLength", Flags = TypeFlags.None });
+			Serialiser.Serialise(retObj, value.isNullable, new TypeChildInfo(){ Name = "isNullable", Flags = TypeFlags.None });
 			Serialiser.Serialise(retObj, value.inputSubtype, new TypeChildInfo(){ Name = "inputSubtype", Flags = TypeFlags.None });
 			parent.AddChild(retObj);
 		}
@@ -42,6 +44,7 @@ namespace Editor_CSharp.Serial
 			value.name = Serialiser.Deserialise<string>(obj, new TypeChildInfo(){ Name = "name", Flags = TypeFlags.None });
 			value.inputType = Serialiser.Deserialise<string>(obj, new TypeChildInfo(){ Name = "inputType", Flags = TypeFlags.None });
 			value.outputStaticLength = Serialiser.Deserialise<uint>(obj, new TypeChildInfo(){ Name = "outputStaticLength", Flags = TypeFlags.None });
+			value.isNullable = Serialiser.Deserialise<bool>(obj, new TypeChildInfo(){ Name = "isNullable", Flags = TypeFlags.None });
 			value.inputSubtype = Serialiser.Deserialise<string>(obj, new TypeChildInfo(){ Name = "inputSubtype", Flags = TypeFlags.None });
 			return value;
 		}
