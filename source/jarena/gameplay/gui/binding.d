@@ -15,8 +15,6 @@ const PROPERTY_BIND_TARGET = "__jaster_prop";
 /// A flag used for certain `DataConverters` functions.
 alias NegativeAsNaN = Flag!"NegativeAsNaN";
 
-alias IgnoreDuplicateTemplates = Flag!"ignoredupes";
-
 /++
  + A UDA to be attached to any struct meant to be used as a DataBinding.
  +
@@ -241,6 +239,13 @@ struct VectorProperty(T, size_t N)
  + ++/
 static abstract class DataBinder
 {
+    enum DuplicateAction
+    {
+        Throw,
+        Ignore,
+        Replace
+    }
+
     private static
     {
         alias ParserFunc = UIBase delegate(UIBase, ArchiveObject);
@@ -480,7 +485,7 @@ static abstract class DataBinder
         }
 
         ///
-        ViewContainer parseView(ArchiveObject root, IgnoreDuplicateTemplates ignoreDupes = IgnoreDuplicateTemplates.no)
+        ViewContainer parseView(ArchiveObject root, DuplicateAction action = DuplicateAction.Throw)
         {
             import std.array : split;
             foreach(child; root.children)
@@ -493,9 +498,7 @@ static abstract class DataBinder
                 auto oldName = child.name;
                 child.name = splitted[1];
                 scope(exit) child.name = oldName;
-
-                if(!ignoreDupes || !DataBinder.canFindTemplate(child.name))
-                    DataBinder.addTemplate(child);
+                DataBinder.addTemplate(child, action);
             }
 
             auto container = new ViewContainer();
@@ -515,14 +518,21 @@ static abstract class DataBinder
          +  pass to `parseUIObject`.
          +
          + Params:
-         +  obj = The object that serves as the template.
+         +  obj     = The object that serves as the template.
+         +  action  = The action to perform if a template of the same name already exists.
          + ++/
-        void addTemplate(ArchiveObject obj)
+        void addTemplate(ArchiveObject obj, DuplicateAction action = DuplicateAction.Throw)
         {
             assert(obj !is null);
-            enforceAndLogf((obj.name in DataBinder._templates) is null, "The template '%s' already exists.", obj.name);
             enforceAndLogf(obj.children.length == 1, "The template '%s' requires having *only* one child in it's root.", obj.name);
-
+            if(DataBinder.canFindTemplate(obj.name))
+            {
+                if(action == DuplicateAction.Replace)
+                    DataBinder.removeTemplate(obj.name);
+                else if(action == DuplicateAction.Throw)
+                    enforceAndLogf(false, "The template '%s' already exists.", obj.name);
+            }
+            
             DataBinder._templates[obj.name] = obj.children[0];
         }
 

@@ -6,6 +6,7 @@ private
     import std.exception;
     import jaster.serialise;
     import jarena.core, jarena.gameplay, jarena.data;
+    import editor.scene;
 }
 
 struct ExceptionInfo
@@ -16,11 +17,29 @@ struct ExceptionInfo
 
 static class Editor
 {
+    enum ActionType
+    {
+        None,
+        ChangeView
+    }
+
+    union ActionValue
+    {
+        ArchiveObject changeViewValue;
+    }
+
+    struct Action
+    {
+        ActionType  type;
+        ActionValue value;
+    }
+
     private static __gshared
     {
-        ThreadID _engineThread;
-        Engine   _engine;
-
+        ThreadID    _engineThread;
+        Engine      _engine;
+        EditorScene _scene;
+        Action[]    _actions;
     }
 
     public static
@@ -36,6 +55,9 @@ static class Editor
                 this._engine       = new Engine();
                 this._engine.onInitLibraries();
                 this._engine.onInit();
+                this._scene = new EditorScene();
+                this._engine.scenes.register!EditorScene(this._scene);
+                this._engine.scenes.swap!EditorScene();
             }
         }
 
@@ -46,8 +68,34 @@ static class Editor
                 if(this._engine is null)
                     return;
 
+                foreach(action; _actions)
+                {
+                    final switch(action.type) with(ActionType)
+                    {
+                        case None: break;
+
+                        case ChangeView:
+                            this._scene.changeView(action.value.changeViewValue);
+                            break;
+                    }
+                }
+
+                _actions.length = 0;
+
                 enforce(Thread.getThis().id == this._engineThread, "Update was called outside of the engine thread.");
                 this._engine.onUpdate();
+            }
+        }
+
+        void changeView(ArchiveObject obj)
+        {
+            synchronized
+            {
+                Action act;
+                act.type = ActionType.ChangeView;
+                act.value.changeViewValue = obj;
+
+                this._actions ~= act;
             }
         }
 
@@ -64,7 +112,7 @@ static class Editor
 void errorWrapper(ubyte[]* onError, void delegate() func)
 {
     try func();
-    catch(Exception ex)
+    catch(Error ex)
     {
         if(onError !is null)
             (*onError) = Editor.serialise(ExceptionInfo(ex.msg, ex.info.toString()));
@@ -109,6 +157,7 @@ void jengine_editor_openUIFile(char* path, uint pathLength, ubyte[]* data, ubyte
             // We only support singular ones per file for now.
             if(child.name == "UI:view")
             {
+                Editor.changeView(child);
                 binary.root.addChild(child);
                 (*data) = cast(ubyte[])binary.saveToMemory();   
                 return;
