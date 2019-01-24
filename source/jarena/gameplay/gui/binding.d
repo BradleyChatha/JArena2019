@@ -15,6 +15,8 @@ const PROPERTY_BIND_TARGET = "__jaster_prop";
 /// A flag used for certain `DataConverters` functions.
 alias NegativeAsNaN = Flag!"NegativeAsNaN";
 
+alias IgnoreDuplicateTemplates = Flag!"ignoredupes";
+
 /++
  + A UDA to be attached to any struct meant to be used as a DataBinding.
  +
@@ -478,7 +480,7 @@ static abstract class DataBinder
         }
 
         ///
-        ViewContainer parseView(ArchiveObject root)
+        ViewContainer parseView(ArchiveObject root, IgnoreDuplicateTemplates ignoreDupes = IgnoreDuplicateTemplates.no)
         {
             import std.array : split;
             foreach(child; root.children)
@@ -491,7 +493,9 @@ static abstract class DataBinder
                 auto oldName = child.name;
                 child.name = splitted[1];
                 scope(exit) child.name = oldName;
-                DataBinder.addTemplate(child);
+
+                if(!ignoreDupes || !DataBinder.canFindTemplate(child.name))
+                    DataBinder.addTemplate(child);
             }
 
             auto container = new ViewContainer();
