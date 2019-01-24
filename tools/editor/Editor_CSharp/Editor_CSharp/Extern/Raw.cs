@@ -9,8 +9,9 @@ using Editor_CSharp.Serial;
 namespace Editor_CSharp.Extern
 {
     [StructLayout(LayoutKind.Sequential)]
-    public struct Slice
+    public struct ByteSlice
     {
+        // I hope to god this is consistent between compilers T.T
         public int Length;
         public IntPtr Ptr;
 
@@ -28,12 +29,14 @@ namespace Editor_CSharp.Extern
     public static class EditorRaw
     {
         [DllImport("editor.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void jengine_editor_init(ref Slice onError);
+        public static extern void jengine_editor_init(ref ByteSlice onError);
+
+
     }
 
     public static class SliceExtension
     {
-        public static void ThrowExceptionIfExists(this Slice slice)
+        public static void ThrowExceptionIfExists(this ByteSlice slice)
         {
             if (slice.Length > 0)
             {

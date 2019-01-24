@@ -16,7 +16,7 @@ namespace Editor_CSharp.Extern
 
         private static void ThreadMain()
         {
-            var errorInfo = new Slice();
+            var errorInfo = new ByteSlice();
             EditorRaw.jengine_editor_init(ref errorInfo);
             errorInfo.ThrowExceptionIfExists();
 
