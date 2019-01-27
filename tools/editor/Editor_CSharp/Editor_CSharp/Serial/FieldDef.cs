@@ -7,6 +7,7 @@ namespace Editor_CSharp.Serial
 	{
 		public FieldDef()
 		{
+			this.enumOptions = new List<string>();
 		}
 		public string outputSubtype;
 		public uint inputStaticLength;
@@ -16,6 +17,7 @@ namespace Editor_CSharp.Serial
 		public uint outputStaticLength;
 		public bool isNullable;
 		public string inputSubtype;
+		public List<string> enumOptions;
 	}
 	public class FieldDefSerialiser : ITypeSerialiser
 	{
@@ -31,6 +33,7 @@ namespace Editor_CSharp.Serial
 			Serialiser.Serialise(retObj, value.outputStaticLength, new TypeChildInfo(){ Name = "outputStaticLength", Flags = TypeFlags.None });
 			Serialiser.Serialise(retObj, value.isNullable, new TypeChildInfo(){ Name = "isNullable", Flags = TypeFlags.None });
 			Serialiser.Serialise(retObj, value.inputSubtype, new TypeChildInfo(){ Name = "inputSubtype", Flags = TypeFlags.None });
+			Serialiser.Serialise(retObj, value.enumOptions, new TypeChildInfo(){ Name = "enumOptions", Flags = TypeFlags.None });
 			parent.AddChild(retObj);
 		}
 		public Object Deserialise(ArchiveObject obj, TypeChildInfo info)
@@ -46,6 +49,7 @@ namespace Editor_CSharp.Serial
 			value.outputStaticLength = Serialiser.Deserialise<uint>(obj, new TypeChildInfo(){ Name = "outputStaticLength", Flags = TypeFlags.None });
 			value.isNullable = Serialiser.Deserialise<bool>(obj, new TypeChildInfo(){ Name = "isNullable", Flags = TypeFlags.None });
 			value.inputSubtype = Serialiser.Deserialise<string>(obj, new TypeChildInfo(){ Name = "inputSubtype", Flags = TypeFlags.None });
+			value.enumOptions = Serialiser.Deserialise<List<string>>(obj, new TypeChildInfo(){ Name = "enumOptions", Flags = TypeFlags.None });
 			return value;
 		}
 	}

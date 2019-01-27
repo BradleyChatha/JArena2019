@@ -278,6 +278,9 @@ static abstract class DataBinder
         // For static arrays.
         uint   inputStaticLength;
         uint   outputStaticLength;
+
+        // For enums
+        string[] enumOptions;
     }
 
     private static
@@ -670,6 +673,15 @@ static abstract class DataBinder
                         setType("DynamicArray");
 
                     setSubtype(Unqual!(ElementEncodingType!FieldT).stringof);
+                }
+                else static if(is(FieldT == enum))
+                {
+                    import std.conv : to;
+                    setType("Enum");
+                    setSubtype(Unqual!(OriginalType!FieldT).stringof);
+
+                    static foreach(member; EnumMembers!FieldT)
+                        fieldDef.enumOptions ~= member.to!string;
                 }
                 else
                     setType(FieldT.stringof);

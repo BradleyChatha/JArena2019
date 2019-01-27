@@ -93,6 +93,10 @@ namespace Editor_CSharp.Controls
                     {
                         parent.Items.Add(new StringEditor(fieldObj, field));
                     }
+                    else if(field.inputType == "Enum")
+                    {
+                        parent.Items.Add(new EnumEditor(fieldObj, field));
+                    }
                     else if(field.inputType == "int"
                          || field.inputType == "float"
                          || field.inputType == "uint")

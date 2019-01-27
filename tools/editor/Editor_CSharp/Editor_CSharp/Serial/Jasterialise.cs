@@ -15,6 +15,7 @@ namespace Editor_CSharp.Serial
 			Serialiser.Register<FieldDef>(new FieldDefSerialiser());
 			Serialiser.Register<uint>(new uintSerialiser());
 			Serialiser.Register<bool>(new boolSerialiser());
+			Serialiser.Register<List<string>>(new List_string_Serialiser());
 		}
 	}
 }

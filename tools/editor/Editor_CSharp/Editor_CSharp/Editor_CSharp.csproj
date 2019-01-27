@@ -63,6 +63,9 @@
     <Compile Include="Controls\BoolEditor.xaml.cs">
       <DependentUpon>BoolEditor.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\EnumEditor.xaml.cs">
+      <DependentUpon>EnumEditor.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\LabeledNumberBox.xaml.cs">
       <DependentUpon>LabeledNumberBox.xaml</DependentUpon>
     </Compile>
@@ -90,11 +93,16 @@
     <Compile Include="Serial\FieldDef.cs" />
     <Compile Include="Serial\List_BindingDef_.cs" />
     <Compile Include="Serial\List_FieldDef_.cs" />
+    <Compile Include="Serial\List_string_.cs" />
     <Compile Include="Serial\Serialiser.cs" />
     <Compile Include="Serial\string.cs" />
     <Compile Include="Serial\uint.cs" />
     <Compile Include="Util\NumberHelper.cs" />
     <Page Include="Controls\BoolEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\EnumEditor.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
