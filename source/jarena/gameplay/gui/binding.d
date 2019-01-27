@@ -258,6 +258,7 @@ static abstract class DataBinder
     struct BindingDef
     {
         string name;
+        string targetName;
         FieldDef[] fields;
     }
 
@@ -682,11 +683,17 @@ static abstract class DataBinder
             {{
                 BindingDef bindDef;
                 bindDef.name = __traits(identifier, attrib.BindT);
+                bindDef.targetName = __traits(identifier, attrib.Target);
 
                 static foreach(field; getSymbolsByUDA!(attrib.BindT, BindingFor))
                 {{
                     FieldDef fieldDef;
                     fieldDef.name = getFieldName!field;
+
+                    // For *some* reason, GridContainer.Definition[] messes up when used with getFieldName.
+                    // So we're special casing it until I can get a generic fix sorted.
+                    static if(is(typeof(field) == GridContainer.Definition[]))
+                        fieldDef.name = field.stringof;
 
                     static if(isInstanceOf!(Nullable, typeof(field)))
                         fieldDef.isNullable = true;

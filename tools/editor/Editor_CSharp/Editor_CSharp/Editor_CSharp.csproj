@@ -60,7 +60,32 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Controls\BoolEditor.xaml.cs">
+      <DependentUpon>BoolEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\LabeledNumberBox.xaml.cs">
+      <DependentUpon>LabeledNumberBox.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Nullbox.xaml.cs">
+      <DependentUpon>Nullbox.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\NumberEditor.xaml.cs">
+      <DependentUpon>NumberEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\RectangleEditor.xaml.cs">
+      <DependentUpon>RectangleEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\StringEditor.xaml.cs">
+      <DependentUpon>StringEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\VectorEditor.xaml.cs">
+      <DependentUpon>VectorEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ViewEditor.xaml.cs">
+      <DependentUpon>ViewEditor.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Serial\BindingDef.cs" />
+    <Compile Include="Serial\bool.cs" />
     <Compile Include="Serial\ControlDef.cs" />
     <Compile Include="Serial\FieldDef.cs" />
     <Compile Include="Serial\List_BindingDef_.cs" />
@@ -68,6 +93,39 @@
     <Compile Include="Serial\Serialiser.cs" />
     <Compile Include="Serial\string.cs" />
     <Compile Include="Serial\uint.cs" />
+    <Compile Include="Util\NumberHelper.cs" />
+    <Page Include="Controls\BoolEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\LabeledNumberBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\Nullbox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\NumberEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\RectangleEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\StringEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\VectorEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ViewEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

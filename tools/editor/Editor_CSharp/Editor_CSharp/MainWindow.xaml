@@ -4,15 +4,21 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Editor_CSharp"
+        xmlns:cc="clr-namespace:Editor_CSharp.Controls"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525" Closed="Window_Closed">
+        Title="JEngine UI Editor" Height="350" Width="525" Closed="Window_Closed">
     <Grid>
-        <ToolBarPanel HorizontalAlignment="Stretch" Height="26" VerticalAlignment="Top">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <ToolBarPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0">
             <Menu>
                 <MenuItem Header="_File">
                     <MenuItem x:Name="menuOpen" Header="_Open" Click="menuOpen_Click"/>
                 </MenuItem>
             </Menu>
         </ToolBarPanel>
+        <ContentControl x:Name="content" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
     </Grid>
 </Window>

@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Editor_CSharp.Controls;
 using Editor_CSharp.Extern;
 using Editor_CSharp.Serial;
 using Microsoft.WindowsAPICodePack.Dialogs;
@@ -23,12 +24,17 @@ namespace Editor_CSharp
     /// </summary>
     public partial class MainWindow : Window
     {
+        ViewEditor _editor;
+
         public MainWindow()
         {
             InitializeComponent();
 
             Jasterialise.RegisterSerialisers();
             Editor.Init();
+
+            this._editor = new ViewEditor();
+            this.content.Content = this._editor;
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -56,6 +62,7 @@ namespace Editor_CSharp
             }
 
             var obj = Editor.OpenUIFile(dialog.FileName);
+            this._editor.ChangeView(obj);
         }
     }
 }

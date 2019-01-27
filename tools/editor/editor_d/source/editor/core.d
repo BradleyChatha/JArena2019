@@ -88,7 +88,7 @@ static class Editor
                     this._engine.onUpdate();
                 }
             }
-            catch(Error ex)
+            catch(Throwable ex)
             {
                 // I only catch errors since I need to get the message first.
                 import std.format, core.sys.windows.winuser, std.string;
@@ -101,14 +101,11 @@ static class Editor
 
         void changeView(ArchiveObject obj)
         {
-            synchronized
-            {
-                Action act;
-                act.type = ActionType.ChangeView;
-                act.value.changeViewValue = obj;
+            Action act;
+            act.type = ActionType.ChangeView;
+            act.value.changeViewValue = obj;
 
-                this._actions ~= act;
-            }
+            synchronized this._actions ~= act;
         }
 
         ubyte[] serialise(T)(T value)
@@ -124,7 +121,7 @@ static class Editor
 void errorWrapper(ubyte[]* onError, void delegate() func)
 {
     try func();
-    catch(Error ex)
+    catch(Throwable ex)
     {
         if(onError !is null)
             (*onError) = Editor.serialise(ExceptionInfo(ex.msg, ex.info.toString()));
@@ -187,6 +184,13 @@ void jengine_editor_getDefinition(char* controlName, uint nameLength, ubyte[]* d
         auto nameD  = controlName[0..nameLength];
         auto def    = DataBinder.getDefinitionFor(nameD.idup);
         auto binary = new ArchiveBinary();
+
+        // DEBUG
+        import std.string, core.sys.windows.winuser;
+        auto sdl = new ArchiveSDL();
+        Serialiser.serialise!(DataBinder.ControlDef)(def, sdl.root);
+        import std.file;
+        std.file.write("Test.txt", sdl.saveToMemoryText());
 
         Serialiser.serialise!(DataBinder.ControlDef)(def, binary.root);
         (*data) = cast(ubyte[])binary.saveToMemory();
