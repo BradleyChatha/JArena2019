@@ -29,6 +29,7 @@ namespace Editor_CSharp.Controls
 
         public void ChangeView(ArchiveObject view)
         {
+            this.tree.Items.Clear();
             this.viewName.Text = view.ExpectChild("name").ExpectValueAs<string>(0);
             
             foreach(var child in view.Children)
@@ -40,11 +41,38 @@ namespace Editor_CSharp.Controls
             }
         }
 
+        public ArchiveObject CreateViewObject()
+        {
+            var root = new ArchiveObject();
+            var type = new ArchiveObject("type");
+            type.AddValueAs("UI:view");
+            root.AddChild(type);
+
+            var obj = new ArchiveObject("UI:view");
+            foreach(var child in this.tree.Items)
+            {
+                var editor = child as IEditorControl;
+                if(editor == null)
+                    continue;
+
+                var toAdd = editor.GetObject();
+                if(toAdd != null)
+                    obj.AddChild(toAdd);
+            }
+
+            var name = new ArchiveObject("name");
+            name.AddValueAs(this.viewName.Text);
+            obj.AddChild(name);
+
+            root.AddChild(obj);
+            return root;
+        }
+
         private TreeViewItem GenerateTree(ArchiveObject root)
         {
             var name = root.GetChild("name");
             var def  = Editor.GetDefinitionFor(root.Name);
-            var item = new TreeViewItem();
+            var item = new ControlTreeItem(def);
             item.Header = $"{root.Name}({((name == null) ? "NO NAME" : name.ExpectValueAs<string>(0))})";
             item.IsExpanded = true;
 
@@ -61,7 +89,7 @@ namespace Editor_CSharp.Controls
                 }
                 else
                 {
-                    parent = new TreeViewItem();
+                    parent = new BindingTreeItem(binding);
                     parent.IsExpanded = true;
                     parent.Header = binding.targetName;
                     item.Items.Add(parent);
@@ -105,8 +133,9 @@ namespace Editor_CSharp.Controls
                     }
                     else
                     {
-                        var fieldItem = new Label();
-                        fieldItem.Content = field.name;
+                        var fieldItem = new UnhandledTreeItem(fieldObj);
+                        fieldItem.Header = field.name;
+                        fieldItem.ToolTip = $"Unhandled: InputType = '{field.inputType}'. InputSubType = '{field.inputSubtype}'. InputLength = '{field.inputStaticLength}'.";
                         parent.Items.Add(fieldItem);
                     }
                 }

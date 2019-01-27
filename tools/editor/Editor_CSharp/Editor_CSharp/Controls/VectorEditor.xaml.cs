@@ -20,7 +20,7 @@ namespace Editor_CSharp.Controls
     /// <summary>
     /// Interaction logic for VectorEditor.xaml
     /// </summary>
-    public partial class VectorEditor : UserControl
+    public partial class VectorEditor : UserControl, IEditorControl
     {
         public FieldDef Def { private set; get; }
         public List<LabeledNumberBox> Inputs { private set; get; }
@@ -60,6 +60,19 @@ namespace Editor_CSharp.Controls
             this.nullbox.Unchecked += (_, __) => this.Inputs.ForEach(i => i.IsEnabled = false);
             this.nullbox.Visibility = (def.isNullable) ? Visibility.Visible : Visibility.Hidden;
             this.nullbox.IsChecked  = (def.isNullable) ? obj != null : true;
+        }
+
+        public ArchiveObject GetObject()
+        {
+            if (!this.nullbox.IsChecked)
+                return null;
+
+            var obj = new ArchiveObject();
+            obj.Name = this.Def.name;
+
+            this.Inputs.ForEach(b => obj.AddValue(NumberHelper.MakeValue(b.input.Text, this.Def.inputSubtype)));
+
+            return obj;
         }
     }
 }

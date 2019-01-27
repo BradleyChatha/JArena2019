@@ -16,6 +16,8 @@
             <Menu>
                 <MenuItem Header="_File">
                     <MenuItem x:Name="menuOpen" Header="_Open" Click="menuOpen_Click"/>
+                    <MenuItem x:Name="menuSaveAs" Header="_Save As" Click="menuSaveAs_Click"/>
+                    <MenuItem x:Name="menuDebugMakeObject" Header="[Debug] _Make" Click="menuDebugMakeObject_Click"/>
                 </MenuItem>
             </Menu>
         </ToolBarPanel>

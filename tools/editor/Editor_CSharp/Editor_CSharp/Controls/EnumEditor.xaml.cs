@@ -19,7 +19,7 @@ namespace Editor_CSharp.Controls
     /// <summary>
     /// Interaction logic for EnumEditor.xaml
     /// </summary>
-    public partial class EnumEditor : UserControl
+    public partial class EnumEditor : UserControl, IEditorControl
     {
         public FieldDef Def { get; set; }
         public EnumEditor(ArchiveObject obj, FieldDef def)
@@ -40,6 +40,17 @@ namespace Editor_CSharp.Controls
             this.nullbox.Unchecked += (_, __) => this.list.IsEnabled = false;
             this.nullbox.Visibility = (def.isNullable) ? Visibility.Visible : Visibility.Hidden;
             this.nullbox.IsChecked  = (def.isNullable) ? obj != null : true;
+        }
+
+        public ArchiveObject GetObject()
+        {
+            if(!this.nullbox.IsChecked)
+                return null;
+
+            var obj = new ArchiveObject();
+            obj.Name = this.Def.name;
+            obj.AddValueAs<string>((string)this.list.SelectedItem);
+            return obj;
         }
     }
 }

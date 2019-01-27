@@ -19,8 +19,9 @@ namespace Editor_CSharp.Controls
     /// <summary>
     /// Interaction logic for BoolEditor.xaml
     /// </summary>
-    public partial class BoolEditor : UserControl
+    public partial class BoolEditor : UserControl, IEditorControl
     {
+        public FieldDef Def { set; get; }
         public BoolEditor(ArchiveObject value, FieldDef def)
         {
             InitializeComponent();
@@ -36,6 +37,18 @@ namespace Editor_CSharp.Controls
             }
             this.nullbox.Visibility = (def.isNullable) ? Visibility.Visible : Visibility.Hidden;
             this.lblName.Content = def.name;
+            this.Def = def;
+        }
+
+        public ArchiveObject GetObject()
+        {
+            if(!this.nullbox.IsChecked)
+                return null;
+
+            var obj  = new ArchiveObject();
+            obj.Name = this.Def.name;
+            obj.AddValueAs<bool>(this.checkbox.IsChecked ?? false);
+            return obj;
         }
     }
 }

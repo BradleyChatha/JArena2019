@@ -64,5 +64,24 @@ namespace Editor_CSharp
             var obj = Editor.OpenUIFile(dialog.FileName);
             this._editor.ChangeView(obj);
         }
+
+        private void menuDebugMakeObject_Click(object sender, RoutedEventArgs e)
+        {
+            var obj = this._editor.CreateViewObject();
+            int breakpointHere = 0;
+        }
+
+        private void menuSaveAs_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new CommonSaveFileDialog();
+            var result = dialog.ShowDialog();
+            dialog.DefaultExtension = "sdl";
+            dialog.Filters.Add(new CommonFileDialogFilter("SDLang", ".sdl"));
+
+            if (result == CommonFileDialogResult.Cancel || result == CommonFileDialogResult.None || String.IsNullOrEmpty(dialog.FileName))
+                return;
+
+            Editor.SaveObjectToFile(dialog.FileName, this._editor.CreateViewObject());
+        }
     }
 }

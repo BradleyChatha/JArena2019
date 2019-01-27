@@ -20,7 +20,7 @@ namespace Editor_CSharp.Controls
     /// <summary>
     /// Interaction logic for NumberEditor.xaml
     /// </summary>
-    public partial class NumberEditor : UserControl
+    public partial class NumberEditor : UserControl, IEditorControl
     {
         public FieldDef Def { set; get; }
         public NumberEditor(ArchiveObject obj, FieldDef def)
@@ -37,6 +37,18 @@ namespace Editor_CSharp.Controls
             this.nullbox.Unchecked  += (_, __) => this.input.IsEnabled = false;
             this.nullbox.Visibility  = (def.isNullable) ? Visibility.Visible : Visibility.Hidden;
             this.nullbox.IsChecked   = (def.isNullable) ? obj != null : true;
+            this.Def                 = def;
+        }
+
+        public ArchiveObject GetObject()
+        {
+            if(!this.nullbox.IsChecked)
+                return null;
+
+            var obj = new ArchiveObject();
+            obj.Name = this.Def.name;
+            obj.AddValue(NumberHelper.MakeValue(this.input.input.Text, this.Def.inputType));
+            return obj;
         }
     }
 }

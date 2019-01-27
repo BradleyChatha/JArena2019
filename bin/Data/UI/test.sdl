@@ -1,0 +1,111 @@
+type "UI:view"
+UI:view {
+	GridContainer {
+		rows {
+			Definition {
+				type "Pixels"
+				amount 20L
+			}
+			Definition {
+				type "Pixels"
+				amount 20L
+			}
+		}
+		columns {
+			Definition {
+				type "Pixels"
+				amount 50L
+			}
+			Definition {
+				type "Star"
+				amount 1L
+			}
+			Definition {
+				type "Star"
+				amount 1L
+			}
+			Definition {
+				type "Pixels"
+				amount 20L
+			}
+		}
+		showDebugGrid true
+		margin 300D 100D 0D 0D
+		size 300D 100D
+		BasicButton {
+			shape
+			text {
+				text "ABC"
+			}
+			horizAlignment "Stretch"
+			vertAlignment "Stretch"
+		}
+	}
+	StackContainer {
+		background {
+			borderSize 1L
+			borderColour "#000000"
+			colour "azure"
+		}
+		direction "Horizontal"
+		name "panelInstructions"
+		horizAlignment "Stretch"
+		vertAlignment "Bottom"
+		size -1D 30D
+		BasicLabel {
+			text {
+				text "L = Show animation list; R = Reset Camera; Shift+R = Toggle Repeating"
+				colour "rockSalt"
+			}
+			vertAlignment "Center"
+		}
+	}
+	StackContainer {
+		background {
+			borderSize 1L
+			borderColour "#000000"
+			colour "azure"
+		}
+		direction "Vertical"
+		autoSize "yes"
+		name "panelData"
+		margin 25D 25D 0D 0D
+		size -1D -1D
+		BasicLabel {
+			text {
+				colour "rockSalt"
+			}
+			name "lblData1"
+			margin 0D 0D 0D 10D
+		}
+	}
+	StackContainer {
+		background {
+			borderSize 1L
+			borderColour "#000000"
+			colour "azure"
+		}
+		direction "Vertical"
+		name "panelList"
+		isVisible true
+		horizAlignment "Right"
+		vertAlignment "Stretch"
+		size 200D -1D
+		StackContainer {
+			background
+			name "controlNavigation"
+			horizAlignment "Center"
+			size 200D 30D
+			BasicLabel {
+				text {
+					text "0/69"
+					colour "rockSalt"
+				}
+				name "lblNavPages"
+				vertAlignment "Center"
+				margin 5D -3D 0D 0D
+			}
+		}
+	}
+	name "AnimationViewer_View"
+}

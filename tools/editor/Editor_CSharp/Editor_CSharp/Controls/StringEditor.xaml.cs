@@ -19,7 +19,7 @@ namespace Editor_CSharp.Controls
     /// <summary>
     /// Interaction logic for StringEditor.xaml
     /// </summary>
-    public partial class StringEditor : UserControl
+    public partial class StringEditor : UserControl, IEditorControl
     {
         public FieldDef Def { set; get; }
 
@@ -37,6 +37,17 @@ namespace Editor_CSharp.Controls
             this.nullbox.Unchecked += (_, __) => this.input.IsEnabled = false;
             this.nullbox.Visibility = (def.isNullable) ? Visibility.Visible : Visibility.Hidden;
             this.nullbox.IsChecked  = (def.isNullable) ? obj != null : true;
+        }
+
+        public ArchiveObject GetObject()
+        {
+            if (!this.nullbox.IsChecked)
+                return null;
+
+            var obj = new ArchiveObject();
+            obj.Name = this.Def.name;
+            obj.AddValueAs<string>(this.input.Text);
+            return obj;
         }
     }
 }

@@ -196,3 +196,23 @@ void jengine_editor_getDefinition(char* controlName, uint nameLength, ubyte[]* d
         (*data) = cast(ubyte[])binary.saveToMemory();
     });
 }
+
+void jengine_editor_saveFile(char* path, uint pathLength, ubyte[] data, ubyte[]* onError)
+{
+    errorWrapper(onError, ()
+    {
+        auto pathD  = path[0..pathLength];
+        auto binary = new ArchiveBinary();
+        auto sdl    = new ArchiveSDL();
+        binary.loadFromMemory(data);
+
+        foreach(val; binary.root.values)
+            sdl.root.addValue(val);
+        foreach(prop; binary.root.attributes)
+            sdl.root.setAttribute(prop.name, prop.value);
+        foreach(child; binary.root.children)
+            sdl.root.addChild(child);
+
+        sdl.saveToFile(pathD);
+    });
+}

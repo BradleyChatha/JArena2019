@@ -20,7 +20,7 @@ namespace Editor_CSharp.Controls
     /// <summary>
     /// Interaction logic for RectangleEditor.xaml
     /// </summary>
-    public partial class RectangleEditor : UserControl
+    public partial class RectangleEditor : UserControl, IEditorControl
     {
         public FieldDef Def { private set; get; }
 
@@ -28,6 +28,7 @@ namespace Editor_CSharp.Controls
         {
             InitializeComponent();
             this.label.Content = def.name;
+            this.Def = def;
 
             this.x.NumType = def.inputSubtype;
             this.y.NumType = def.inputSubtype;
@@ -55,6 +56,19 @@ namespace Editor_CSharp.Controls
             this.nullbox.Unchecked += (_, __) => Inputs.ForEach(i => i.IsEnabled = false);
             this.nullbox.Visibility = (def.isNullable) ? Visibility.Visible : Visibility.Hidden;
             this.nullbox.IsChecked  = (def.isNullable) ? obj != null : true;
+        }
+
+        public ArchiveObject GetObject()
+        {
+            if(!this.nullbox.IsChecked)
+                return null;
+
+            var obj = new ArchiveObject();
+            obj.Name = this.Def.name;
+            
+            (new List<LabeledNumberBox>{ x, y, w, h }).ForEach(b => obj.AddValue(NumberHelper.MakeValue(b.input.Text, this.Def.inputSubtype)));
+
+            return obj;
         }
     }
 }

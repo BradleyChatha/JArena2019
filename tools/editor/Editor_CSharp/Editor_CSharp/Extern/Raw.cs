@@ -16,6 +16,11 @@ namespace Editor_CSharp.Extern
         public int Length;
         public IntPtr Ptr;
 
+        public void Dispose()
+        {
+
+        }
+
         public byte[] Dup()
         {
             if(Length < 0)
@@ -24,6 +29,28 @@ namespace Editor_CSharp.Extern
             byte[] bytes = new byte[this.Length];
             Marshal.Copy(this.Ptr, bytes, 0, this.Length);
             return bytes;
+        }
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ByteSliceFromManaged : IDisposable
+    {
+        public int Length;
+        public IntPtr Ptr;
+
+        public ByteSliceFromManaged(IEnumerable<byte> bytes)
+        {
+            var managed   = bytes.ToArray();
+            var unmanaged = Marshal.AllocHGlobal(managed.Length);
+            Marshal.Copy(managed, 0, unmanaged, managed.Length);
+
+            this.Ptr = unmanaged;
+            this.Length = managed.Length;
+        }
+
+        public void Dispose()
+        {
+            Marshal.FreeHGlobal(this.Ptr);
         }
     }
 
@@ -48,6 +75,13 @@ namespace Editor_CSharp.Extern
                                                                                                 ref ByteSlice data,
                                                                                                 ref ByteSlice onError
                                                               );
+
+        [DllImport("editor.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void jengine_editor_saveFile([MarshalAs(UnmanagedType.LPStr)] string path,
+                                                                                           int pathLength,
+                                                                                           ByteSliceFromManaged dataToSave,
+                                                                                           ref ByteSlice onError
+                                                         );
     }
 
     public static class SliceExtension

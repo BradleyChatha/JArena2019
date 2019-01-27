@@ -19,6 +19,10 @@
         <Label Content="Name:"/>
         <TextBox x:Name="viewName" Grid.Column="1" Height="23"/>
 
-        <TreeView x:Name="tree" Grid.Row="1" Grid.ColumnSpan="2"/>
+        <TreeView x:Name="tree" Grid.Row="1" Grid.ColumnSpan="2">
+            <TreeView.Resources>
+                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="Transparent" />
+        </TreeView.Resources>
+        </TreeView>
     </Grid>
 </UserControl>

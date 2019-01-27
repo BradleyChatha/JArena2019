@@ -60,12 +60,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Controls\BindingTreeItem.cs" />
     <Compile Include="Controls\BoolEditor.xaml.cs">
       <DependentUpon>BoolEditor.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ControlTreeITem.cs" />
     <Compile Include="Controls\EnumEditor.xaml.cs">
       <DependentUpon>EnumEditor.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\IEditorControl.cs" />
     <Compile Include="Controls\LabeledNumberBox.xaml.cs">
       <DependentUpon>LabeledNumberBox.xaml</DependentUpon>
     </Compile>
@@ -81,6 +84,7 @@
     <Compile Include="Controls\StringEditor.xaml.cs">
       <DependentUpon>StringEditor.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\UnhandledTreeItem.cs" />
     <Compile Include="Controls\VectorEditor.xaml.cs">
       <DependentUpon>VectorEditor.xaml</DependentUpon>
     </Compile>
