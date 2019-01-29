@@ -8,30 +8,13 @@ using Editor_CSharp.Serial;
 
 namespace Editor_CSharp.Controls
 {
-    public class ControlTreeItem : TreeViewItem, IEditorControl
+    public class ControlTreeItem : EditorTreeItemBase
     {
         public ControlDef Def { get; set; }
         public ControlTreeItem(ControlDef def)
         {
             this.Def = def;
-        }
-
-        public ArchiveObject GetObject()
-        {
-            var obj = new ArchiveObject();
-            obj.Name = this.Def.name;
-            foreach (var child in this.Items)
-            {
-                var editor = child as IEditorControl;
-                if (editor == null)
-                    continue;
-
-                var toAdd = editor.GetObject();
-                if (toAdd != null)
-                    obj.AddChild(toAdd);
-            }
-
-            return obj;
+            this.ObjectName = def.name;
         }
     }
 }

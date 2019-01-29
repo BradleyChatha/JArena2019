@@ -1,6 +1,14 @@
 type "UI:view"
 UI:view {
 	GridContainer {
+		BasicButton {
+			shape
+			text {
+				text "ABC"
+			}
+			horizAlignment "Stretch"
+			vertAlignment "Stretch"
+		}
 		rows {
 			Definition {
 				type "Pixels"
@@ -32,16 +40,15 @@ UI:view {
 		showDebugGrid true
 		margin 300D 100D 0D 0D
 		size 300D 100D
-		BasicButton {
-			shape
-			text {
-				text "ABC"
-			}
-			horizAlignment "Stretch"
-			vertAlignment "Stretch"
-		}
 	}
 	StackContainer {
+		BasicLabel {
+			text {
+				text "L = Show animation list; R = Reset Camera; Shift+R = Toggle Repeating"
+				colour "rockSalt"
+			}
+			vertAlignment "Center"
+		}
 		background {
 			borderSize 1L
 			borderColour "#000000"
@@ -52,15 +59,15 @@ UI:view {
 		horizAlignment "Stretch"
 		vertAlignment "Bottom"
 		size -1D 30D
-		BasicLabel {
-			text {
-				text "L = Show animation list; R = Reset Camera; Shift+R = Toggle Repeating"
-				colour "rockSalt"
-			}
-			vertAlignment "Center"
-		}
 	}
 	StackContainer {
+		BasicLabel {
+			text {
+				colour "rockSalt"
+			}
+			name "lblData1"
+			margin 0D 0D 0D 10D
+		}
 		background {
 			borderSize 1L
 			borderColour "#000000"
@@ -71,31 +78,9 @@ UI:view {
 		name "panelData"
 		margin 25D 25D 0D 0D
 		size -1D -1D
-		BasicLabel {
-			text {
-				colour "rockSalt"
-			}
-			name "lblData1"
-			margin 0D 0D 0D 10D
-		}
 	}
 	StackContainer {
-		background {
-			borderSize 1L
-			borderColour "#000000"
-			colour "azure"
-		}
-		direction "Vertical"
-		name "panelList"
-		isVisible true
-		horizAlignment "Right"
-		vertAlignment "Stretch"
-		size 200D -1D
 		StackContainer {
-			background
-			name "controlNavigation"
-			horizAlignment "Center"
-			size 200D 30D
 			BasicLabel {
 				text {
 					text "0/69"
@@ -105,6 +90,39 @@ UI:view {
 				vertAlignment "Center"
 				margin 5D -3D 0D 0D
 			}
+			background
+			name "controlNavigation"
+			horizAlignment "Center"
+			size 200D 30D
+		}
+		background {
+			borderSize 1L
+			borderColour "#000000"
+			colour "azure"
+		}
+		direction "Vertical"
+		name "panelList"
+		isVisible false
+		horizAlignment "Right"
+		vertAlignment "Stretch"
+		size 200D -1D
+	}
+	template:AV_NavButton {
+		BasicButton {
+			baseColour "flameRed"
+			shape
+			text
+			size 75D 22.999999999999998223D
+		}
+	}
+	template:AV_ListButton {
+		BasicButton {
+			baseColour "funGreen"
+			shape
+			text
+			horizAlignment "Stretch"
+			margin 0D 10D 0D 0D
+			size -1D 400D
 		}
 	}
 	name "AnimationViewer_View"

@@ -29,15 +29,25 @@ namespace Editor_CSharp.Controls
 
         public void ChangeView(ArchiveObject view)
         {
-            this.tree.Items.Clear();
+            this.treeControls.Items.Clear();
             this.viewName.Text = view.ExpectChild("name").ExpectValueAs<string>(0);
             
             foreach(var child in view.Children)
             {
-                if(child.Name == "name" || child.Name.StartsWith("template:"))
+                if(child.Name == "name")
                     continue;
 
-                this.tree.Items.Add(this.GenerateTree(child));
+                if(child.Name.StartsWith("template:"))
+                {
+                    var item = new TemplateTreeItem(child);
+                    item.IsExpanded = true;
+                    item.Items.Add(this.GenerateTree(child.Children[0]));
+                    item.PropertiesTree = this.treeProperties;
+
+                    this.treeControls.Items.Add(item);
+                }
+                else
+                    this.treeControls.Items.Add(this.GenerateTree(child));
             }
         }
 
@@ -49,7 +59,7 @@ namespace Editor_CSharp.Controls
             root.AddChild(type);
 
             var obj = new ArchiveObject("UI:view");
-            foreach(var child in this.tree.Items)
+            foreach(var child in this.treeControls.Items)
             {
                 var editor = child as IEditorControl;
                 if(editor == null)
@@ -75,11 +85,12 @@ namespace Editor_CSharp.Controls
             var item = new ControlTreeItem(def);
             item.Header = $"{root.Name}({((name == null) ? "NO NAME" : name.ExpectValueAs<string>(0))})";
             item.IsExpanded = true;
+            item.PropertiesTree = this.treeProperties;
 
             var notUsed = root.Children.ToList();
             foreach(var binding in def.bindings)
             {
-                TreeViewItem parent;
+                EditorTreeItemBase parent;
                 ArchiveObject bindTarget;
 
                 if(String.IsNullOrWhiteSpace(binding.targetName) || binding.targetName == "DataBinding")
@@ -92,51 +103,59 @@ namespace Editor_CSharp.Controls
                     parent = new BindingTreeItem(binding);
                     parent.IsExpanded = true;
                     parent.Header = binding.targetName;
-                    item.Items.Add(parent);
+                    parent.PropertiesTree = null;
+                    item.Properties.Add(parent);
                     bindTarget = this.FindAndRemoveByName(notUsed, binding.targetName);
                 }
 
                 foreach(var field in binding.fields)
                 {
+                    Action<Object> addToParent = null;
                     ArchiveObject fieldObj = null;
                     if(parent == item)
+                    {
                         fieldObj = this.FindAndRemoveByName(notUsed, field.name);
+                        addToParent = o => parent.Properties.Add(o);
+                    }
                     else if(bindTarget != null)
                         fieldObj = bindTarget.GetChild(field.name);
+
+                    if(parent != item)
+                        addToParent = o => parent.Items.Add(o);
 
                     // I can't use a hashmap because for more complex types (such as arrays), I need to process their additional info first.
                     if (field.inputType == "bool")
                     {
-                        parent.Items.Add(new BoolEditor(fieldObj, field));
+                        addToParent(new BoolEditor(fieldObj, field));
                     }
                     else if(field.inputType == "StaticArray" && field.outputType.StartsWith("Vector"))
                     {
-                        parent.Items.Add(new VectorEditor(fieldObj, field));
+                        addToParent(new VectorEditor(fieldObj, field));
                     }
                     else if(field.inputType == "StaticArray" && field.outputType.StartsWith("Rectangle"))
                     {
-                        parent.Items.Add(new RectangleEditor(fieldObj, field));
+                        addToParent(new RectangleEditor(fieldObj, field));
                     }
                     else if(field.inputType == "DynamicArray" && field.inputSubtype == "char")
                     {
-                        parent.Items.Add(new StringEditor(fieldObj, field));
+                        addToParent(new StringEditor(fieldObj, field));
                     }
                     else if(field.inputType == "Enum")
                     {
-                        parent.Items.Add(new EnumEditor(fieldObj, field));
+                        addToParent(new EnumEditor(fieldObj, field));
                     }
                     else if(field.inputType == "int"
                          || field.inputType == "float"
                          || field.inputType == "uint")
                     {
-                        parent.Items.Add(new NumberEditor(fieldObj, field));
+                        addToParent(new NumberEditor(fieldObj, field));
                     }
                     else
                     {
                         var fieldItem = new UnhandledTreeItem(fieldObj);
                         fieldItem.Header = field.name;
                         fieldItem.ToolTip = $"Unhandled: InputType = '{field.inputType}'. InputSubType = '{field.inputSubtype}'. InputLength = '{field.inputStaticLength}'.";
-                        parent.Items.Add(fieldItem);
+                        addToParent(fieldItem);
                     }
                 }
             }
@@ -164,6 +183,13 @@ namespace Editor_CSharp.Controls
             }
             
             return null;
+        }
+
+        private void treeControls_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            var item = this.treeControls.SelectedItem as EditorTreeItemBase;
+            if(item != null)
+                item.ShowProperties();
         }
     }
 }
