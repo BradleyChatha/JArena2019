@@ -78,6 +78,11 @@ namespace Editor_CSharp.Controls
             return root;
         }
 
+        public void UpdateGameClient()
+        {
+            Editor.ChangeView(this.CreateViewObject());
+        }
+
         private TreeViewItem GenerateTree(ArchiveObject root)
         {
             var name = root.GetChild("name");
@@ -126,29 +131,29 @@ namespace Editor_CSharp.Controls
                     // I can't use a hashmap because for more complex types (such as arrays), I need to process their additional info first.
                     if (field.inputType == "bool")
                     {
-                        addToParent(new BoolEditor(fieldObj, field));
+                        addToParent(new BoolEditor(this, fieldObj, field));
                     }
                     else if(field.inputType == "StaticArray" && field.outputType.StartsWith("Vector"))
                     {
-                        addToParent(new VectorEditor(fieldObj, field));
+                        addToParent(new VectorEditor(this, fieldObj, field));
                     }
                     else if(field.inputType == "StaticArray" && field.outputType.StartsWith("Rectangle"))
                     {
-                        addToParent(new RectangleEditor(fieldObj, field));
+                        addToParent(new RectangleEditor(this, fieldObj, field));
                     }
                     else if(field.inputType == "DynamicArray" && field.inputSubtype == "char")
                     {
-                        addToParent(new StringEditor(fieldObj, field));
+                        addToParent(new StringEditor(this, fieldObj, field));
                     }
                     else if(field.inputType == "Enum")
                     {
-                        addToParent(new EnumEditor(fieldObj, field));
+                        addToParent(new EnumEditor(this, fieldObj, field));
                     }
                     else if(field.inputType == "int"
                          || field.inputType == "float"
                          || field.inputType == "uint")
                     {
-                        addToParent(new NumberEditor(fieldObj, field));
+                        addToParent(new NumberEditor(this, fieldObj, field));
                     }
                     else
                     {

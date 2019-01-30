@@ -216,3 +216,18 @@ void jengine_editor_saveFile(char* path, uint pathLength, ubyte[] data, ubyte[]*
         sdl.saveToFile(pathD);
     });
 }
+
+void jengine_editor_changeView(ubyte[] data, ubyte[]* onError)
+{
+    errorWrapper(onError, ()
+    {
+        auto binary = new ArchiveBinary();
+        binary.loadFromMemory(data);
+
+        foreach(child; binary.root.children)
+        {
+            if(child.name == "UI:view")
+                Editor.changeView(child);
+        }
+    });
+}

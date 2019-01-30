@@ -44,7 +44,7 @@ UI:view {
 	StackContainer {
 		BasicLabel {
 			text {
-				text "L = Show animation list; R = Reset Camera; Shift+R = Toggle Repeating"
+				text "L = Show animation list; R = Reset Camera; Shift+R = Toggle Repeating\r\n\r\nBut you see, it is me! DIO!"
 				colour "rockSalt"
 			}
 			vertAlignment "Center"
@@ -58,7 +58,7 @@ UI:view {
 		name "panelInstructions"
 		horizAlignment "Stretch"
 		vertAlignment "Bottom"
-		size -1D 30D
+		size -1D 50D
 	}
 	StackContainer {
 		BasicLabel {

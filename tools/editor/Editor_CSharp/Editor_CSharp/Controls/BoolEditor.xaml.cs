@@ -22,7 +22,7 @@ namespace Editor_CSharp.Controls
     public partial class BoolEditor : UserControl, IEditorControl
     {
         public FieldDef Def { set; get; }
-        public BoolEditor(ArchiveObject value, FieldDef def)
+        public BoolEditor(ViewEditor editor, ArchiveObject value, FieldDef def)
         {
             InitializeComponent();
 
@@ -38,6 +38,9 @@ namespace Editor_CSharp.Controls
             this.nullbox.Visibility = (def.isNullable) ? Visibility.Visible : Visibility.Hidden;
             this.lblName.Content = def.name;
             this.Def = def;
+
+            this.checkbox.Checked   += (_, __) => editor.UpdateGameClient();
+            this.checkbox.Unchecked += (_, __) => editor.UpdateGameClient();
         }
 
         public ArchiveObject GetObject()

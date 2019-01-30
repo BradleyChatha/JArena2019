@@ -23,7 +23,7 @@ namespace Editor_CSharp.Controls
     {
         public FieldDef Def { set; get; }
 
-        public StringEditor(ArchiveObject obj, FieldDef def)
+        public StringEditor(ViewEditor editor, ArchiveObject obj, FieldDef def)
         {
             InitializeComponent();
 
@@ -37,6 +37,17 @@ namespace Editor_CSharp.Controls
             this.nullbox.Unchecked += (_, __) => this.input.IsEnabled = false;
             this.nullbox.Visibility = (def.isNullable) ? Visibility.Visible : Visibility.Hidden;
             this.nullbox.IsChecked  = (def.isNullable) ? obj != null : true;
+
+            if(def.outputType != "Font")
+                this.input.TextChanged += (_, __) => editor.UpdateGameClient();
+            else
+            {
+                this.input.IsEnabled = false;
+                this.nullbox.IsEnabled = false;
+                this.input.Background = Brushes.Yellow;
+                this.label.Content = $"{def.name}(Disabled)";
+                this.label.ToolTip = "Fonts are causing a few issues, so currently the editor won't support changing them.";
+            }
         }
 
         public ArchiveObject GetObject()

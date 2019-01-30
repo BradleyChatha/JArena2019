@@ -10,7 +10,7 @@
         <StackPanel Orientation="Horizontal">
             <local:Nullbox x:Name="nullbox"/>
             <Label x:Name="label"/>
-            <TextBox x:Name="input" VerticalAlignment="Center" Width="200"/>
+            <TextBox x:Name="input" VerticalAlignment="Center" Width="200" AcceptsReturn="True" TextWrapping="Wrap"/>
         </StackPanel>
     </Grid>
 </UserControl>

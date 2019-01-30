@@ -82,6 +82,9 @@ namespace Editor_CSharp.Extern
                                                                                            ByteSliceFromManaged dataToSave,
                                                                                            ref ByteSlice onError
                                                          );
+
+        [DllImport("editor.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void jengine_editor_changeView(ByteSliceFromManaged data, ref ByteSlice onError);
     }
 
     public static class SliceExtension

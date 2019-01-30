@@ -25,7 +25,7 @@ namespace Editor_CSharp.Controls
         public FieldDef Def { private set; get; }
         public List<LabeledNumberBox> Inputs { private set; get; }
 
-        public VectorEditor(ArchiveObject obj, FieldDef def)
+        public VectorEditor(ViewEditor editor, ArchiveObject obj, FieldDef def)
         {
             InitializeComponent();
             this.Def = def;
@@ -60,6 +60,21 @@ namespace Editor_CSharp.Controls
             this.nullbox.Unchecked += (_, __) => this.Inputs.ForEach(i => i.IsEnabled = false);
             this.nullbox.Visibility = (def.isNullable) ? Visibility.Visible : Visibility.Hidden;
             this.nullbox.IsChecked  = (def.isNullable) ? obj != null : true;
+
+            foreach(var input in this.Inputs)
+            {
+                input.input.TextChanged += (s, __) =>
+                {
+                    try
+                    {
+                        editor.UpdateGameClient();
+                    }
+                    catch(FormatException ex)
+                    {
+                        input.SetError(ex.Message);
+                    }
+                };
+            }
         }
 
         public ArchiveObject GetObject()

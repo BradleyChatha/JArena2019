@@ -76,24 +76,40 @@ namespace Editor_CSharp.Extern
         public static void SaveObjectToFile(string path, ArchiveObject obj, bool isRoot = true)
         {
             var binary = new ArchiveBinary();
-            
-            if(isRoot)
-            {
-                foreach(var val in obj.Values)
-                    binary.Root.AddValue(val);
-                foreach(var prop in obj.Attributes)
-                    binary.Root.SetAttribute(prop.Name, prop.Value);
-                foreach(var child in obj.Children)
-                    binary.Root.AddChild(child);
-            }
-            else
-                binary.Root.AddChild(obj);
+            Editor.AddToOrAsRoot(binary.Root, obj, isRoot);
 
             var data    = new ByteSliceFromManaged(binary.SaveToMemory());
             var onError = new ByteSlice();
             EditorRaw.jengine_editor_saveFile(path, path.Length, data, ref onError);
             data.Dispose();
             onError.ThrowExceptionIfExists();
+        }
+
+        public static void ChangeView(ArchiveObject viewRoot, bool isRoot = true)
+        {
+            var binary  = new ArchiveBinary();
+            var onError = new ByteSlice();
+            Editor.AddToOrAsRoot(binary.Root, viewRoot, isRoot);
+
+            var data = new ByteSliceFromManaged(binary.SaveToMemory());
+            EditorRaw.jengine_editor_changeView(data, ref onError);
+            data.Dispose();
+            onError.ThrowExceptionIfExists();
+        }
+
+        private static void AddToOrAsRoot(ArchiveObject parent, ArchiveObject obj, bool isRoot)
+        {
+            if (isRoot)
+            {
+                foreach (var val in obj.Values)
+                    parent.AddValue(val);
+                foreach (var prop in obj.Attributes)
+                    parent.SetAttribute(prop.Name, prop.Value);
+                foreach (var child in obj.Children)
+                    parent.AddChild(child);
+            }
+            else
+                parent.AddChild(obj);
         }
     }
 }

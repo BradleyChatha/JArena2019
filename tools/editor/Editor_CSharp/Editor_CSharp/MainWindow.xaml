@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Editor_CSharp"
         xmlns:cc="clr-namespace:Editor_CSharp.Controls"
         mc:Ignorable="d"
-        Title="JEngine UI Editor" Height="350" Width="525" Closed="Window_Closed">
+        Title="JEngine UI Editor" Height="700" Width="525" Closed="Window_Closed">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="20"/>

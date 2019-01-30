@@ -24,7 +24,7 @@ namespace Editor_CSharp.Controls
     {
         public FieldDef Def { private set; get; }
 
-        public RectangleEditor(ArchiveObject obj, FieldDef def)
+        public RectangleEditor(ViewEditor editor, ArchiveObject obj, FieldDef def)
         {
             InitializeComponent();
             this.label.Content = def.name;
@@ -40,7 +40,7 @@ namespace Editor_CSharp.Controls
             this.w.label.Content = "W:";
             this.h.label.Content = "H:";
 
-            var Inputs = new List<UserControl>()
+            var Inputs = new List<LabeledNumberBox>()
             {
                 w, h, x, y
             };
@@ -56,6 +56,21 @@ namespace Editor_CSharp.Controls
             this.nullbox.Unchecked += (_, __) => Inputs.ForEach(i => i.IsEnabled = false);
             this.nullbox.Visibility = (def.isNullable) ? Visibility.Visible : Visibility.Hidden;
             this.nullbox.IsChecked  = (def.isNullable) ? obj != null : true;
+
+            foreach (var input in Inputs)
+            {
+                input.input.TextChanged += (s, __) =>
+                {
+                    try
+                    {
+                        editor.UpdateGameClient();
+                    }
+                    catch (FormatException ex)
+                    {
+                        input.SetError(ex.Message);
+                    }
+                };
+            }
         }
 
         public ArchiveObject GetObject()

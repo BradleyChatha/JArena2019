@@ -22,7 +22,7 @@ namespace Editor_CSharp.Controls
     public partial class EnumEditor : UserControl, IEditorControl
     {
         public FieldDef Def { get; set; }
-        public EnumEditor(ArchiveObject obj, FieldDef def)
+        public EnumEditor(ViewEditor editor, ArchiveObject obj, FieldDef def)
         {
             InitializeComponent();
 
@@ -40,6 +40,8 @@ namespace Editor_CSharp.Controls
             this.nullbox.Unchecked += (_, __) => this.list.IsEnabled = false;
             this.nullbox.Visibility = (def.isNullable) ? Visibility.Visible : Visibility.Hidden;
             this.nullbox.IsChecked  = (def.isNullable) ? obj != null : true;
+
+            this.list.SelectionChanged += (_, __) => editor.UpdateGameClient();
         }
 
         public ArchiveObject GetObject()

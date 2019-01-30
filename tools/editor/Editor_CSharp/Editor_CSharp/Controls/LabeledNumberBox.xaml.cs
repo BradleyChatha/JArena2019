@@ -24,6 +24,7 @@ namespace Editor_CSharp.Controls
         public string NumType { set; get; }
 
         public bool IsFloatingPoint => NumType == "float" || NumType == "double";
+        public bool IsUnsigned      => NumType.StartsWith("u");
 
         /// <summary>
         /// PURELY FOR EDITOR USE.
@@ -49,12 +50,17 @@ namespace Editor_CSharp.Controls
             }
             catch(Exception ex)
             {
-                this.input.Background = Brushes.Red;
-                this.input.ToolTip = ex.Message;
+                this.SetError(ex.Message);
                 return null;
             }
 
             throw new Exception($"The type {typeof(T)} isn't supported.");
+        }
+
+        public void SetError(string message)
+        {
+            this.input.Background = Brushes.Red;
+            this.input.ToolTip = message;
         }
 
         private T? ValidateAndConvert<T>(T min, T max, Converter<string, T> converter) where T : struct, IComparable
@@ -87,6 +93,7 @@ namespace Editor_CSharp.Controls
              || e.Key == Key.Delete
              || e.Key == Key.Left
              || e.Key == Key.Right
+             || (!this.IsUnsigned && e.Key == Key.OemMinus && this.input.CaretIndex == 0)
             );
         }
     }

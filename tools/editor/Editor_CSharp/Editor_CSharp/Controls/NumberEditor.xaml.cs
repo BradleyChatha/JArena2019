@@ -23,7 +23,7 @@ namespace Editor_CSharp.Controls
     public partial class NumberEditor : UserControl, IEditorControl
     {
         public FieldDef Def { set; get; }
-        public NumberEditor(ArchiveObject obj, FieldDef def)
+        public NumberEditor(ViewEditor editor, ArchiveObject obj, FieldDef def)
         {
             InitializeComponent();
 
@@ -38,6 +38,18 @@ namespace Editor_CSharp.Controls
             this.nullbox.Visibility  = (def.isNullable) ? Visibility.Visible : Visibility.Hidden;
             this.nullbox.IsChecked   = (def.isNullable) ? obj != null : true;
             this.Def                 = def;
+
+            this.input.input.TextChanged += (s, __) =>
+            {
+                try
+                {
+                    editor.UpdateGameClient();
+                }
+                catch (FormatException ex)
+                {
+                    input.SetError(ex.Message);
+                }
+            };
         }
 
         public ArchiveObject GetObject()
