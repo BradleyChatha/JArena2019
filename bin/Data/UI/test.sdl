@@ -26,6 +26,8 @@ UI:view {
 			}
 			horizAlignment "Stretch"
 			vertAlignment "Stretch"
+			property:GridSlot 0L 0L
+			property:GridSlotSpan 3L 2L
 		}
 		rows {
 			Definition {
@@ -77,6 +79,9 @@ UI:view {
 		horizAlignment "Stretch"
 		vertAlignment "Bottom"
 		size -1D 30D
+		property:Test {
+			description "This is a test property to simply check that the data binder doesn't crash. Please ignore."
+		}
 	}
 	StackContainer {
 		BasicLabel {
