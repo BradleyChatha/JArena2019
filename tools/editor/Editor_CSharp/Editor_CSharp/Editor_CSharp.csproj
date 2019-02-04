@@ -79,6 +79,7 @@
     <Compile Include="Controls\NumberEditor.xaml.cs">
       <DependentUpon>NumberEditor.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\PropertyTreeItem.cs" />
     <Compile Include="Controls\RectangleEditor.xaml.cs">
       <DependentUpon>RectangleEditor.xaml</DependentUpon>
     </Compile>

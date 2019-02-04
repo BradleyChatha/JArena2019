@@ -30,6 +30,8 @@ namespace Editor_CSharp.Controls
             this.nullbox.Unchecked += (_, __) => this.checkbox.IsEnabled = false;
             this.nullbox.IsChecked = (def.isNullable) ? value != null
                                                       : true;
+            this.nullbox.Checked += (_, __) => editor.UpdateGameClient();
+            this.nullbox.Unchecked += (_, __) => editor.UpdateGameClient();
 
             if (value != null)
             {

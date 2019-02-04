@@ -200,7 +200,7 @@ namespace Editor_CSharp.Controls
 
             foreach(var child in notUsed)
             {
-                if(child.Name.StartsWith("property:") || child.Name.StartsWith("metadata:"))
+                if(child.Name.StartsWith("metadata:"))
                     continue;
 
                 if(this.Templates.ContainsKey(child.Name))
@@ -214,6 +214,10 @@ namespace Editor_CSharp.Controls
 
                     var instanceName = child.GetChild("name");
                     templateItem.Header += $"({((instanceName == null) ? "NO NAME" : instanceName.ExpectValueAs<string>(0))})";
+                }
+                else if(child.Name.StartsWith("property:"))
+                {
+                    item.Properties.Add(new PropertyTreeItem(child));
                 }
                 else
                     item.Items.Add(this.GenerateTree(child));

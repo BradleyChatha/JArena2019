@@ -58,6 +58,8 @@ namespace Editor_CSharp.Controls
             }
             this.nullbox.Checked   += (_, __) => this.Inputs.ForEach(i => i.IsEnabled = true);
             this.nullbox.Unchecked += (_, __) => this.Inputs.ForEach(i => i.IsEnabled = false);
+            this.nullbox.Checked   += (_, __) => editor.UpdateGameClient();
+            this.nullbox.Unchecked += (_, __) => editor.UpdateGameClient();
             this.nullbox.Visibility = (def.isNullable) ? Visibility.Visible : Visibility.Hidden;
             this.nullbox.IsChecked  = (def.isNullable) ? obj != null : true;
 

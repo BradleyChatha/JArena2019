@@ -40,6 +40,8 @@ namespace Editor_CSharp.Controls
             this.nullbox.Unchecked += (_, __) => this.list.IsEnabled = false;
             this.nullbox.Visibility = (def.isNullable) ? Visibility.Visible : Visibility.Hidden;
             this.nullbox.IsChecked  = (def.isNullable) ? obj != null : true;
+            this.nullbox.Checked += (_, __) => editor.UpdateGameClient();
+            this.nullbox.Unchecked += (_, __) => editor.UpdateGameClient();
 
             this.list.SelectionChanged += (_, __) => editor.UpdateGameClient();
         }
