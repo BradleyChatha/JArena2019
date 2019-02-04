@@ -528,6 +528,7 @@ static abstract class DataBinder
         ///
         ViewContainer parseView(ArchiveObject root, DuplicateAction action = DuplicateAction.Throw)
         {
+            // Go over all templates first.
             import std.array : split;
             foreach(child; root.children)
             {
@@ -542,6 +543,7 @@ static abstract class DataBinder
                 DataBinder.addTemplate(child, action);
             }
 
+            // Then read in things as normal
             auto container = new ViewContainer();
             foreach(child; DataBinder.parseUIObjectGeneric(root))
                 container.addChild(child);
@@ -816,6 +818,10 @@ static abstract class DataBinder
                             val.addProperty!ArchiveObject(nameRange.front, prop);
                             usedForRoot ~= prop;
                         }
+                        
+                        // Mark all 'metadata' tags as used, since they're a by-product of unrelated things.
+                        foreach(meta; root.children.filter!(c => c.name.startsWith("metadata:")))
+                            usedForRoot ~= meta;
 
                         // If there was a specific target, then we should make sure that all of it's objects were used.
                         static if(!is(attrib.Target == NO_TARGET))
@@ -854,7 +860,7 @@ static abstract class DataBinder
                         newChild = ptr.parser(ptr.factory(), child);
                     }
 
-                    // Sort out any templates that are pre-defined by the parent
+                    // Sort out any properties that are pre-defined by the parent
                     static foreach(attrib; GetAllUDAsInstanceOf!(ChildProperty, C))
                     {{
                         alias ValueVar = getSymbolsByUDA!(attrib.BindT, MainValue)[0];

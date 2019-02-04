@@ -184,14 +184,6 @@ void jengine_editor_getDefinition(char* controlName, uint nameLength, ubyte[]* d
         auto nameD  = controlName[0..nameLength];
         auto def    = DataBinder.getDefinitionFor(nameD.idup);
         auto binary = new ArchiveBinary();
-
-        // DEBUG
-        import std.string, core.sys.windows.winuser;
-        auto sdl = new ArchiveSDL();
-        Serialiser.serialise!(DataBinder.ControlDef)(def, sdl.root);
-        import std.file;
-        std.file.write("Test.txt", sdl.saveToMemoryText());
-
         Serialiser.serialise!(DataBinder.ControlDef)(def, binary.root);
         (*data) = cast(ubyte[])binary.saveToMemory();
     });

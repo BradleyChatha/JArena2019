@@ -1,5 +1,23 @@
 type "UI:view"
 UI:view {
+	template:AV_NavButton {
+		BasicButton {
+			baseColour "flameRed"
+			shape
+			text
+			size 75D 22.999999999999998223D
+		}
+	}
+	template:AV_ListButton {
+		BasicButton {
+			baseColour "funGreen"
+			shape
+			text
+			horizAlignment "Stretch"
+			margin 0D 10D 0D 0D
+			size -1D 400D
+		}
+	}
 	GridContainer {
 		BasicButton {
 			shape
@@ -44,7 +62,7 @@ UI:view {
 	StackContainer {
 		BasicLabel {
 			text {
-				text "L = Show animation list; R = Reset Camera; Shift+R = Toggle Repeating\r\n\r\nBut you see, it is me! DIO!"
+				text "L = Show animation list; R = Reset Camera; Shift+R = Toggle Repeating"
 				colour "rockSalt"
 			}
 			vertAlignment "Center"
@@ -58,7 +76,7 @@ UI:view {
 		name "panelInstructions"
 		horizAlignment "Stretch"
 		vertAlignment "Bottom"
-		size -1D 50D
+		size -1D 30D
 	}
 	StackContainer {
 		BasicLabel {
@@ -81,6 +99,13 @@ UI:view {
 	}
 	StackContainer {
 		StackContainer {
+			AV_NavButton {
+				shape
+				text {
+					text "<"
+				}
+				name "btnNavLeft"
+			}
 			BasicLabel {
 				text {
 					text "0/69"
@@ -90,10 +115,30 @@ UI:view {
 				vertAlignment "Center"
 				margin 5D -3D 0D 0D
 			}
+			AV_NavButton {
+				shape
+				text {
+					text ">"
+				}
+				name "btnNavRight"
+				horizAlignment "Right"
+			}
 			background
 			name "controlNavigation"
 			horizAlignment "Center"
 			size 200D 30D
+		}
+		AV_ListButton {
+			shape
+			text {
+				text "Some sexy animation"
+			}
+		}
+		AV_ListButton {
+			shape
+			text {
+				text "Some sexy animation"
+			}
 		}
 		background {
 			borderSize 1L
@@ -106,24 +151,6 @@ UI:view {
 		horizAlignment "Right"
 		vertAlignment "Stretch"
 		size 200D -1D
-	}
-	template:AV_NavButton {
-		BasicButton {
-			baseColour "flameRed"
-			shape
-			text
-			size 75D 22.999999999999998223D
-		}
-	}
-	template:AV_ListButton {
-		BasicButton {
-			baseColour "funGreen"
-			shape
-			text
-			horizAlignment "Stretch"
-			margin 0D 10D 0D 0D
-			size -1D 400D
-		}
 	}
 	name "AnimationViewer_View"
 }

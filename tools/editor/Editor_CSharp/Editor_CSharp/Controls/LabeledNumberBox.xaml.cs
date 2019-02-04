@@ -24,7 +24,7 @@ namespace Editor_CSharp.Controls
         public string NumType { set; get; }
 
         public bool IsFloatingPoint => NumType == "float" || NumType == "double";
-        public bool IsUnsigned      => NumType.StartsWith("u");
+        public bool IsUnsigned      => NumType != null && NumType.StartsWith("u");
 
         /// <summary>
         /// PURELY FOR EDITOR USE.

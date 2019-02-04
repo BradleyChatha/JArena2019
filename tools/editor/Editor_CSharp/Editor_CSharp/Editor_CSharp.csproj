@@ -85,6 +85,7 @@
     <Compile Include="Controls\StringEditor.xaml.cs">
       <DependentUpon>StringEditor.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\TemplateInstanceTreeItem.cs" />
     <Compile Include="Controls\TemplateTreeItem.cs" />
     <Compile Include="Controls\UnhandledTreeItem.cs" />
     <Compile Include="Controls\VectorEditor.xaml.cs">

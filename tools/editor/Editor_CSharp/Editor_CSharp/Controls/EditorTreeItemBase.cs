@@ -28,7 +28,7 @@ namespace Editor_CSharp.Controls
             this.Properties.ForEach(p => this.PropertiesTree.Items.Add(p));
         }
 
-        public ArchiveObject GetObject()
+        public virtual ArchiveObject GetObject()
         {
             var obj = new ArchiveObject();
             obj.Name = this.ObjectName;

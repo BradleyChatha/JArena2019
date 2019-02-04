@@ -17,14 +17,37 @@ using Editor_CSharp.Serial;
 
 namespace Editor_CSharp.Controls
 {
+    public class TemplateInfo
+    {
+        public ArchiveObject rootObj;
+        public ArchiveObject baseObj;
+        public ControlDef    baseObjectDef;
+    }
+
     /// <summary>
     /// Interaction logic for ViewEditor.xaml
     /// </summary>
     public partial class ViewEditor : UserControl
     {
+        public Dictionary<string, TemplateInfo> Templates { get; private set; }
+
         public ViewEditor()
         {
             InitializeComponent();
+            this.Templates = new Dictionary<string, TemplateInfo>();
+        }
+
+        public void RegisterTemplate(ArchiveObject obj)
+        {
+            if(obj == null)
+                throw new ArgumentNullException("obj");
+
+            var info           = new TemplateInfo();
+            info.rootObj       = obj;
+            info.baseObj       = obj.Children[0];
+            info.baseObjectDef = Editor.GetDefinitionFor(info.baseObj.Name);
+
+            this.Templates[obj.Name.Split(':').Last()] = info;
         }
 
         public void ChangeView(ArchiveObject view)
@@ -32,22 +55,32 @@ namespace Editor_CSharp.Controls
             this.treeControls.Items.Clear();
             this.viewName.Text = view.ExpectChild("name").ExpectValueAs<string>(0);
             
+            // Parse templates first
+            foreach(var child in view.Children.Where(c => c.Name.StartsWith("template:")))
+            {
+                var item = new TemplateTreeItem(child);
+                item.IsExpanded = true;
+                item.Items.Add(this.GenerateTree(child.Children[0]));
+                item.PropertiesTree = this.treeProperties;
+                
+                this.RegisterTemplate(child);
+                this.treeControls.Items.Add(item);
+            }
+
             foreach(var child in view.Children)
             {
-                if(child.Name == "name")
+                if(child.Name == "name" || child.Name.StartsWith("template:"))
                     continue;
 
-                if(child.Name.StartsWith("template:"))
+                if(child.Name.StartsWith("metadata:"))
                 {
-                    var item = new TemplateTreeItem(child);
-                    item.IsExpanded = true;
-                    item.Items.Add(this.GenerateTree(child.Children[0]));
-                    item.PropertiesTree = this.treeProperties;
-
-                    this.treeControls.Items.Add(item);
+                    if(child.Name.EndsWith("lalalala"))
+                        MessageBox.Show("ohohoh");
+                    else
+                        continue;
                 }
-                else
-                    this.treeControls.Items.Add(this.GenerateTree(child));
+
+                this.treeControls.Items.Add(this.GenerateTree(child));
             }
         }
 
@@ -83,10 +116,10 @@ namespace Editor_CSharp.Controls
             Editor.ChangeView(this.CreateViewObject());
         }
 
-        private TreeViewItem GenerateTree(ArchiveObject root)
+        private TreeViewItem GenerateTree(ArchiveObject root, TemplateInfo template = null)
         {
             var name = root.GetChild("name");
-            var def  = Editor.GetDefinitionFor(root.Name);
+            var def  = template?.baseObjectDef ?? Editor.GetDefinitionFor(root.Name);
             var item = new ControlTreeItem(def);
             item.Header = $"{root.Name}({((name == null) ? "NO NAME" : name.ExpectValueAs<string>(0))})";
             item.IsExpanded = true;
@@ -167,9 +200,23 @@ namespace Editor_CSharp.Controls
 
             foreach(var child in notUsed)
             {
-                if(child.Name.StartsWith("property:") || child.Name.StartsWith("AV_")) // "AV_" is a temporary hack until templates are somewhat used
-                    continue; // TODO: Support this
-                item.Items.Add(this.GenerateTree(child));
+                if(child.Name.StartsWith("property:") || child.Name.StartsWith("metadata:"))
+                    continue;
+
+                if(this.Templates.ContainsKey(child.Name))
+                {
+                    var templateItem = new TemplateInstanceTreeItem(
+                        this.Templates[child.Name], 
+                        (EditorTreeItemBase)this.GenerateTree(child, this.Templates[child.Name])
+                    );
+                    templateItem.PropertiesTree = this.treeProperties;
+                    item.Items.Add(templateItem);
+
+                    var instanceName = child.GetChild("name");
+                    templateItem.Header += $"({((instanceName == null) ? "NO NAME" : instanceName.ExpectValueAs<string>(0))})";
+                }
+                else
+                    item.Items.Add(this.GenerateTree(child));
             }
 
             return item;
