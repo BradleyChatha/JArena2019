@@ -296,9 +296,7 @@ static abstract class DataBinder
         }
 
         ArchiveObject[string] _templates; // Key is template name.
-
-        // HACK: __gshared has been added *just* for the editor to work. The editor should implement promises to get around this at some point.
-        __gshared BindingInfo[string]   _classInfo; // Key is whatever getFieldName returns for each class.
+        BindingInfo[string]   _classInfo; // Key is whatever getFieldName returns for each class.
     }
 
     public static

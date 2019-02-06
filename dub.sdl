@@ -3,15 +3,14 @@ description "A minimal D application."
 authors "Sealab"
 copyright "Copyright © 2018, Sealab"
 license "MIT"
-dependency "fluent-asserts" version="~>0.12.3"       // For unittests
-dependency "sdlang-d" version="~>0.10.4"             // For data files
-dependency "resusage" version="~>0.2.7"              // For getting memory usage
-dependency "derelict-gl3" version="~>2.0.0-beta.1"   // For rendering
-dependency "derelict-sdl2" version="~>3.1.0-alpha.1" // For windowing
-dependency "derelict-fi" version="~>3.0.0-beta.1"    // For image loading
-dependency "derelict-ft" version="~>2.0.0-beta.1"    // For text loading.
-dependency "derelict-fmod" version="~>4.1.1"         // For audio
-dependency "jasterialise" version="~>0.0.4"          // Old jarena.data.serialise module
+dependency "sdlang-d" version="0.10.4"             // For data files
+dependency "resusage" version="0.2.7"              // For getting memory usage
+dependency "derelict-gl3" version="2.0.0-beta.1"   // For rendering
+dependency "derelict-sdl2" version="3.1.0-alpha.1" // For windowing
+dependency "derelict-fi" version="3.0.0-beta.1"    // For image loading
+dependency "derelict-ft" version="2.0.0-beta.4"    // For text loading.
+dependency "derelict-fmod" version="4.1.1"         // For audio
+dependency "jasterialise" version="0.0.4"          // Old jarena.data.serialise module
 
 //dflags "-vcg-ast"
 
