@@ -452,7 +452,7 @@ final class ServiceProvider
             // Otherwise, call the function, and optionally store it in a result.
             auto paramRange = paramsToUse.joiner(", ");
             static if(targetFunc == "__ctor")
-                code.putf("%s = %s T(%s);", is(T == class) ? "new" : "", objectName, paramRange);
+                code.putf("%s = %s T(%s);", objectName, is(T == class) ? "new" : "", paramRange);
             else static if(resultName.length > 0)
                 code.putf("auto %s = %s.%s(%s);", resultName, objectName, targetFunc, paramRange);
             else
