@@ -275,6 +275,36 @@ final class ServiceProvider
     }
 }
 
+interface IConfig(T)
+{
+    @property
+    ref T value();
+}
+
+class ConfigImpl(T) : IConfig!T
+if(is(T == struct))
+{
+    private T _value;
+
+    @property
+    ref T value()
+    {
+        return this._value;
+    }
+}
+
+void configure(T)(ServiceProvider service, void delegate(ref T) configurator)
+{
+    auto config = service.get!(IConfig!T);
+    if(config is null)
+    {
+        service.addSingleton!(IConfig!T, ConfigImpl!T);
+        config = service.get!(IConfig!T);
+    }
+
+    configurator(config.value);
+}
+
 private template NormalParamLength(alias Func)
 {
     enum ParamFilter(T) = is(T == interface) || is(T == ServiceProvider);
@@ -377,6 +407,19 @@ version(unittest)
             service.write(1, myNonServiceParam);
         }
     }
+
+    struct SomeConfig
+    {
+        string name;
+    }
+
+    class SomeClassWithConfig
+    {
+        this(IConfig!SomeConfig config, ILoggerService logger)
+        {
+            logger.write(0, config.value.name);
+        }
+    }
 }
 
 // TEST CASE
@@ -402,4 +445,9 @@ unittest
     services.injectCall!(SomeUnrelatedClass.doLog)(foo, "Foz");
     services.injectCall!"doLog"(foo, "Foz"); // Alternate way
     assert(LAST_LOGGED_MESSAGE == "[ERROR] Foz", LAST_LOGGED_MESSAGE);
+
+    // Test configuration.
+    services.configure!SomeConfig((ref c) { c.name = "EXPLOSION"; });
+    services.makeAndInject!SomeClassWithConfig();
+    assert(LAST_LOGGED_MESSAGE == "[INFO] EXPLOSION", LAST_LOGGED_MESSAGE);
 }
