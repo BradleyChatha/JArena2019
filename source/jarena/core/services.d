@@ -10,40 +10,90 @@ private
     import jarena.core;
 }
 
-version = ServiceProviderVerbose;
+//version = ServiceProviderVerbose;
 
+/// Passed to the various `ServiceProvider.addXXX` functions.
 alias OverrideExisting = Flag!"override_";
 
+/++
+ + A UDA that can be attached to function parameters.
+ +
+ + Normally, a Service Parameter (a parameter the Service Provider will detect as a service, and
+ + will attempt to perform an injection on) is defined as either being a parameter taking an `interface`,
+ + or a parameter taking a `ServiceProvider`.
+ +
+ + Attaching this UDA onto a parameter will force the service provider to treat the parameter as a service,
+ + and will force it to perform an injection on that parameter (like it does for any other service).
+ +
+ + Use_Case:
+ +  Take JEngine's `Renderer` class for example. There's only ever going to be *one* renderer for this engine,
+ +  so it's bit of a waste of time to make an interface for it just so it can be used with the service provider
+ +  (not to mention the issues with templated functions when being used with interfaces).
+ +
+ +  So instead of doing something such as `provider.addSingleton!(IRenderer, OpenGLRenderer)(rendererInstance)`, you do
+ +  `provider.addSingleton!(Renderer, Renderer)(rendererInstance)`. So there is simply one class, `Renderer`, which is both
+ +  the service base class, but also the service implementation class.
+ +
+ +  Now, this isn't an `interface`, so the service provider won't perform an injection on it anytime we use it as a parameter.
+ +  So we attach `@FromService` onto it to force the provider to perform the injection.
+ +
+ +  `void onRender(@FromService Renderer renderer)`
+ +
+ +  Side note - Depending on how many services a function takes, the injection process can be relatively expensive.
+ +  So try to avoid using on hot functions. You can do this by getting the services at another point in time (e.g the constructor),
+ +  or caching the results of `ServiceProvider.get` and passing them manually.
+ +
+ +  Side side note - I beg to holy saint Walter Bright to make working with function parameter UDAs easier ;_;
+ + ++/
 struct FromServices{}
 
+/++
+ + A container for services.
+ +
+ + A service is a class that, as the name implies, provides a certain service.
+ +
+ + This class is heavily inspired from ASP Core's ServiceProvider. So alongside being a Service Locator,
+ + it also acts as a dependency injector.
+ +
+ + How to use:
+ +  Services can be registered via `addSingleton` and `addTransient`.
+ +
+ +  Services can then be retrieved using `get`.
+ +
+ +  The service provider can inject parameters into function calls (including the constructor) via
+ +  `injectCall` and `makeAndInject`.
+ +
+ + Versions:
+ +  If the `ServiceProviderVerbose` `version` is specified, then this class will provide verbose logging of it's actions.
+ + ++/
 final class ServiceProvider
 {	
-    alias IsSingleton = Flag!"singleton";
-	
-    struct ParamInfo
-	{
-		TypeInfo paramType;
-		string paramName;
-	}
-	
-	struct FactoryStackInfo
-	{
-		ServiceInfo service;
-		bool wasInCache;
-	}
-	
-	struct ServiceInfo
-	{	
-        IsSingleton isSingleton;
-		TypeInfo baseType;
-		TypeInfo implType;
-		ParamInfo[] injectParams;
-		Object singleton; // If applicable
-        Object delegate() factoryFunc;
-	}
-	
     private
     {
+        alias IsSingleton = Flag!"singleton";
+	
+        struct ParamInfo
+        {
+            TypeInfo paramType;
+            string paramName;
+        }
+        
+        struct FactoryStackInfo
+        {
+            ServiceInfo service;
+            bool wasInCache;
+        }
+        
+        struct ServiceInfo
+        {	
+            IsSingleton isSingleton;
+            TypeInfo baseType;
+            TypeInfo implType;
+            ParamInfo[] injectParams;
+            Object singleton; // If applicable
+            Object delegate() factoryFunc;
+        }
+
         ServiceInfo[TypeInfo]  _services; // Key is the base type.
         FactoryStackInfo[]     _factoryStack;
         bool                   _factoryStackLock;
@@ -51,16 +101,76 @@ final class ServiceProvider
 
     public
     {
+        /++
+         + Registers a service.
+         +
+         + Lifetimes:
+         +  Similar to the ASP counter parts, there are two lifetimes for a service.
+         +
+         +  Singleton - Where a single instance is created for the service, and is then used for every request for the service.
+         +
+         +  Transient - Where a new instance is created every time the service is reqeuested for.
+         +
+         + Decoupling:
+         +  You may have noticed the two template parameters, `Base`, and `Implementation`.
+         +
+         +  This class aims to allow the user code to decouple from the implementation of a class, and it's interface.
+         +
+         +  For example, you may have an `ILoggerService` interface (which would be used as the `Base`) and several
+         +  implementations such as a `FileLogger`, `ConsoleLogger`, `CompoundLogger`, etc. (Which would be used as the `Implementation`).
+         +
+         +  The user code doesn't exactly care what implementation it gets in most cases, all they care is that they get an `ILoggerService`.
+         +
+         +  So this function is used to associate a certain implementation of a service, to it's interface, and then the user code can
+         +  blindly ask for the service's interface without having to know it's nitty-gritty details.
+         +
+         +  However, there are certainly some cases where there will only ever be one concrete implementation of an interface.
+         +  In cases like these, you can simply specify both the `Base` and `Implementation` to be of the implementing class.
+         +
+         +  There is a slight quirk with this however, as it will require you to use the `@FromServices` UDA for function parameters (please refer to it's
+         +  documentation).
+         +
+         + Injection:
+         +  Please refer to `injectCall` and `makeAndInject`.
+         +
+         + Params:
+         +  [Base]           = The interface/base class of the service. This should be defined well enough that the user shouldn't have to cast it
+         +  [Implementation] = The implementation class of the service.
+         +  instance         = [Singletons only] The instance to use for the singleton.
+         +                     If this is null, then an instance will be created by `get`, using `makeAndInject` under the hood.
+         +  override_        = Determines whether to override any existing implementation for the `Base` service.
+         +                     If `OverrideExisting.no` and an implementation already exists, then an exception is thrown. 
+         + ++/
         void addSingleton(Base, Implementation)(Base instance = null, OverrideExisting override_ = OverrideExisting.no)
         {
             this.add!(Base, Implementation)(instance, override_, IsSingleton.yes);
         }
 
+        /// ditto
         void addTransient(Base, Implementation)(OverrideExisting override_ = OverrideExisting.no)
         {
             this.add!(Base, Implementation)(null, override_, IsSingleton.no);
         }
         
+        /++
+         + Creates and/or returns an instance of the specified service.
+         +
+         + Service Creation:
+         +  All services are created using the `makeAndInject` function on their implementation class.
+         +  This allows services to be injected with other services fluently.
+         +
+         +  For singletons, if an instance of the service doesn't exist yet, then an instance is created, cached, then returned.
+         +  If an instance has already been cached, then it's returned.
+         +
+         +  For transient, an instance is created everytime this function is called.
+         +
+         + Params:
+         +  [Base]   = The interface/base class of the service. This will be the same `Base` parameter passed to `addSingleton` and `addTransient`.
+         +  default_ = What to return if the service doesn't exist.
+         +
+         + Returns:
+         +  The instance of the service, or `default_` if the service doesn't exist.
+         + ++/
         Base get(Base)(lazy Base default_ = null)
         {
             import std.algorithm : filter;
@@ -130,6 +240,23 @@ final class ServiceProvider
             return cast(Base)ptr.factoryFunc();
         }
         
+        /++
+         + Calls the constructor for a type, performing the same injection process documented
+         + by `injectCall`.
+         +
+         + Notes:
+         +  If it wasn't obvious, if `T` is a class then the GC is used to allocate it's memory.
+         +
+         +  This function will select a ctor that contains parameters, instead of a constructor that takes no parameters, if both
+         +  types of constructors exist in the same type.
+         +
+         + Params:
+         +  [T]     = The type to construct.
+         +  params  = The non-service (see `injectCall`) parameters to pass.
+         +
+         + Returns:
+         +  The newly constructed `T`.
+         + ++/
         T makeAndInject(T, Params...)(Params params)
         {
             import std.format : format;
@@ -142,6 +269,52 @@ final class ServiceProvider
             return obj;
         }
 
+        /++
+         + Calls a function, performing service injection in the process.
+         +
+         + Overloaded functions:
+         +  It is unwise to use injection with functions that have overloads, as there's no easy way to specify/determine
+         +  which overload needs to be used. It'll just use whichever one the compiler returns from `__traits(getMember)`.
+         +
+         + Injection:
+         +  Injection is the process of automatically passing over dependencies/services that the function needs.
+         +
+         +  The service provider detects a Service parameter as being: a parameter who's type is an interface; a parameter
+         +  who's type is `ServiceProvider`; a parameter who has been marked with the `@FromServices` UDA.
+         +
+         +  For a service parameter who's type is `ServiceProvider`, the current instance of this class is passed to the parameter.
+         + 
+         +  For any other service parameter, the return value of `this.get!TypeOfParameter` is passed to it.
+         +
+         +  For non-service parameters (parameters that don't meet the criteria above), the given `params` are passed.
+         +
+         +  Functions that are being injected have a strict order for how their parameters are laid out -
+         +  Non-service parameters must always come before a service parameter. The service provider will enforce this with a compile time check,
+         +  and will provide a detailed error message on what's wrong with the parameters if it does not meet the right criteria.
+         +
+         +  If the number of `params` passed differs from from the number of non-service parameters for the function, a compile time assert
+         +  will fail, listing all of the parameters that still need to be passed (if not enough parameters were passed).
+         +
+         +  An assert will also fail if a circular dependency is detected. Due to the nature of how this class works, this can only be detected
+         +  at runtime currently.
+         +
+         +  Do note that currently default parameters are not supported (but there's no technical reason they can't be).
+         +
+         + UFCS:
+         +  Currently, there is no support for UFCS. The issue is that this class needs to have the module of the UFCS function
+         +  imported, and there isn't really an easy way to do that.
+         +
+         +  A possibility in the future is to provide a mixin that can be used inside a module to provide the functionality needed
+         +  for UFCS injection.
+         +
+         + Params:
+         +  [funcName] = The name of the function to inject and call.
+         +  target     = The instance of `T` to call the function with.
+         +  params     = The non-service params to pass to the function. (See the 'Injection' section if you haven't already).
+         +
+         + Returns:
+         +  Whatever `funcName` returns.
+         + ++/
         auto injectCall(string funcName, T, Params...)(ref scope T target, Params params)
         {
             import std.format : format;
@@ -159,6 +332,12 @@ final class ServiceProvider
             }
         }
 
+        /++
+         + A helper function for the other `injectCall` overload, that takes the name of the given `func` instead
+         + of taking a direct string.
+         +
+         + E.g. instead of `injectCall!"MyFunc"` you do `injectCall!(MyObject.MyFunc)`
+         + ++/
         auto injectCall(alias func, T, Params...)(ref scope T target, Params params)
         {
             return this.injectCall!(__traits(identifier, func))(target, params);
@@ -273,7 +452,7 @@ final class ServiceProvider
             // Otherwise, call the function, and optionally store it in a result.
             auto paramRange = paramsToUse.joiner(", ");
             static if(targetFunc == "__ctor")
-                code.putf("%s = new T(%s);", objectName, paramRange);
+                code.putf("%s = %s T(%s);", is(T == class) ? "new" : "", objectName, paramRange);
             else static if(resultName.length > 0)
                 code.putf("auto %s = %s.%s(%s);", resultName, objectName, targetFunc, paramRange);
             else
@@ -284,12 +463,18 @@ final class ServiceProvider
     }
 }
 
+/++
+ + The base class for a configuration.
+ +
+ + Please see the `configure` function.
+ + ++/
 interface IConfig(T)
 {
     @property
     ref T value();
 }
 
+/// The implementation for a configuration.
 class ConfigImpl(T) : IConfig!T
 if(is(T == struct))
 {
@@ -302,6 +487,26 @@ if(is(T == struct))
     }
 }
 
+// TODO: Rewrite this a bit, since I question if it's even valid English (in terms of it making no fucking sense).
+/++
+ + Using a struct (`T`) to store some form of configuration, this function will register
+ + a singleton service (`IConfig!T`) into the given `ServiceProvider`.
+ +
+ + Notes:
+ +  `configurator` will be passed an already existing version of the configuration if it exists.
+ +  Otherwise a new instance of it will be used.
+ +
+ + Use Case:
+ +  Sometimes a service will allow the user to configure how it works.
+ +  
+ +  It can support this by defining a struct to store the configuration, and then using
+ +  the `IConfig` interface alongside the configuration struct and dependency injection
+ +  to retrieve this configuration.
+ +
+ + Params:
+ +  service      = The service provider to use.
+ +  configurator = The function that will configure the data.
+ + ++/
 void configure(T)(ServiceProvider service, void delegate(ref T) configurator)
 {
     auto config = service.get!(IConfig!T);
