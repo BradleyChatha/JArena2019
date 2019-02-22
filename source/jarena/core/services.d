@@ -372,7 +372,7 @@ version(unittest)
 
     class SomeUnrelatedClass
     {
-        void doLog(string myNonServiceParam, int level, ILoggerService service)
+        void doLog(string myNonServiceParam, ILoggerService service)
         {
             service.write(1, myNonServiceParam);
         }
@@ -382,9 +382,7 @@ version(unittest)
 // TEST CASE
 unittest
 {	
-	auto loggerMinimal  = new MinimalConsoleLoggerService();
-	auto loggerDetailed = new DetailedConsoleLoggerService();
-	auto services       = new ServiceProvider();
+	auto services = new ServiceProvider();
 
     alias Parameters = AliasSeq;
 	
