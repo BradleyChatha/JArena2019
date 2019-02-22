@@ -37,15 +37,16 @@ final class Engine
 
     private
     {
-        Window       _window;
-        PostOffice   _eventOffice;
-        InputManager _input;
-        FPS          _fps;
-        SceneManager _scenes;
-        Timers       _timers;
-        Config       _config;
-        Duration     _frameTime;
-        AudioManager _audio;
+        Window          _window;
+        PostOffice      _eventOffice;
+        InputManager    _input;
+        FPS             _fps;
+        SceneManager    _scenes;
+        Timers          _timers;
+        Config          _config;
+        Duration        _frameTime;
+        AudioManager    _audio;
+        ServiceProvider _services;
 
         // Debug stuff
         char[512]           _debugBuffer;
@@ -129,6 +130,7 @@ final class Engine
             this._debugControls = new EngineDebugControls(this, this._config.debugControls.get(false));
             this._frameTime     = (1000 / this._config.targetFPS.get(WINDOW_DEFAULT_FPS)).msecs;
             this._audio         = new AudioManager();
+            this._services      = new ServiceProvider();
 
             this._debugText                     = new BasicLabel();
             this._debugText.text.value.font     = this._debugFont;
