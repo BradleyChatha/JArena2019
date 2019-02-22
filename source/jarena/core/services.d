@@ -13,11 +13,14 @@ private
 version = ServiceProviderVerbose;
 
 alias OverrideExisting = Flag!"override_";
-alias IsSingleton      = Flag!"singleton";
+
+struct FromServices{}
 
 final class ServiceProvider
 {	
-	struct ParamInfo
+    alias IsSingleton = Flag!"singleton";
+	
+    struct ParamInfo
 	{
 		TypeInfo paramType;
 		string paramName;
@@ -62,7 +65,7 @@ final class ServiceProvider
         {
             import std.algorithm : filter;
             import std.range     : retro;
-            static assert(is(Base == interface), "The given type '"~Base.stringof~"' is not an interface.");
+            static assert(is(Base == interface) || is(Base == class), "The given type '"~Base.stringof~"' is neither an interface nor a class.");
 
             // Gain the factory lock.
             bool weHaveLock = false;
@@ -235,14 +238,20 @@ final class ServiceProvider
             // For services, call `this.get!ServiceType` on them.
             // For `ServiceProvider`, pass `this`.
             string[] paramsToUse;
-            static foreach(i, param; FuncParams)
+            static foreach(i; 0..FuncParams.length)
             {{
+                alias param = FuncParams[i];
                 static if(is(param == ServiceProvider))
                 {
                     code.putf(`this.verboseTracef("Using 'this' for parameter %s (\"%s\")");`, i, ParamNames[i]);
                     paramsToUse ~= "this";
                 }
-                else static if(is(param == interface))
+                else static if(is(param == interface) 
+                            || (
+                                    is(typeof(canFindFromServices!(__traits(getAttributes, FuncParams[i..i+1]))))
+                                 && canFindFromServices!(__traits(getAttributes, FuncParams[i..i+1]))
+                               )
+                            )
                 {
                     code.putf(`this.verboseTracef("Using service '%s' for parameter %s (\"%s\")");`, param.stringof, i, ParamNames[i]);
                     paramsToUse ~= format("this.get!(FuncParams[%s])", i);
@@ -307,12 +316,28 @@ void configure(T)(ServiceProvider service, void delegate(ref T) configurator)
 
 private template NormalParamLength(alias Func)
 {
-    enum ParamFilter(T) = is(T == interface) || is(T == ServiceProvider);
+    size_t doCount()
+    {
+        size_t serviceParamCount = 0;
 
-    alias FuncParams   = Parameters!Func;
-    alias FilterParams = Filter!(ParamFilter, FuncParams);
+        forEveryServiceParam!Func((i){ serviceParamCount++; });
+
+        return (Parameters!Func.length - serviceParamCount);
+    }
     
-    enum NormalParamLength = (FuncParams.length - FilterParams.length);
+    enum NormalParamLength = doCount;
+}
+
+private bool canFindFromServices(Attribs...)()
+{
+    bool value;
+    static foreach(attrib; Attribs)
+    {
+        static if(is(attrib == FromServices))
+            value = true;
+    }
+
+    return value;
 }
 
 private template FirstServiceIndex(alias Func)
@@ -321,19 +346,29 @@ private template FirstServiceIndex(alias Func)
     {
         size_t index = size_t.max;
 
-        foreach(i, param; Parameters!Func)
-        {
-            if(is(param == interface) || is(param == ServiceProvider))
-            {
-                index = i;
-                break;
-            }
-        }
+        forEveryServiceParam!Func((i){ if(index == size_t.max) index = i; });
 
         return index;
     }
 
     enum FirstServiceIndex = findIndex();
+}
+
+private void forEveryServiceParam(alias Func)(void delegate(size_t) func)
+{
+    alias Params = Parameters!Func;
+    static foreach(i; 0..Params.length)
+    {{
+        alias param = Params[i];
+        if(is(param == interface) || is(param == ServiceProvider))
+            func(i);
+
+        static if(is(typeof(__traits(getAttributes, Params[i..i+1]))))
+        {
+            if(canFindFromServices!(__traits(getAttributes, Params[i..i+1])))
+                func(i);
+        }
+    }}
 }
 
 private template InjectionCtorFor(alias Type)
@@ -415,9 +450,19 @@ version(unittest)
 
     class SomeClassWithConfig
     {
+        SomeConfig value;
         this(IConfig!SomeConfig config, ILoggerService logger)
         {
             logger.write(0, config.value.name);
+            this.value = config.value;
+        }
+    }
+
+    class SomeClassWithUDA
+    {
+        this(@FromServices SomeClassWithConfig config, ILoggerService logger)
+        {
+            logger.write(0, config.value.name ~ "YEET");
         }
     }
 }
@@ -448,6 +493,11 @@ unittest
 
     // Test configuration.
     services.configure!SomeConfig((ref c) { c.name = "EXPLOSION"; });
-    services.makeAndInject!SomeClassWithConfig();
+    auto configObj = services.makeAndInject!SomeClassWithConfig();
     assert(LAST_LOGGED_MESSAGE == "[INFO] EXPLOSION", LAST_LOGGED_MESSAGE);
+
+    // Non-interface based injection
+    services.addSingleton!(SomeClassWithConfig, SomeClassWithConfig)(configObj);
+    services.makeAndInject!SomeClassWithUDA();
+    assert(LAST_LOGGED_MESSAGE == "[INFO] EXPLOSIONYEET");
 }
