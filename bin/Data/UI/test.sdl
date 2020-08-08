@@ -1,0 +1,161 @@
+type "UI:view"
+UI:view {
+	template:AV_NavButton {
+		BasicButton {
+			baseColour "flameRed"
+			shape
+			text
+			size 75D 22.999999999999998223D
+		}
+	}
+	template:AV_ListButton {
+		BasicButton {
+			baseColour "funGreen"
+			shape
+			text
+			horizAlignment "Stretch"
+			margin 0D 10D 0D 0D
+			size -1D 400D
+		}
+	}
+	GridContainer {
+		BasicButton {
+			shape
+			text {
+				text "ABC"
+			}
+			horizAlignment "Stretch"
+			vertAlignment "Stretch"
+			property:GridSlot 0L 0L
+			property:GridSlotSpan 3L 2L
+		}
+		rows {
+			Definition {
+				type "Pixels"
+				amount 20L
+			}
+			Definition {
+				type "Pixels"
+				amount 20L
+			}
+		}
+		columns {
+			Definition {
+				type "Pixels"
+				amount 50L
+			}
+			Definition {
+				type "Star"
+				amount 1L
+			}
+			Definition {
+				type "Star"
+				amount 1L
+			}
+			Definition {
+				type "Pixels"
+				amount 20L
+			}
+		}
+		showDebugGrid true
+		margin 300D 100D 0D 0D
+		size 300D 100D
+	}
+	StackContainer {
+		BasicLabel {
+			text {
+				text "L = Show animation list; R = Reset Camera; Shift+R = Toggle Repeating"
+				colour "rockSalt"
+			}
+			vertAlignment "Center"
+		}
+		background {
+			borderSize 1L
+			borderColour "#000000"
+			colour "azure"
+		}
+		direction "Horizontal"
+		name "panelInstructions"
+		horizAlignment "Stretch"
+		vertAlignment "Bottom"
+		size -1D 30D
+		property:Test {
+			description "This is a test property to simply check that the data binder doesn't crash. Please ignore."
+		}
+	}
+	StackContainer {
+		BasicLabel {
+			text {
+				colour "rockSalt"
+			}
+			name "lblData1"
+			margin 0D 0D 0D 10D
+		}
+		background {
+			borderSize 1L
+			borderColour "#000000"
+			colour "azure"
+		}
+		direction "Vertical"
+		autoSize "yes"
+		name "panelData"
+		margin 25D 25D 0D 0D
+		size -1D -1D
+	}
+	StackContainer {
+		StackContainer {
+			AV_NavButton {
+				shape
+				text {
+					text "<"
+				}
+				name "btnNavLeft"
+			}
+			BasicLabel {
+				text {
+					text "0/69"
+					colour "rockSalt"
+				}
+				name "lblNavPages"
+				vertAlignment "Center"
+				margin 5D -3D 0D 0D
+			}
+			AV_NavButton {
+				shape
+				text {
+					text ">"
+				}
+				name "btnNavRight"
+				horizAlignment "Right"
+			}
+			background
+			name "controlNavigation"
+			horizAlignment "Center"
+			size 200D 30D
+		}
+		AV_ListButton {
+			shape
+			text {
+				text "Some sexy animation"
+			}
+		}
+		AV_ListButton {
+			shape
+			text {
+				text "Some sexy animation"
+			}
+		}
+		background {
+			borderSize 1L
+			borderColour "#000000"
+			colour "azure"
+		}
+		direction "Vertical"
+		name "panelList"
+		isVisible false
+		horizAlignment "Right"
+		vertAlignment "Stretch"
+		size 200D -1D
+	}
+	name "AnimationViewer_View"
+}

@@ -239,6 +239,50 @@ struct VectorProperty(T, size_t N)
  + ++/
 static abstract class DataBinder
 {
+    enum DuplicateAction
+    {
+        Throw,
+        Ignore,
+        Replace
+    }
+
+    /// Definition of a control's bindings/properties, designed to be able to be serialised.
+    /// Useful only for external programs that need to know these things.
+    struct ControlDef
+    {
+        string name;
+        BindingDef[] bindings;
+    }
+
+    /// ditto
+    struct BindingDef
+    {
+        string name;
+        string targetName;
+        FieldDef[] fields;
+    }
+
+    /// ditto
+    struct FieldDef
+    {
+        string name;
+        bool isNullable;
+
+        string inputType;
+        string outputType;
+
+        // For arrays.
+        string inputSubtype;
+        string outputSubtype;
+
+        // For static arrays.
+        uint   inputStaticLength;
+        uint   outputStaticLength;
+
+        // For enums
+        string[] enumOptions;
+    }
+
     private static
     {
         alias ParserFunc = UIBase delegate(UIBase, ArchiveObject);
@@ -248,6 +292,7 @@ static abstract class DataBinder
         {
             ParserFunc parser;
             MakerFunc  factory;
+            ControlDef definition;
         }
 
         ArchiveObject[string] _templates; // Key is template name.
@@ -297,6 +342,7 @@ static abstract class DataBinder
             BindingInfo info;
             info.parser     = DataBinder.generateParserFor!C;
             info.factory    = DataBinder.generateFactoryFor!C;
+            info.definition = DataBinder.generateDefinitionFor!C;
             
             DataBinder._classInfo[getFieldName!C] = info;
         }
@@ -478,8 +524,9 @@ static abstract class DataBinder
         }
 
         ///
-        ViewContainer parseView(ArchiveObject root)
+        ViewContainer parseView(ArchiveObject root, DuplicateAction action = DuplicateAction.Throw)
         {
+            // Go over all templates first.
             import std.array : split;
             foreach(child; root.children)
             {
@@ -491,14 +538,24 @@ static abstract class DataBinder
                 auto oldName = child.name;
                 child.name = splitted[1];
                 scope(exit) child.name = oldName;
-                DataBinder.addTemplate(child);
+                DataBinder.addTemplate(child, action);
             }
 
+            // Then read in things as normal
             auto container = new ViewContainer();
             foreach(child; DataBinder.parseUIObjectGeneric(root))
                 container.addChild(child);
 
             return container;
+        }
+
+        ///
+        ControlDef getDefinitionFor(string name)
+        {
+            auto ptr = (name in this._classInfo);
+            enforceAndLogf(ptr !is null, "The control '%s' doesn't exist.", name);
+
+            return ptr.definition;
         }
 
         /++
@@ -511,14 +568,21 @@ static abstract class DataBinder
          +  pass to `parseUIObject`.
          +
          + Params:
-         +  obj = The object that serves as the template.
+         +  obj     = The object that serves as the template.
+         +  action  = The action to perform if a template of the same name already exists.
          + ++/
-        void addTemplate(ArchiveObject obj)
+        void addTemplate(ArchiveObject obj, DuplicateAction action = DuplicateAction.Throw)
         {
             assert(obj !is null);
-            enforceAndLogf((obj.name in DataBinder._templates) is null, "The template '%s' already exists.", obj.name);
             enforceAndLogf(obj.children.length == 1, "The template '%s' requires having *only* one child in it's root.", obj.name);
-
+            if(DataBinder.canFindTemplate(obj.name))
+            {
+                if(action == DuplicateAction.Replace)
+                    DataBinder.removeTemplate(obj.name);
+                else if(action == DuplicateAction.Throw)
+                    enforceAndLogf(false, "The template '%s' already exists.", obj.name);
+            }
+            
             DataBinder._templates[obj.name] = obj.children[0];
         }
 
@@ -556,6 +620,12 @@ static abstract class DataBinder
             return factoryTemplate!C(new ArchiveObject(templateName));
         }
 
+        ///
+        void removeTemplate(string templateName)
+        {
+            DataBinder._templates.remove(templateName);
+        }
+
         /// Returns: Whether a template called `templateName` exists.
         bool canFindTemplate(string templateName)
         {
@@ -568,6 +638,108 @@ static abstract class DataBinder
     // ###################
     private static
     {
+        ControlDef generateDefinitionFor(C : UIBase)()
+        {
+            import std.range : ElementEncodingType;
+
+            void handleType(T, bool Input = true)(ref FieldDef fieldDef)
+            {
+                static if(Input)
+                {
+                    auto setType    = (string str){fieldDef.inputType = str;};
+                    auto setSubtype = (string str){fieldDef.inputSubtype = str;};
+                    auto setLength  = (uint l){fieldDef.inputStaticLength = l;};
+                }
+                else
+                {
+                    auto setType    = (string str){fieldDef.outputType = str;};
+                    auto setSubtype = (string str){fieldDef.outputSubtype = str;};
+                    auto setLength  = (uint l){fieldDef.outputStaticLength = l;};
+                }
+
+                static if(isInstanceOf!(Nullable, T))
+                    alias FieldT = Unqual!(ReturnType!(T.get));
+                else
+                    alias FieldT = Unqual!(T);
+
+                static if(isArray!FieldT)
+                {
+                    static if(isStaticArray!FieldT)
+                    {
+                        setType("StaticArray");
+                        setLength(cast(uint)T.length);
+                    }
+                    else
+                        setType("DynamicArray");
+
+                    setSubtype(Unqual!(ElementEncodingType!FieldT).stringof);
+                }
+                else static if(is(FieldT == enum))
+                {
+                    import std.conv : to;
+                    setType("Enum");
+                    setSubtype(Unqual!(OriginalType!FieldT).stringof);
+
+                    static foreach(member; EnumMembers!FieldT)
+                        fieldDef.enumOptions ~= member.to!string;
+                }
+                else
+                    setType(FieldT.stringof);
+            }
+
+            ControlDef def;
+            def.name = __traits(identifier, C);
+
+            static foreach(base; AliasSeq!(C, BaseClassesTuple!C))
+            static foreach(attrib; GetAllUDAsInstanceOf!(UsesBinding, base))
+            {{
+                BindingDef bindDef;
+                bindDef.name = __traits(identifier, attrib.BindT);
+                bindDef.targetName = __traits(identifier, attrib.Target);
+
+                static foreach(field; getSymbolsByUDA!(attrib.BindT, BindingFor))
+                {{
+                    FieldDef fieldDef;
+                    fieldDef.name = getFieldName!field;
+
+                    // For *some* reason, GridContainer.Definition[] messes up when used with getFieldName.
+                    // So we're special casing it until I can get a generic fix sorted.
+                    static if(is(typeof(field) == GridContainer.Definition[]))
+                        fieldDef.name = field.stringof;
+
+                    static if(isInstanceOf!(Nullable, typeof(field)))
+                        fieldDef.isNullable = true;
+
+                    handleType!(typeof(field))(fieldDef);
+
+                    fieldDef.outputType    = fieldDef.inputType;
+                    fieldDef.outputSubtype = fieldDef.inputSubtype;
+                    bindDef.fields        ~= fieldDef;
+                }}
+
+                static foreach(symbolName; __traits(allMembers, attrib.BindT))
+                static foreach(attrib2; GetAllUDAsInstanceOf!(ConverterBindingFor, getSymbolByName!(attrib.BindT, symbolName)))
+                {{
+                    alias Field = getSymbolByName!(attrib.BindT, symbolName);
+                    
+                    FieldDef fieldDef;
+                    fieldDef.name = getFieldName!Field;
+
+                    static if(isInstanceOf!(Nullable, typeof(Field)))
+                        fieldDef.isNullable = true;
+
+                    handleType!(typeof(Field))(fieldDef);
+                    handleType!(attrib2.ValueT, false)(fieldDef);
+                    
+                    bindDef.fields ~= fieldDef;
+                }}
+
+                def.bindings ~= bindDef;
+            }}
+
+            return def;
+        }
+
         MakerFunc generateFactoryFor(C : UIBase)()
         {
             return () {
@@ -644,6 +816,10 @@ static abstract class DataBinder
                             val.addProperty!ArchiveObject(nameRange.front, prop);
                             usedForRoot ~= prop;
                         }
+                        
+                        // Mark all 'metadata' tags as used, since they're a by-product of unrelated things.
+                        foreach(meta; root.children.filter!(c => c.name.startsWith("metadata:")))
+                            usedForRoot ~= meta;
 
                         // If there was a specific target, then we should make sure that all of it's objects were used.
                         static if(!is(attrib.Target == NO_TARGET))
@@ -682,7 +858,7 @@ static abstract class DataBinder
                         newChild = ptr.parser(ptr.factory(), child);
                     }
 
-                    // Sort out any templates that are pre-defined by the parent
+                    // Sort out any properties that are pre-defined by the parent
                     static foreach(attrib; GetAllUDAsInstanceOf!(ChildProperty, C))
                     {{
                         alias ValueVar = getSymbolsByUDA!(attrib.BindT, MainValue)[0];

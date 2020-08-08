@@ -10,8 +10,8 @@ private
 @DataBinding
 struct StackContainerBinding
 {
-    @ConverterBindingFor!(StackContainer.Direction, string)("direction", &DataConverters.stringToEnum!(StackContainer.Direction))
-    Nullable!string direction;
+    @BindingFor("direction")
+    Nullable!(StackContainer.Direction) direction;
 
     @ConverterBindingFor!(StackContainer.AutoSize, string)("autoSize", &DataConverters.stringToEnum!(StackContainer.AutoSize))
     Nullable!string autoSize;

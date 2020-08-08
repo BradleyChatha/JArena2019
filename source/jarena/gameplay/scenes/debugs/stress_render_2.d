@@ -6,7 +6,7 @@ import jarena.core, jarena.graphics, jarena.gameplay, jarena.data.loaders, jaren
 @SceneName("Render test #2")
 class StressTest_Render2Scene : Scene
 {
-    const ENTITY_COUNT = 1_000u;
+    const ENTITY_COUNT = 1_000_000u;
 
     SpritePool pool;
 

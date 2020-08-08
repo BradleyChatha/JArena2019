@@ -13,6 +13,8 @@ private
  + ++/
 final class AssetManager
 {
+    struct Any {}
+
     private
     {
         Package[string]     _packages;
@@ -125,6 +127,34 @@ final class AssetManager
         if(is(T == struct))
         {
             return this.get!(StructWrapperAsset!T)(assetName);
+        }
+
+        /++
+         + Determines whether an asset exists.
+         +
+         + Params:
+         +  T         = If left to it's default value, then the function will simply check to see if
+         +              an asset called `assetName` exists. Otherwise, if a specific type is given, then
+         +              this function will also test whether the asset is castable to the given type.
+         +  assetName = The name of the asset to test for.
+         + ++/
+        bool exists(T = Any)(string assetName)
+        {
+            static if(!is(T == Any))
+            {
+                auto asset = this._assets.get(assetName);
+                if(asset == PackageAsset.init)
+                    return false;
+
+                static if(is(T == struct)) alias TestT = StructWrapperAsset!T;
+                else                       alias TestT = T;
+
+                return ((cast(TestT)asset.value) !is null);
+            }
+            else
+            {
+                return this._assets.hasKey(assetName);
+            }
         }
 
         /++
