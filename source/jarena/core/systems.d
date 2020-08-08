@@ -3,7 +3,8 @@ module jarena.core.systems;
 
 private
 {
-    import std.traits    : allSatisfy, isSomeString, getSymbolsByUDA, getUDAs, hasUDA;
+    import std.meta      : allSatisfy;
+    import std.traits    : isSomeString, getSymbolsByUDA, getUDAs, hasUDA;
     import std.typetuple : AliasSeq;
     import derelict.sdl2.sdl;
     import jaster.serialise.builder;

@@ -4,6 +4,7 @@ private
 {
     import std.experimental.logger;
     import jarena.core, jarena.data, jarena.graphics;
+    import jarena.data.loaders.core : Package;
 }
 
 /++

@@ -1,7 +1,7 @@
 {
 	"fileVersion": 1,
 	"versions": {
-		"botan": "1.12.10",
+		"botan": "1.12.18",
 		"botan-math": "1.0.3",
 		"ddmp": "0.0.1-0.dev.3",
 		"derelict-fi": "3.0.0-beta.1",
@@ -10,24 +10,22 @@
 		"derelict-gl3": "2.0.0-beta.1",
 		"derelict-sdl2": "3.1.0-alpha.1",
 		"derelict-util": "3.0.0-beta.2",
-		"diet-ng": "1.5.0",
-		"eventcore": "0.8.40",
-		"fluent-asserts": "0.12.3",
+		"diet-ng": "1.7.2",
+		"eventcore": "0.9.7",
+		"fluent-asserts": "0.12.5",
 		"jasterialise": "0.0.4",
 		"jastream": "0.1.0",
-		"libasync": "0.8.3",
+		"libasync": "0.8.6",
 		"libdparse": "0.8.8",
-		"libevent": "2.0.2+2.0.16",
-		"libinputvisitor": "1.2.2",
-		"memutils": "0.4.13",
+		"memutils": "1.0.4",
 		"mir-linux-kernel": "1.0.1",
 		"openssl": "1.1.6+1.0.1g",
 		"resusage": "0.2.7",
-		"sdlang-d": "0.10.4",
+		"sdlang-d": "0.10.6",
 		"stdx-allocator": "2.77.5",
-		"taggedalgebraic": "0.10.12",
+		"taggedalgebraic": "0.11.16",
 		"unit-threaded": "0.7.55",
-		"vibe-core": "1.6.0",
-		"vibe-d": "0.8.4"
+		"vibe-core": "1.9.3",
+		"vibe-d": "0.9.0"
 	}
 }
